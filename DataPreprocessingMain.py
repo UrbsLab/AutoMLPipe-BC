@@ -39,7 +39,7 @@ def main(argv):
     scale_data = options.scale_data
     impute_data = options.impute_data
     overwrite_cv = options.overwrite_cv
-    run_parallel = options.run_parallel == 'True'
+    run_parallel = options.run_parallel
     queue = options.queue
     reserved_memory = options.reserved_memory
     maximum_memory = options.maximum_memory
@@ -71,7 +71,7 @@ def main(argv):
             full_path = output_path+"/"+experiment_name+"/"+dataset_directory_path
             for cv_train_path in glob.glob(full_path+"/CVDatasets/*Train.csv"):
                 cv_test_path = cv_train_path.replace("Train.csv","Test.csv")
-                if run_parallel:
+                if eval(run_parallel):
                     submitClusterJob(cv_train_path,cv_test_path,output_path+'/'+experiment_name,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,reserved_memory,maximum_memory,queue,categorical_feature_path)
                 else:
                     submitLocalJob(cv_train_path,cv_test_path,output_path+'/'+experiment_name,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,categorical_feature_path)

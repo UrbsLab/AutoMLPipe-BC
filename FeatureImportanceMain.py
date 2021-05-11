@@ -46,7 +46,7 @@ def main(argv):
     TURF_pct = options.TURF_pct
     n_jobs = options.n_jobs
     instance_subset = options.instance_subset
-    run_parallel = options.run_parallel == 'True'
+    run_parallel = options.run_parallel
     queue = options.queue
     reserved_memory = options.reserved_memory
     maximum_memory = options.maximum_memory
@@ -78,22 +78,22 @@ def main(argv):
             full_path = output_path+"/"+experiment_name+"/"+dataset_directory_path
             experiment_path = output_path+'/'+experiment_name
 
-            if do_mutual_info == 'True':
+            if eval(do_mutual_info):
                 if not os.path.exists(full_path+"/mutualinformation"):
                     os.mkdir(full_path+"/mutualinformation")
                 for cv_train_path in glob.glob(full_path+"/CVDatasets/*_CV_*Train.csv"):
                     command_text = '/FeatureImportanceJob.py ' + cv_train_path+" "+experiment_path+" "+str(random_state)+" "+class_label+" "+instance_label+" " +str(instance_subset)+" mi "+str(n_jobs)+' '+str(use_TURF)+' '+str(TURF_pct)
-                    if run_parallel:
+                    if eval(run_parallel):
                         submitClusterJob(command_text, experiment_path,reserved_memory,maximum_memory,queue)
                     else:
                         submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,instance_subset,'mi',n_jobs,use_TURF,TURF_pct)
 
-            if do_multisurf == 'True':
+            if eval(do_multisurf):
                 if not os.path.exists(full_path+"/multisurf"):
                     os.mkdir(full_path+"/multisurf")
                 for cv_train_path in glob.glob(full_path+"/CVDatasets/*_CV_*Train.csv"):
                     command_text = '/FeatureImportanceJob.py ' + cv_train_path+" "+experiment_path+" "+str(random_state)+" "+class_label+" "+instance_label+" " +str(instance_subset)+" ms "+str(n_jobs)+' '+str(use_TURF)+' '+str(TURF_pct)
-                    if run_parallel:
+                    if eval(run_parallel):
                         submitClusterJob(command_text, experiment_path,reserved_memory,maximum_memory,queue)
                     else:
                         submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,instance_subset,'ms',n_jobs,use_TURF,TURF_pct)
@@ -122,9 +122,9 @@ def main(argv):
         phase3Jobs = []
         for dataset in datasets:
             for cv in range(cv_partitions):
-                if do_multisurf:
+                if eval(do_multisurf):
                     phase3Jobs.append('job_multisurf_' + dataset + '_' + str(cv) + '.txt')
-                if do_mutual_info:
+                if eval(do_mutual_info):
                     phase3Jobs.append('job_mutualinformation_' + dataset + '_' + str(cv) + '.txt')
 
         for filename in glob.glob(output_path + "/" + experiment_name + '/jobsCompleted/job_mu*'):

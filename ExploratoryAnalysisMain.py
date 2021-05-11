@@ -79,7 +79,7 @@ def main(argv):
     export_feature_correlations = options.export_feature_correlations
     export_univariate_plots = options.export_univariate_plots
     random_state = options.random_state
-    run_parallel = options.run_parallel == 'True'
+    run_parallel = options.run_parallel
     queue = options.queue
     reserved_memory = options.reserved_memory
     maximum_memory = options.maximum_memory
@@ -99,7 +99,7 @@ def main(argv):
             if file_extension == 'txt' or file_extension == 'csv':
                 if data_name not in unique_datanames:
                     unique_datanames.append(data_name)
-                    if run_parallel:
+                    if eval(run_parallel):
                         submitClusterJob(datasetFilename,output_path+'/'+experiment_name,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,reserved_memory,maximum_memory,queue,ignore_features_path,categorical_feature_path,sig_cutoff)
                     else:
                         submitLocalJob(datasetFilename,output_path+'/'+experiment_name,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff)

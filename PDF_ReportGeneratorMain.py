@@ -27,14 +27,14 @@ def main(argv):
     output_path = options.output_path
     experiment_name = options.experiment_name
 
-    run_parallel = options.run_parallel == 'True'
+    run_parallel = options.run_parallel
     queue = options.queue
     reserved_memory = options.reserved_memory
     maximum_memory = options.maximum_memory
 
     experiment_path = output_path+'/'+experiment_name
 
-    if run_parallel:
+    if eval(run_parallel):
         submitClusterJob(experiment_path,reserved_memory,maximum_memory,queue)
     else:
         submitLocalJob(experiment_path)

@@ -221,59 +221,37 @@ def job(experiment_path):
     analy_report.multi_cell(w = 180, h = 4, txt='Datasets: '+'\n'+listDatasets, border=1, align='L')
     analy_report.y += 5
 
-    #Kruskall Wallis Table
-    #A table can take at most 4 datasets to fit comfortably with these settings
-    kw_ds = pd.read_csv(experiment_path+'/DatasetComparisons/'+'BestCompare_KruskalWallis.csv',sep=',',index_col=0)
-    kw_ds = kw_ds.round(4)
+    try:
+        #Kruskall Wallis Table
+        #A table can take at most 4 datasets to fit comfortably with these settings
+        kw_ds = pd.read_csv(experiment_path+'/DatasetComparisons/'+'BestCompare_KruskalWallis.csv',sep=',',index_col=0)
+        kw_ds = kw_ds.round(4)
 
-    #Process
-    for i in range(len(ds)):
-        kw_ds = kw_ds.drop('Std_D'+str(i+1),1)
-    kw_ds = kw_ds.drop('Statistic',1)
-    kw_ds = kw_ds.drop('Sig(*)',1)
+        #Process
+        for i in range(len(ds)):
+            kw_ds = kw_ds.drop('Std_D'+str(i+1),1)
+        kw_ds = kw_ds.drop('Statistic',1)
+        kw_ds = kw_ds.drop('Sig(*)',1)
 
-    #Format
-    kw_ds.reset_index(inplace=True)
-    kw_ds = kw_ds.columns.to_frame().T.append(kw_ds, ignore_index=True)
-    kw_ds.columns = range(len(kw_ds.columns))
-    epw = 208 #Amount of Space (width) Avaliable
-    th = analy_report.font_size
-    col_width = epw/float(10) #maximum column width
+        #Format
+        kw_ds.reset_index(inplace=True)
+        kw_ds = kw_ds.columns.to_frame().T.append(kw_ds, ignore_index=True)
+        kw_ds.columns = range(len(kw_ds.columns))
+        epw = 208 #Amount of Space (width) Avaliable
+        th = analy_report.font_size
+        col_width = epw/float(10) #maximum column width
 
-    dfLength = len(ds)
-    print(dfLength)
-    if len(ds) <= 4:
-        kw_ds = kw_ds.to_numpy()
-        for row in kw_ds:
-            for datum in row:
-                analy_report.cell(col_width, th, str(datum), border=1)
-            analy_report.ln(th) #critical
-    else:
-        #Print next 3 datasets
-        table1 = kw_ds.iloc[: , :10]
-        table1 = table1.to_numpy()
-        for row in table1:
-            for datum in row:
-                analy_report.cell(col_width, th, str(datum), border=1)
-            analy_report.ln(th) #critical
-        analy_report.y += 5
-
-        table1 = kw_ds.iloc[: , 10:18]
-        met = kw_ds.iloc[:,0]
-        met2 = kw_ds.iloc[:,1]
-        table1 = pd.concat([met,met2, table1], axis=1)
-        table1 = table1.to_numpy()
-        for row in table1:
-            for datum in row:
-                analy_report.cell(col_width, th, str(datum), border=1)
-            analy_report.ln(th) #critical
-        analy_report.y += 5
-
-        if len(ds) > 8:
-            table1 = kw_ds.iloc[: , 18:26]
-            met = kw_ds.iloc[:,0]
-            met2 = kw_ds.iloc[:,1]
-            table1 = pd.concat([met,met2,table1], axis=1)
+        dfLength = len(ds)
+        print(dfLength)
+        if len(ds) <= 4:
+            kw_ds = kw_ds.to_numpy()
+            for row in kw_ds:
+                for datum in row:
+                    analy_report.cell(col_width, th, str(datum), border=1)
+                analy_report.ln(th) #critical
+        else:
+            #Print next 3 datasets
+            table1 = kw_ds.iloc[: , :10]
             table1 = table1.to_numpy()
             for row in table1:
                 for datum in row:
@@ -281,11 +259,10 @@ def job(experiment_path):
                 analy_report.ln(th) #critical
             analy_report.y += 5
 
-        if len(ds) > 12:
-            table1 = kw_ds.iloc[: , 26:34]
+            table1 = kw_ds.iloc[: , 10:18]
             met = kw_ds.iloc[:,0]
             met2 = kw_ds.iloc[:,1]
-            table1 = pd.concat([met,met2,table1], axis=1)
+            table1 = pd.concat([met,met2, table1], axis=1)
             table1 = table1.to_numpy()
             for row in table1:
                 for datum in row:
@@ -293,11 +270,37 @@ def job(experiment_path):
                 analy_report.ln(th) #critical
             analy_report.y += 5
 
-        if len(ds) > 16:
-            analy_report.x = 0
-            analy_report.y = 260
-            analy_report.cell(0, 4, 'Warning: Additional dataset results could not be displayed', 1, align="C")
+            if len(ds) > 8:
+                table1 = kw_ds.iloc[: , 18:26]
+                met = kw_ds.iloc[:,0]
+                met2 = kw_ds.iloc[:,1]
+                table1 = pd.concat([met,met2,table1], axis=1)
+                table1 = table1.to_numpy()
+                for row in table1:
+                    for datum in row:
+                        analy_report.cell(col_width, th, str(datum), border=1)
+                    analy_report.ln(th) #critical
+                analy_report.y += 5
 
+            if len(ds) > 12:
+                table1 = kw_ds.iloc[: , 26:34]
+                met = kw_ds.iloc[:,0]
+                met2 = kw_ds.iloc[:,1]
+                table1 = pd.concat([met,met2,table1], axis=1)
+                table1 = table1.to_numpy()
+                for row in table1:
+                    for datum in row:
+                        analy_report.cell(col_width, th, str(datum), border=1)
+                    analy_report.ln(th) #critical
+                analy_report.y += 5
+
+            if len(ds) > 16:
+                analy_report.x = 0
+                analy_report.y = 260
+                analy_report.cell(0, 4, 'Warning: Additional dataset results could not be displayed', 1, align="C")
+    except:
+        pass
+        
     footer(analy_report)
 
     #Output The PDF Object

@@ -15,8 +15,6 @@ def job(cv_train_path,experiment_path,random_state,class_label,instance_label,in
     random.seed(random_state)
     np.random.seed(random_state)
 
-    use_TURF = use_TURF != 'False'
-
     dataset_name,dataFeatures,dataOutcome,header,cvCount = prepareData(cv_train_path,instance_label,class_label)
     #Mutual Information
     if algorithm == 'mi':
@@ -77,7 +75,7 @@ def runMultiSURF(dataFeatures,dataOutcome,instance_subset,experiment_path,datase
     #Run MultiSURF
     outname = "multisurf"
     outpath = experiment_path + '/' + dataset_name + "/"+outname+"/scores_cv_" + str(cvCount) + '.csv'
-    if use_TURF:
+    if eval(use_TURF):
         clf = TURF(MultiSURF(n_jobs=njobs),pct=TURF_pct).fit(dataFeatures,dataPhenotypes)
     else:
         clf = MultiSURF(n_jobs=njobs).fit(dataFeatures, dataPhenotypes)

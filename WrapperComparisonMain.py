@@ -28,7 +28,7 @@ def main(argv):
     options = parser.parse_args(argv[1:])
     output_path = options.output_path
     experiment_name = options.experiment_name
-    run_parallel = options.run_parallel == 'True'
+    run_parallel = options.run_parallel
     queue = options.queue
     reserved_memory = options.reserved_memory
     maximum_memory = options.maximum_memory
@@ -36,7 +36,7 @@ def main(argv):
     metadata = pd.read_csv(output_path + '/' + experiment_name + '/' + 'metadata.csv').values
     sig_cutoff = metadata[4,1]
 
-    if run_parallel:
+    if eval(run_parallel):
         submitClusterJob(output_path+'/'+experiment_name,reserved_memory,maximum_memory,queue,sig_cutoff)
     else:
         submitLocalJob(output_path+'/'+experiment_name,sig_cutoff)

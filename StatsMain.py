@@ -43,7 +43,7 @@ def main(argv):
     plot_FI_box = options.plot_FI_box
     top_results = options.top_results
 
-    run_parallel = options.run_parallel == 'True'
+    run_parallel = options.run_parallel
     queue = options.queue
     reserved_memory = options.reserved_memory
     maximum_memory = options.maximum_memory
@@ -102,7 +102,7 @@ def main(argv):
         dataset_paths.remove('metadata.csv')
         for dataset_directory_path in dataset_paths:
             full_path = output_path + "/" + experiment_name + "/" + dataset_directory_path
-            if run_parallel:
+            if eval(run_parallel):
                 submitClusterJob(full_path,encodedAlgos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,output_path+'/'+experiment_name,cv_partitions,reserved_memory,maximum_memory,queue,plot_metric_boxplots,primary_metric,top_results,sig_cutoff)
             else:
                 submitLocalJob(full_path,encodedAlgos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff)
@@ -153,7 +153,7 @@ def submitClusterJob(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class
     pass
 
 def encode(do_algo,encodedAlgos):
-    if do_algo == "True" or do_algo == "TRUE":
+    if eval(do_algo):
         encodedAlgos += '1'
     else:
         encodedAlgos += '0'

@@ -19,7 +19,7 @@ def job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_
     job_start_time = time.time()
     random.seed(random_state)
     np.random.seed(random_state)
-    jupyterRun = False #controls whether plots are shown or closed depending on whether jupyter notebook is used to run code or not
+    jupyterRun = 'False' #controls whether plots are shown or closed depending on whether jupyter notebook is used to run code or not
     topFeatures = 20 #only used with jupyter notebook reporting
     if ignore_features_path == 'None':
         ignore_features = []
@@ -45,21 +45,21 @@ def job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_
 
     countsSummary(data,class_label,experiment_path,dataset_name,instance_label,match_label,categorical_variables,jupyterRun)
 
-    if export_exploratory_analysis == "True":
+    if eval(export_exploratory_analysis):
         basicExploratory(data,experiment_path,dataset_name,jupyterRun)
 
-    if export_feature_correlations:
+    if eval(export_feature_correlations):
         featureCorrelationPlot(data,class_label,instance_label,match_label,experiment_path,dataset_name,jupyterRun)
 
     sorted_p_list = univariateAnalysis(data,experiment_path,dataset_name,class_label,instance_label,match_label,categorical_variables,jupyterRun,topFeatures)
 
-    if export_univariate_plots:
+    if eval(export_univariate_plots):
         univariatePlots(data,sorted_p_list,class_label,categorical_variables,experiment_path,dataset_name,sig_cutoff)
 
     reportHeaders(data,experiment_path,dataset_name,class_label,instance_label,match_label,partition_method)
 
     #Cross Validation
-    train_dfs,test_dfs = cv_partitioner(data,cv_partitions,partition_method,class_label,True,match_label,random_state)
+    train_dfs,test_dfs = cv_partitioner(data,cv_partitions,partition_method,class_label,'True',match_label,random_state)
 
     saveCVDatasets(experiment_path,dataset_name,train_dfs,test_dfs)
 
@@ -149,7 +149,7 @@ def countsSummary(data,class_label,experiment_path,dataset_name,instance_label,m
     plt.ylabel('Count')
     plt.title('Class Counts')
     plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'ClassCounts.png',bbox_inches='tight')
-    if jupyterRun:
+    if eval(jupyterRun):
         plt.show()
     else:
         plt.close('all')
@@ -165,7 +165,7 @@ def basicExploratory(data,experiment_path,dataset_name,jupyterRun):
     plt.ylabel("Frequency")
     plt.title("Histogram of Missing Value Counts In Feature Set")
     plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'FeatureMissingnessHistogram.png',bbox_inches='tight')
-    if jupyterRun:
+    if eval(jupyterRun):
         plt.show()
     else:
         plt.close('all')
@@ -181,7 +181,7 @@ def featureCorrelationPlot(data,class_label,instance_label,match_label,experimen
     f,ax=plt.subplots(figsize=(40,20))
     sns.heatmap(corrmat,vmax=1,square=True)
     plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'FeatureCorrelations.png',bbox_inches='tight')
-    if jupyterRun:
+    if eval(jupyterRun):
         plt.show()
     else:
         plt.close('all')
@@ -198,7 +198,7 @@ def univariateAnalysis(data,experiment_path,dataset_name,class_label,instance_la
     pval_df = pd.DataFrame.from_dict(p_value_dict, orient='index')
     pval_df.to_csv(experiment_path + '/' + dataset_name + '/exploratory/univariate/Significance.csv',index_label='Feature',header=['p-value'])
 
-    if jupyterRun:
+    if eval(jupyterRun):
         fCount = data.shape[1]-1
         if not instance_label == 'None':
             fCount -= 1
@@ -333,7 +333,7 @@ def cv_partitioner(td, cv_partitions, partition_method, outcomeLabel, categorica
     # Handle Special Variables for Nominal Outcomes
     outcomeIndex = None
     classList = None
-    if categoricalOutcome:
+    if eval(categoricalOutcome):
         outcomeIndex = td.columns.get_loc(outcomeLabel)
         classList = []
         for each in datasetList:
@@ -356,7 +356,7 @@ def cv_partitioner(td, cv_partitions, partition_method, outcomeLabel, categorica
 
     # Stratified Partitioning Method-----------------------
     elif partition_method == 'S':
-        if categoricalOutcome:  # Discrete outcome
+        if eval(categoricalOutcome):  # Discrete outcome
 
             # Create data sublists, each having all rows with the same class
             byClassRows = [[] for i in range(len(classList))]  # create list of empty lists (one for each class)
@@ -377,7 +377,7 @@ def cv_partitioner(td, cv_partitions, partition_method, outcomeLabel, categorica
             raise Exception("Error: Stratified partitioning only designed for discrete endpoints. ")
 
     elif partition_method == 'M':
-        if categoricalOutcome:
+        if eval(categoricalOutcome):
             # Get match variable column index
             outcomeIndex = td.columns.get_loc(outcomeLabel)
             matchIndex = td.columns.get_loc(matchName)

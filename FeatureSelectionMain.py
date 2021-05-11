@@ -43,7 +43,7 @@ def main(argv):
     top_results = options.top_results
     export_scores = options.export_scores
     overwrite_cv = options.overwrite_cv
-    run_parallel = options.run_parallel == 'True'
+    run_parallel = options.run_parallel
     queue = options.queue
     reserved_memory = options.reserved_memory
     maximum_memory = options.maximum_memory
@@ -72,7 +72,7 @@ def main(argv):
         dataset_paths.remove('metadata.csv')
         for dataset_directory_path in dataset_paths:
             full_path = output_path + "/" + experiment_name + "/" + dataset_directory_path
-            if run_parallel:
+            if eval(run_parallel):
                 submitClusterJob(full_path,output_path+'/'+experiment_name,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,reserved_memory,maximum_memory,queue)
             else:
                 submitLocalJob(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv)

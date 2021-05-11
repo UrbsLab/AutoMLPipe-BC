@@ -16,14 +16,12 @@ import copy
 def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff):
     job_start_time = time.time()
     data_name = full_path.split('/')[-1]
-    jupyterRun = False
+    jupyterRun = 'False'
     print(full_path)
 
     #Translate metric from scikitlearn standard
-    print(primary_metric)
     metric_term_dict = {'balanced_accuracy': 'Balanced Accuracy','accuracy': 'Accuracy','f1': 'F1_Score','recall': 'Sensitivity (Recall)','precision': 'Precision (PPV)','roc_auc': 'ROC_AUC'}
     primary_metric = metric_term_dict[primary_metric]
-    print(primary_metric)
 
     algorithms,abbrev,colors,original_headers = preparation(full_path,encoded_algos)
 
@@ -37,7 +35,7 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
     saveMetricMeans(full_path,metrics,metric_dict)
     saveMetricStd(full_path,metrics,metric_dict)
 
-    if plot_metric_boxplots == 'True':
+    if eval(plot_metric_boxplots):
         metricBoxplots(full_path,metrics,algorithms,metric_dict,jupyterRun)
 
     #Save Kruskal Wallis and Mann Whitney Stats
@@ -52,7 +50,7 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
     #Select 'top' feature for vizualization
     featuresToViz = selectForViz(top_results,non_zero_union_features,non_zero_union_indexes,algorithms,ave_metric_list,fi_ave_norm_list)
 
-    if plot_FI_box == 'True':
+    if eval(plot_FI_box):
         #Generate FI boxplots for each modeling algorithm
         doFIBoxplots(full_path,fi_df_list,algorithms,original_headers,jupyterRun)
 
@@ -218,7 +216,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
         mean_tpr = np.mean(tprs, axis=0)
         mean_tpr[-1] = 1.0
         mean_auc = np.mean(aucs)
-        if plot_ROC=='True' or plot_ROC:
+        if eval(plot_ROC):
             # Plot individual CV ROC line
             plt.rcParams["figure.figsize"] = (6,6)
             for i in range(cv_partitions):
@@ -238,7 +236,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             #plt.title(algorithm + ' : ROC over CV Partitions')
             plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
             plt.savefig(full_path+'/training/results/'+abbrev[algorithm]+"_ROC.png", bbox_inches="tight")
-            if jupyterRun:
+            if eval(jupyterRun):
                 plt.show()
             else:
                 plt.close('all')
@@ -246,7 +244,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
         #CV PRC plot ---------------------------------------------------------------
         mean_prec = np.mean(precs, axis=0)
         mean_pr_auc = np.mean(praucs)
-        if plot_PRC=='True' or plot_PRC:
+        if eval(plot_PRC):
             for i in range(cv_partitions):
                 plt.plot(alg_result_table[i][3], alg_result_table[i][4], lw=1, alpha=0.3, label='PRC fold %d (AUC = %0.2f)' % (i, alg_result_table[i][5]))
 
@@ -271,7 +269,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             #plt.title(algorithm + ' : PRC over CV Partitions')
             plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
             plt.savefig(full_path+'/training/results/'+abbrev[algorithm]+"_PRC.png", bbox_inches="tight")
-            if jupyterRun:
+            if eval(jupyterRun):
                 plt.show()
             else:
                 plt.close('all')
@@ -316,7 +314,7 @@ def doPlotROC(result_table,colors,full_path,jupyterRun):
     plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
     #plt.legend(prop={'size': 13}, loc='best')
     plt.savefig(full_path+'/training/results/Summary_ROC.png', bbox_inches="tight")
-    if jupyterRun:
+    if eval(jupyterRun):
         plt.show()
     else:
         plt.close('all')
@@ -343,7 +341,7 @@ def doPlotPRC(result_table,colors,full_path,data_name,instance_label,class_label
     plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
     #plt.legend(prop={'size': 13}, loc='best')
     plt.savefig(full_path+'/training/results/Summary_PRC.png', bbox_inches="tight")
-    if jupyterRun:
+    if eval(jupyterRun):
         plt.show()
     else:
         plt.close('all')
@@ -401,7 +399,7 @@ def metricBoxplots(full_path,metrics,algorithms,metric_dict,jupyterRun):
         plt.ylabel(str(metric))
         plt.xlabel('ML Algorithm')
         plt.savefig(full_path + '/training/results/performanceBoxplots/Compare_'+metric+'.png', bbox_inches="tight")
-        if jupyterRun:
+        if eval(jupyterRun):
             plt.show()
         else:
             plt.close('all')
@@ -543,7 +541,7 @@ def doFIBoxplots(full_path,fi_df_list,algorithms,original_headers,jupyterRun):
         plt.xlabel('Features')
         plt.xticks(np.arange(1, len(original_headers) + 1), original_headers, rotation='vertical')
         plt.savefig(full_path+'/training/results/FI/' + algorithms[counter] + '_boxplot',bbox_inches="tight")
-        if jupyterRun:
+        if eval(jupyterRun):
             plt.show()
         else:
             plt.close('all')
@@ -691,7 +689,7 @@ def compound_FI_plot(fi_list, algorithms, algColors, all_feature_listToViz, figN
     #plt.legend(lines, algorithms, loc=0, fontsize=16)
     plt.legend(lines, algorithms,loc="upper left", bbox_to_anchor=(1.01,1))
     plt.savefig(full_path+'/training/results/FI/Compare_FI_' + figName + '.png', bbox_inches='tight')
-    if jupyterRun:
+    if eval(jupyterRun):
         plt.show()
     else:
         plt.close('all')

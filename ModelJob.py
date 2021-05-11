@@ -45,8 +45,6 @@ def job(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_
     random.seed(random_state)
     np.random.seed(random_state)
 
-    do_lcs_sweep = do_lcs_sweep != 'False'
-
     #Get hyperparameter grid
     param_grid = hyperparameters(random_state,do_lcs_sweep,nu,iterations,N)[algorithm]
     trainX,trainY,testX,testY = dataPrep(train_file_path,instance_label,class_label,test_file_path)
@@ -147,7 +145,7 @@ def run_LR_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         optuna.logging.set_verbosity(optuna.logging.CRITICAL)
         study.optimize(lambda trial: objective_LR(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
 
-        if do_plot == 'True':
+        if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
             fig.write_image(full_path+'/training/LR_ParamOptimization_'+str(i)+'.png')
 
@@ -193,7 +191,7 @@ def run_LR_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI or use_uniform_FI == 'True':
+    if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -228,7 +226,7 @@ def run_DT_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         optuna.logging.set_verbosity(optuna.logging.CRITICAL)
         study.optimize(lambda trial: objective_DT(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
 
-        if do_plot == 'True':
+        if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
             fig.write_image(full_path+'/training/DT_ParamOptimization_'+str(i)+'.png')
 
@@ -274,7 +272,7 @@ def run_DT_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI or use_uniform_FI == 'True':
+    if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -311,7 +309,7 @@ def run_RF_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         optuna.logging.set_verbosity(optuna.logging.CRITICAL)
         study.optimize(lambda trial: objective_RF(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
 
-        if do_plot == 'True':
+        if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
             fig.write_image(full_path+'/training/RF_ParamOptimization_'+str(i)+'.png')
 
@@ -357,7 +355,7 @@ def run_RF_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI or use_uniform_FI == 'True':
+    if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -446,7 +444,7 @@ def run_XGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         optuna.logging.set_verbosity(optuna.logging.CRITICAL)
         study.optimize(lambda trial: objective_XGB(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
 
-        if do_plot == 'True':
+        if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
             fig.write_image(full_path+'/training/XGB_ParamOptimization_'+str(i)+'.png')
 
@@ -493,7 +491,7 @@ def run_XGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI or use_uniform_FI == 'True':
+    if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -539,7 +537,7 @@ def run_LGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         optuna.logging.set_verbosity(optuna.logging.CRITICAL)
         study.optimize(lambda trial: objective_LGB(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
 
-        if do_plot == 'True':
+        if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
             fig.write_image(full_path+'/training/LGB_ParamOptimization_'+str(i)+'.png')
 
@@ -585,7 +583,7 @@ def run_LGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI or use_uniform_FI == 'True':
+    if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -626,7 +624,7 @@ def run_SVM_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         optuna.logging.set_verbosity(optuna.logging.CRITICAL)
         study.optimize(lambda trial: objective_SVM(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
 
-        if do_plot == 'True':
+        if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
             fig.write_image(full_path+'/training/SVM_ParamOptimization_'+str(i)+'.png')
 
@@ -703,7 +701,7 @@ def run_GB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         optuna.logging.set_verbosity(optuna.logging.CRITICAL)
         study.optimize(lambda trial: objective_GB(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
 
-        if do_plot == 'True':
+        if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
             fig.write_image(full_path+'/training/GB_ParamOptimization_'+str(i)+'.png')
 
@@ -749,7 +747,7 @@ def run_GB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI or use_uniform_FI == 'True':
+    if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -789,7 +787,7 @@ def run_KN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         optuna.logging.set_verbosity(optuna.logging.CRITICAL)
         study.optimize(lambda trial: objective_KN(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
 
-        if do_plot == 'True':
+        if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
             fig.write_image(full_path+'/training/KN_ParamOptimization_'+str(i)+'.png')
 
@@ -881,7 +879,7 @@ def run_ANN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         optuna.logging.set_verbosity(optuna.logging.CRITICAL)
         study.optimize(lambda trial: objective_ANN(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
 
-        if do_plot == 'True':
+        if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
             fig.write_image(full_path+'/training/ANN_ParamOptimization_'+str(i)+'.png')
 
@@ -964,7 +962,7 @@ def run_eLCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trial
         optuna.logging.set_verbosity(optuna.logging.CRITICAL)
         study.optimize(lambda trial: objective_eLCS(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
 
-        if do_plot == 'True':
+        if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
             fig.write_image(full_path+'/training/eLCS_ParamOptimization_'+str(i)+'.png')
 
@@ -1009,7 +1007,7 @@ def run_eLCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trial
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI or use_uniform_FI == 'True':
+    if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -1038,7 +1036,7 @@ def run_XCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         optuna.logging.set_verbosity(optuna.logging.CRITICAL)
         study.optimize(lambda trial: objective_XCS(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
 
-        if do_plot == 'True':
+        if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
             fig.write_image(full_path+'/training/XCS_ParamOptimization_'+str(i)+'.png')
 
@@ -1083,7 +1081,7 @@ def run_XCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI or use_uniform_FI == 'True':
+    if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -1113,7 +1111,7 @@ def get_FI_subset_ExSTraCS(full_path,i,instance_label,class_label,filter_poor_fe
         scores = []
         return scores
 
-    if filter_poor_features == 'True':
+    if eval(filter_poor_features):
         #Load current data ordered_feature_names
         header = pd.read_csv(full_path+'/CVDatasets/'+data_name+'_CV_'+str(i)+'_Test.csv').columns.values.tolist()
         if instance_label != 'None':
@@ -1159,7 +1157,7 @@ def run_ExSTraCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_t
         optuna.logging.set_verbosity(optuna.logging.CRITICAL)
         study.optimize(lambda trial: objective_ExSTraCS(trial, est, x_train, y_train, randSeed, 3, param_grid,primary_metric), n_trials=n_trials, timeout=timeout,catch=(ValueError,))
 
-        if do_plot == 'True':
+        if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
             fig.write_image(full_path+'/training/ExSTraCS_ParamOptimization_'+str(i)+'.png')
 
@@ -1207,7 +1205,7 @@ def run_ExSTraCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_t
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI or use_uniform_FI == 'True':
+    if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -1301,7 +1299,7 @@ def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N):
                       'learning_rate': ['constant', 'invscaling', 'adaptive'],'momentum': [.1, .9],
                       'solver': ['sgd', 'adam'],'batch_size': ['auto'],'alpha': [0.0001, 0.05],'max_iter': [200],'random_state':[random_state]}
 
-    if do_lcs_sweep:
+    if eval(do_lcs_sweep):
         # ExSTraCS
         param_grid_ExSTraCS = {'learning_iterations': [100000,200000,500000],'N': [1000,2000,5000],'nu': [1,10],
                                'random_state':[random_state],'rule_compaction':[None]}

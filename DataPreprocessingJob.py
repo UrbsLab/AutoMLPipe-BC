@@ -33,16 +33,12 @@ def job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwr
 
     categorical_variables = ExploratoryAnalysisJob.idFeatureTypes(data_train,categorical_feature_headers,instance_label,'None',class_label,categorical_cutoff)
 
-    scale_data = scale_data == 'True'
-    impute_data = impute_data == 'True'
-    overwrite_cv = overwrite_cv == 'True'
-
     #Scale Data
-    if scale_data:
+    if eval(scale_data):
         data_train,data_test,scaler = dataScaling(data_train,data_test,class_label,instance_label,header,experiment_path,dataset_name,cvCount)
 
     #Impute Missing Values in Training and Testing Data
-    if impute_data:
+    if eval(impute_data):
         data_train,data_test,imputer,mode_dict = imputeCVData(class_label,instance_label,categorical_variables,data_train,data_test,random_state,header,experiment_path,dataset_name,cvCount)
 
     writeCVFiles(overwrite_cv,cv_train_path,cv_test_path,experiment_path,dataset_name,cvCount,data_train,data_test)
@@ -74,7 +70,7 @@ def loadData(cv_train_path,cv_test_path,experiment_path,class_label,instance_lab
     return data_train,data_test,header,dataset_name,cvCount
 
 def writeCVFiles(overwrite_cv,cv_train_path,cv_test_path,experiment_path,dataset_name,cvCount,data_train,data_test):
-    if overwrite_cv:
+    if eval(overwrite_cv):
         #Remove old CV files
         os.remove(cv_train_path)
         os.remove(cv_test_path)

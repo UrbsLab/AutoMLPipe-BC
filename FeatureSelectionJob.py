@@ -12,7 +12,7 @@ import sys
 def job(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv):
     job_start_time = time.time()
     dataset_name = full_path.split('/')[-1]
-    jupyterRun = False
+    jupyterRun = 'False'
     selected_feature_lists = {}
     meta_feature_ranks = {}
     algorithms = []
@@ -20,18 +20,18 @@ def job(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_f
     filter_poor_features = filter_poor_features == 'True'
 
     #Mutual Information
-    if do_mutual_info == 'True':
+    if eval(do_mutual_info):
         algorithms.append('Mutual Information')
         selected_feature_lists,meta_feature_ranks = reportAveFS("Mutual Information","mutualinformation",cv_partitions,top_results,full_path,selected_feature_lists,meta_feature_ranks,export_scores,jupyterRun)
 
     #MultiSURF
-    if do_multisurf == 'True':
+    if eval(do_multisurf):
         algorithms.append('MultiSURF')
         selected_feature_lists,meta_feature_ranks = reportAveFS("MultiSURF","multisurf",cv_partitions,top_results,full_path,selected_feature_lists,meta_feature_ranks,export_scores,jupyterRun)
 
     if len(algorithms) != 0:
         #Feature Selection
-        if filter_poor_features:
+        if eval(filter_poor_features):
             #Identify top feature subset
             cv_selected_list = selectFeatures(algorithms,cv_partitions,selected_feature_lists,max_features_to_keep,meta_feature_ranks)
 
@@ -84,7 +84,7 @@ def reportAveFS(algorithm,algorithmlabel,cv_partitions,top_results,full_path,sel
     meta_feature_ranks[algorithm] = feature_name_ranks
 
     #Generate barplot of average scores
-    if export_scores == 'True' or export_scores:
+    if eval(export_scores):
         # Make the sum of scores an average
         for v in scoreSum:
             scoreSum[v] = scoreSum[v] / float(cv_partitions)
@@ -110,7 +110,7 @@ def reportAveFS(algorithm,algorithmlabel,cv_partitions,top_results,full_path,sel
         plt.yticks(np.arange(len(ns['Names'])), ns['Names'])
         plt.title('Sorted ' + str(algorithm) + ' Scores')
         plt.savefig((full_path+"/"+algorithmlabel+"/TopAverageScores.png"), bbox_inches="tight")
-        if jupyterRun:
+        if eval(jupyterRun):
             plt.show()
         else:
             plt.close('all')
@@ -183,7 +183,7 @@ def genFilteredDatasets(cv_selected_list,class_label,instance_label,cv_partition
         td_train = trainList[i][labelList]
         td_test = testList[i][labelList]
 
-        if overwrite_cv == 'True':
+        if eval(overwrite_cv):
             #Remove old CV files
             os.remove(path_to_csv+'/'+dataset_name+'_CV_' + str(i) +"_Train.csv")
             os.remove(path_to_csv+'/'+dataset_name+'_CV_' + str(i) + "_Test.csv")

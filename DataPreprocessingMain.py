@@ -25,7 +25,7 @@ def main(argv):
     #Defaults available
     parser.add_argument('--scale-data',dest='scale_data',type=str,help='perform data scaling?',default="True")
     parser.add_argument('--impute-data', dest='impute_data',type=str,help='perform missing value data imputation? (required for most ML algorithms if missing data is present)',default="True")
-    parser.add_argument('--overwrite-cv', dest='overwrite_cv',type=str,help='overwrites earlier cv datasets with new scaled/imputed ones',default="False")
+    parser.add_argument('--overwrite-cv', dest='overwrite_cv',type=str,help='overwrites earlier cv datasets with new scaled/imputed ones',default="True")
     #Lostistical arguments
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")
     parser.add_argument('--queue',dest='queue',type=str,help='specify name of LPC queue',default="i2c2_normal") #specific to our research institution and computing cluster

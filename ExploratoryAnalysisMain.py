@@ -43,7 +43,7 @@ def main(argv):
     parser.add_argument('--sig', dest='sig_cutoff', type=float, help='significance cutoff used throughout pipeline',default=0.05)
     parser.add_argument('--export-ea', dest='export_exploratory_analysis', type=str, help='run and export basic exploratory analysis files, i.e. unique value counts, missingness counts, class balance barplot',default="True")
     parser.add_argument('--export-fc', dest='export_feature_correlations', type=str, help='run and export feature correlation analysis (yields correlation heatmap)',default="True")
-    parser.add_argument('--export-up', dest='export_univariate_plots', type=str, help='export univariate analysis plots (note: univariate analysis still output by default)',default="True")
+    parser.add_argument('--export-up', dest='export_univariate_plots', type=str, help='export univariate analysis plots (note: univariate analysis still output by default)',default="False")
     parser.add_argument('--random-state', dest='random_state', type=int, help='sets a specific random seed for reproducible results',default=42)
     #Lostistical arguments
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")

@@ -17,8 +17,6 @@ def job(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_f
     meta_feature_ranks = {}
     algorithms = []
 
-    filter_poor_features = filter_poor_features == 'True'
-
     #Mutual Information
     if eval(do_mutual_info):
         algorithms.append('Mutual Information')

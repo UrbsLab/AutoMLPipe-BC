@@ -193,7 +193,7 @@ def run_LR_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI:
+    if use_uniform_FI or use_uniform_FI == 'True':
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -274,7 +274,7 @@ def run_DT_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI:
+    if use_uniform_FI or use_uniform_FI == 'True':
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -357,7 +357,7 @@ def run_RF_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI:
+    if use_uniform_FI or use_uniform_FI == 'True':
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -493,7 +493,7 @@ def run_XGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI:
+    if use_uniform_FI or use_uniform_FI == 'True':
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -585,7 +585,7 @@ def run_LGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI:
+    if use_uniform_FI or use_uniform_FI == 'True':
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -749,7 +749,7 @@ def run_GB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI:
+    if use_uniform_FI or use_uniform_FI == 'True':
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -1009,7 +1009,7 @@ def run_eLCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trial
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI:
+    if use_uniform_FI or use_uniform_FI == 'True':
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -1083,7 +1083,7 @@ def run_XCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI:
+    if use_uniform_FI or use_uniform_FI == 'True':
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -1207,7 +1207,7 @@ def run_ExSTraCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_t
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
 
     # Feature Importance Estimates
-    if use_uniform_FI:
+    if use_uniform_FI or use_uniform_FI == 'True':
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
         fi = results.importances_mean
     else:
@@ -1238,9 +1238,23 @@ def classEval(y_true, y_pred):
     else:
         sp = tn / float(tn + fp)
 
-    npv = tn/float(tn+fn)
-    lrp = re/float(1-sp)
-    lrm = (1-re)/float(sp)
+    # calculate NPV
+    if tn == 0 and fn == 0:
+        npv = 0
+    else:
+        npv = tn/float(tn+fn)
+
+    # calculate lrp
+    if sp == 1:
+        lrp = 0
+    else:
+        lrp = re/float(1-sp)
+
+    # calculate lrm
+    if sp == 0:
+        lrm = 0
+    else:
+        lrm = (1-re)/float(sp)
 
     return [bac, ac, f1, re, sp, pr, tp, tn, fp, fn, npv, lrp, lrm]
 
@@ -1301,7 +1315,7 @@ def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N):
                           'random_state':[random_state]}
     else:
         # ExSTraCS
-        param_grid_ExSTraCS = {'learning_iterations': [iterations], 'N': [N], 'nu': [nu], 'random_state': [random_state], 'rule_compaction': [None]}
+        param_grid_ExSTraCS = {'learning_iterations': [iterations], 'N': [N], 'nu': [nu], 'random_state': [random_state], 'rule_compaction': ['None']} #'QRF'
 
         # eLCS
         param_grid_eLCS = {'learning_iterations': [iterations], 'N': [N], 'nu': [nu], 'random_state': [random_state]}

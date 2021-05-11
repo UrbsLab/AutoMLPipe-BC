@@ -7,6 +7,7 @@ import os
 import sys
 import time
 import WrapperComparisonJob
+import pandas as pd
 
 '''Phase 7 of Machine Learning Analysis Pipeline:
 Sample Run Command:

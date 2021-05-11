@@ -19,6 +19,12 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
     jupyterRun = False
     print(full_path)
 
+    #Translate metric from scikitlearn standard
+    print(primary_metric)
+    metric_term_dict = {'balanced_accuracy': 'Balanced Accuracy','accuracy': 'Accuracy','f1': 'F1_Score','recall': 'Sensitivity (Recall)','precision': 'Precision (PPV)','roc_auc': 'ROC_AUC'}
+    primary_metric = metric_term_dict[primary_metric]
+    print(primary_metric)
+
     algorithms,abbrev,colors,original_headers = preparation(full_path,encoded_algos)
 
     result_table,metric_dict = primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,instance_label,class_label,abbrev,colors,plot_ROC,plot_PRC,jupyterRun)
@@ -32,7 +38,7 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
     saveMetricStd(full_path,metrics,metric_dict)
 
     if plot_metric_boxplots == 'True':
-        metricBoxplots(full_path,metrics,algorihms,metric_dict,jupyterRun)
+        metricBoxplots(full_path,metrics,algorithms,metric_dict,jupyterRun)
 
     #Save Kruskal Wallis and Mann Whitney Stats
     if len(algorithms) > 1:
@@ -90,7 +96,8 @@ def preparation(full_path,encoded_algos):
         os.mkdir(full_path+'/training/results')
     #Decode algos
     algorithms = []
-    possible_algos = ['logistic_regression','decision_tree','random_forest','naive_bayes','XGB','LGB','ANN','SVM','ExSTraCS','eLCS','XCS','gradient_boosting','k_neighbors']
+    possible_algos = ['Logistic Regression','Decision Tree','Random Forest','Naive Bayes','XGB','LGB','ANN','SVM','ExSTraCS','eLCS','XCS','Gradient Boosting','K Neighbors']
+    #possible_algos = ['logistic_regression','decision_tree','random_forest','naive_bayes','XGB','LGB','ANN','SVM','ExSTraCS','eLCS','XCS','gradient_boosting','k_neighbors']
     algorithms = decode(algorithms, encoded_algos, possible_algos, 0)
     algorithms = decode(algorithms, encoded_algos, possible_algos, 1)
     algorithms = decode(algorithms, encoded_algos, possible_algos, 2)
@@ -104,8 +111,8 @@ def preparation(full_path,encoded_algos):
     algorithms = decode(algorithms, encoded_algos, possible_algos, 10)
     algorithms = decode(algorithms, encoded_algos, possible_algos, 11)
     algorithms = decode(algorithms, encoded_algos, possible_algos, 12)
-    abbrev = {'logistic_regression':'LR','decision_tree':'DT','random_forest':'RF','naive_bayes':'NB','XGB':'XGB','LGB':'LGB','ANN':'ANN','SVM':'SVM','ExSTraCS':'ExSTraCS','eLCS':'eLCS','XCS':'XCS','gradient_boosting':'GB','k_neighbors':'KN'}
-    colors = {'logistic_regression':'black','decision_tree':'yellow','random_forest':'orange','naive_bayes':'grey','XGB':'purple','LGB':'aqua','ANN':'red','SVM':'blue','ExSTraCS':'lightcoral','eLCS':'firebrick','XCS':'deepskyblue','gradient_boosting':'bisque','k_neighbors':'seagreen'}
+    abbrev = {'Logistic Regression':'LR','Decision Tree':'DT','Random Forest':'RF','Naive Bayes':'NB','XGB':'XGB','LGB':'LGB','ANN':'ANN','SVM':'SVM','ExSTraCS':'ExSTraCS','eLCS':'eLCS','XCS':'XCS','Gradient Boosting':'GB','K Neighbors':'KN'}
+    colors = {'Logistic Regression':'black','Decision Tree':'yellow','Random Forest':'orange','Naive Bayes':'grey','XGB':'purple','LGB':'aqua','ANN':'red','SVM':'blue','ExSTraCS':'lightcoral','eLCS':'firebrick','XCS':'deepskyblue','Gradient Boosting':'bisque','K Neighbors':'seagreen'}
     #Get Original Headers
     original_headers = pd.read_csv(full_path+"/exploratory/OriginalHeaders.csv",sep=',').columns.values.tolist()
     return algorithms,abbrev,colors,original_headers
@@ -216,7 +223,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             plt.rcParams["figure.figsize"] = (6,6)
             for i in range(cv_partitions):
                 plt.plot(alg_result_table[i][0], alg_result_table[i][1], lw=1, alpha=0.3,label='ROC fold %d (AUC = %0.2f)' % (i, alg_result_table[i][2]))
-            plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',label='Chance', alpha=.8)
+            plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',label='No-Skill', alpha=.8)
             std_auc = np.std(aucs)
             std_tpr = np.std(tprs, axis=0)
             plt.plot(mean_fpr, mean_tpr, color=colors[algorithm],label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc),lw=2, alpha=.8)
@@ -228,8 +235,8 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             plt.ylim([-0.05, 1.05])
             plt.xlabel('False Positive Rate')
             plt.ylabel('True Positive Rate')
-            plt.title(algorithm + ' : ROC over CV Partitions')
-            plt.legend(loc="upper left", bbox_to_anchor=(1.05,1))
+            #plt.title(algorithm + ' : ROC over CV Partitions')
+            plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
             plt.savefig(full_path+'/training/results/'+abbrev[algorithm]+"_ROC.png", bbox_inches="tight")
             if jupyterRun:
                 plt.show()
@@ -248,7 +255,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
                 test = test.drop(instance_label, axis=1)
             testY = test[class_label].values
             noskill = len(testY[testY == 1]) / len(testY)  # Fraction of cases
-            plt.plot([0, 1], [noskill, noskill], color='orange', linestyle='--', label='Chance', alpha=.8)
+            plt.plot([0, 1], [noskill, noskill], color='orange', linestyle='--', label='No-Skill', alpha=.8)
 
             std_pr_auc = np.std(praucs)
             std_prec = np.std(precs, axis=0)
@@ -261,8 +268,8 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             plt.ylim([-0.05, 1.05])
             plt.xlabel('Recall (Sensitivity)')
             plt.ylabel('Precision (PPV)')
-            plt.title(algorithm + ' : PRC over CV Partitions')
-            plt.legend(loc="upper left", bbox_to_anchor=(1.05,1))
+            #plt.title(algorithm + ' : PRC over CV Partitions')
+            plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
             plt.savefig(full_path+'/training/results/'+abbrev[algorithm]+"_PRC.png", bbox_inches="tight")
             if jupyterRun:
                 plt.show()
@@ -300,13 +307,14 @@ def doPlotROC(result_table,colors,full_path,jupyterRun):
         plt.plot(result_table.loc[i]['fpr'],result_table.loc[i]['tpr'], color=colors[i],label="{}, AUC={:.3f}".format(i, result_table.loc[i]['auc']))
         count += 1
     plt.rcParams["figure.figsize"] = (6,6)
-    plt.plot([0, 1], [0, 1], color='orange', linestyle='--', label='Chance', alpha=.8)
+    plt.plot([0, 1], [0, 1], color='orange', linestyle='--', label='No-Skill', alpha=.8)
     plt.xticks(np.arange(0.0, 1.1, step=0.1))
     plt.xlabel("False Positive Rate", fontsize=15)
     plt.yticks(np.arange(0.0, 1.1, step=0.1))
     plt.ylabel("True Positive Rate", fontsize=15)
-    plt.title('Comparing Algorithms: Testing Data with CV', fontweight='bold', fontsize=15)
-    plt.legend(prop={'size': 13}, loc='best')
+    #plt.title('Comparing Algorithms: Testing Data with CV', fontweight='bold', fontsize=15)
+    plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
+    #plt.legend(prop={'size': 13}, loc='best')
     plt.savefig(full_path+'/training/results/Summary_ROC.png', bbox_inches="tight")
     if jupyterRun:
         plt.show()
@@ -326,13 +334,14 @@ def doPlotPRC(result_table,colors,full_path,data_name,instance_label,class_label
     testY = test[class_label].values
     noskill = len(testY[testY == 1]) / len(testY)  # Fraction of cases
 
-    plt.plot([0, 1], [noskill, noskill], color='orange', linestyle='--',label='Chance', alpha=.8)
+    plt.plot([0, 1], [noskill, noskill], color='orange', linestyle='--',label='No-Skill', alpha=.8)
     plt.xticks(np.arange(0.0, 1.1, step=0.1))
-    plt.xlabel("Recall (sensitivity)", fontsize=15)
+    plt.xlabel("Recall (Sensitivity)", fontsize=15)
     plt.yticks(np.arange(0.0, 1.1, step=0.1))
     plt.ylabel("Precision (PPV)", fontsize=15)
-    plt.title('Comparing Algorithms: Testing Data with CV', fontweight='bold', fontsize=15)
-    plt.legend(prop={'size': 13}, loc='best')
+    #plt.title('Comparing Algorithms: Testing Data with CV', fontweight='bold', fontsize=15)
+    plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
+    #plt.legend(prop={'size': 13}, loc='best')
     plt.savefig(full_path+'/training/results/Summary_PRC.png', bbox_inches="tight")
     if jupyterRun:
         plt.show()
@@ -387,8 +396,8 @@ def metricBoxplots(full_path,metrics,algorithms,metric_dict,jupyterRun):
         td = td.transpose()
         td.columns = algorithms
 
-        boxplot = td.boxplot(column=algorithms, rot=45)
-        plt.title('Comparing Algorithm ' + str(metric))
+        boxplot = td.boxplot(column=algorithms,rot=90) #, rot=45
+        #plt.title('Comparing Algorithm ' + str(metric))
         plt.ylabel(str(metric))
         plt.xlabel('ML Algorithm')
         plt.savefig(full_path + '/training/results/performanceBoxplots/Compare_'+metric+'.png', bbox_inches="tight")
@@ -400,7 +409,7 @@ def metricBoxplots(full_path,metrics,algorithms,metric_dict,jupyterRun):
 def kruskalWallis(full_path,metrics,algorithms,metric_dict,sig_cutoff):
     if not os.path.exists(full_path + '/training/results/KWMW'):
         os.mkdir(full_path + '/training/results/KWMW')
-    label = ['statistic', 'pvalue', 'sig']
+    label = ['Statistic', 'P-Value', 'Sig(*)']
     kruskal_summary = pd.DataFrame(index=metrics, columns=label)
     for metric in metrics:
         tempArray = []
@@ -410,18 +419,18 @@ def kruskalWallis(full_path,metrics,algorithms,metric_dict,sig_cutoff):
             result = stats.kruskal(*tempArray)
         except:
             result = [tempArray[0],1]
-        kruskal_summary.at[metric, 'statistic'] = str(round(result[0], 6))
-        kruskal_summary.at[metric, 'pvalue'] = str(round(result[1], 6))
+        kruskal_summary.at[metric, 'Statistic'] = str(round(result[0], 6))
+        kruskal_summary.at[metric, 'P-Value'] = str(round(result[1], 6))
         if result[1] < sig_cutoff:
-            kruskal_summary.at[metric, 'sig'] = str('*')
+            kruskal_summary.at[metric, 'Sig(*)'] = str('*')
         else:
-            kruskal_summary.at[metric, 'sig'] = str('')
+            kruskal_summary.at[metric, 'Sig(*)'] = str('')
     kruskal_summary.to_csv(full_path + '/training/results/KWMW/KruskalWallis.csv')
     return kruskal_summary
 
 def mannWhitneyU(full_path,metrics,algorithms,metric_dict,kruskal_summary,sig_cutoff):
     for metric in metrics:
-        if kruskal_summary['sig'][metric] == '*':
+        if kruskal_summary['Sig(*)'][metric] == '*':
             mann_stats = []
             done = []
             for algorithm1 in algorithms:
@@ -441,7 +450,7 @@ def mannWhitneyU(full_path,metrics,algorithms,metric_dict,kruskal_summary,sig_cu
                         mann_stats.append(tempstats)
                         done.append([algorithm1,algorithm2])
             mann_stats_df = pd.DataFrame(mann_stats)
-            mann_stats_df.columns = ['Algorithm 1', 'Algorithm 2', 'statistic', 'p-value', 'sig']
+            mann_stats_df.columns = ['Algorithm 1', 'Algorithm 2', 'Statistic', 'P-Value', 'Sig(*)']
             mann_stats_df.to_csv(full_path + '/training/results/KWMW/MannWhitneyU.csv', index=False)
 
 def prepFI(algorithms,full_path,abbrev,metric_dict,primary_metric,top_results):
@@ -679,7 +688,8 @@ def compound_FI_plot(fi_list, algorithms, algColors, all_feature_listToViz, figN
     plt.xticks(np.arange(len(all_feature_listToViz)), all_feature_listToViz, rotation='vertical')
     plt.xlabel("Feature", fontsize=20)
     plt.ylabel("Normalized Feature Importance", fontsize=20)
-    plt.legend(lines, algorithms, loc=0, fontsize=16)
+    #plt.legend(lines, algorithms, loc=0, fontsize=16)
+    plt.legend(lines, algorithms,loc="upper left", bbox_to_anchor=(1.01,1))
     plt.savefig(full_path+'/training/results/FI/Compare_FI_' + figName + '.png', bbox_inches='tight')
     if jupyterRun:
         plt.show()
@@ -687,4 +697,4 @@ def compound_FI_plot(fi_list, algorithms, algColors, all_feature_listToViz, figN
         plt.close('all')
 
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],sys.argv[7],int(sys.argv[8]),sys.argv[9],sys.argv[10],sys.argv[11],sys.argv[12])
+    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],sys.argv[7],int(sys.argv[8]),sys.argv[9],sys.argv[10],int(sys.argv[11]),float(sys.argv[12]))

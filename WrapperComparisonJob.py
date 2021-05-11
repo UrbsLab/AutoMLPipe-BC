@@ -5,14 +5,15 @@ import pandas as pd
 from scipy import stats
 import copy
 
-def job(experiment_path):
+def job(experiment_path,sig_cutoff):
     # Get dataset paths
-    datasets = os.listdir(experiment_path,sig_cutoff)
+    datasets = os.listdir(experiment_path)
 
     datasets.remove('logs')
     datasets.remove('jobs')
     datasets.remove('jobsCompleted')
     datasets.remove('metadata.csv')
+    datasets = sorted(datasets) #ensures consistent ordering of datasets and assignment of temporary identifier
 
     dataset_directory_paths = []
     for dataset in datasets:
@@ -38,18 +39,24 @@ def job(experiment_path):
     if not os.path.exists(experiment_path+'/DatasetComparisons'):
         os.mkdir(experiment_path+'/DatasetComparisons')
 
-    #Create File with best algorithm based on each metric for each dataset
+    kruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff)
 
-    #data key to keep column names readable
-    #Check new metrics within this script(never updated!!!)
-    #pass target metric for picking 'Best'-new run parameter
+    mannWhitneyU(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff)
 
+    global_data = bestKruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff)
 
+    bestMannWhitneyU(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff,global_data)
+
+    print("Phase 7 complete")
+
+def kruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff):
     # Kruscall Wallis (ANOVA-like) comparison between datasets
-    label = ['statistic', 'pvalue', 'sig']
+    label = ['Statistic', 'P-Value', 'Sig(*)']
+    i = 1
     for dataset in datasets:
-        label.append('mean_' + dataset)
-        label.append('std_' + dataset)
+        label.append('Mean_D' + str(i))
+        label.append('Std_D' + str(i))
+        i += 1
 
     for algorithm in algorithms:
         kruskal_summary = pd.DataFrame(index=metrics, columns=label)
@@ -67,25 +74,26 @@ def job(experiment_path):
                 result = stats.kruskal(*tempArray)
             except:
                 result = [tempArray[0][0],1]
-            kruskal_summary.at[metric, 'statistic'] = str(round(result[0], 6))
-            kruskal_summary.at[metric, 'pvalue'] = str(round(result[1], 6))
+            kruskal_summary.at[metric, 'Statistic'] = str(round(result[0], 6))
+            kruskal_summary.at[metric, 'P-Value'] = str(round(result[1], 6))
 
             if result[1] < sig_cutoff:
-                kruskal_summary.at[metric, 'sig'] = str('*')
+                kruskal_summary.at[metric, 'Sig(*)'] = str('*')
             else:
-                kruskal_summary.at[metric, 'sig'] = str('')
+                kruskal_summary.at[metric, 'Sig(*)'] = str('')
 
             for j in range(len(aveList)):
-                kruskal_summary.at[metric, 'mean_' + datasets[j]] = str(round(aveList[j], 6))
-                kruskal_summary.at[metric, 'std_' + datasets[j]] = str(round(sdList[j], 6))
+                kruskal_summary.at[metric, 'Mean_D' + str(j+1)] = str(round(aveList[j], 6))
+                kruskal_summary.at[metric, 'Std_D' + str(j+1)] = str(round(sdList[j], 6))
 
         kruskal_summary.to_csv(experiment_path+'/DatasetComparisons/'+algorithm+'_KruskalWallis.csv')
 
+def mannWhitneyU(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff):
     # Mann-Whitney U test (Pairwise Comparisons)
-    label = ['metric', 'dataset1', 'dataset2', 'statistic', 'pvalue', 'sig']
-    for i in range(2):
-        label.append('mean_dataset' + str(i))
-        label.append('std_dataset' + str(i))
+    label = ['Metric', 'Data1', 'Data2', 'Statistic', 'P-Value', 'Sig(*)']
+    for i in range(1,3):
+        label.append('Mean_Data' + str(i))
+        label.append('Std_Data' + str(i))
 
     for algorithm in algorithms:
         master_list = []
@@ -113,8 +121,10 @@ def job(experiment_path):
                         result = stats.mannwhitneyu(set1, set2)
 
                     tempList.append(str(metric))
-                    tempList.append(str(datasets[x]))
-                    tempList.append(str(datasets[y]))
+                    #tempList.append(str(datasets[x]))
+                    #tempList.append(str(datasets[y]))
+                    tempList.append('D'+str(x+1))
+                    tempList.append('D'+str(y+1))
                     tempList.append(str(round(result[0], 6)))
                     tempList.append(str(round(result[1], 6)))
 
@@ -131,14 +141,17 @@ def job(experiment_path):
                     master_list.append(tempList)
         df = pd.DataFrame(master_list)
         df.columns = label
-        df.to_csv(experiment_path+'/DatasetComparisons/' +algorithm+ '_MannWhitney.csv')
+        df.to_csv(experiment_path+'/DatasetComparisons/' +algorithm+ '_MannWhitney.csv',index=False)
 
+def bestKruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff):
     #Best Kruskal Wallis results comparison
-    label = ['statistic', 'pvalue', 'sig']
+    label = ['Statistic', 'P-Value', 'Sig(*)']
+    i = 1
     for dataset in datasets:
-        label.append('best_alg_' + dataset)
-        label.append('mean_' + dataset)
-        label.append('std_' + dataset)
+        label.append('Best_Alg_D' + str(i))
+        label.append('Mean_D' + str(i))
+        label.append('Std_D' + str(i))
+        i += 1
 
     kruskal_summary = pd.DataFrame(index=metrics, columns=label)
     global_data = []
@@ -165,29 +178,35 @@ def job(experiment_path):
             best_list.append([best_alg, best_ave, best_sd])
 
         global_data.append([best_data, best_list])
-        result = stats.kruskal(*best_data)
-        kruskal_summary.at[metric, 'statistic'] = str(round(result[0], 6))
-        kruskal_summary.at[metric, 'pvalue'] = str(round(result[1], 6))
-
-        if result[1] < sig_cutoff:
-            kruskal_summary.at[metric, 'sig'] = str('*')
-        else:
-            kruskal_summary.at[metric, 'sig'] = str('')
+        try:
+            result = stats.kruskal(*best_data)
+            kruskal_summary.at[metric, 'Statistic'] = str(round(result[0], 6))
+            kruskal_summary.at[metric, 'P-Value'] = str(round(result[1], 6))
+            if result[1] < sig_cutoff:
+                kruskal_summary.at[metric, 'Sig(*)'] = str('*')
+            else:
+                kruskal_summary.at[metric, 'Sig(*)'] = str('')
+        except ValueError:
+            kruskal_summary.at[metric, 'Statistic'] = str(round('NA', 6))
+            kruskal_summary.at[metric, 'P-Value'] = str(round('NA', 6))
+            kruskal_summary.at[metric, 'Sig(*)'] = str('')
 
         for j in range(len(best_list)):
-            kruskal_summary.at[metric, 'best_alg_' + datasets[j]] = str(best_list[j][0])
-            kruskal_summary.at[metric, 'mean_' + datasets[j]] = str(round(best_list[j][1], 6))
-            kruskal_summary.at[metric, 'std_' + datasets[j]] = str(round(best_list[j][2], 6))
+            kruskal_summary.at[metric, 'Best_Alg_D' + str(j+1)] = str(best_list[j][0])
+            kruskal_summary.at[metric, 'Mean_D' + str(j+1)] = str(round(best_list[j][1], 6))
+            kruskal_summary.at[metric, 'Std_D' + str(j+1)] = str(round(best_list[j][2], 6))
 
     kruskal_summary.to_csv(experiment_path + '/DatasetComparisons/BestCompare_KruskalWallis.csv')
+    return global_data
 
+def bestMannWhitneyU(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff,global_data):
     # Best Mann Whitney (Pairwise comparisons)
-    label = ['metric', 'dataset1', 'dataset2', 'statistic', 'pvalue', 'sig']
+    label = ['Metric', 'Data1', 'Data2', 'Statistic', 'P-Value', 'Sig(*)']
 
-    for i in range(2):
-        label.append('best_alg' + str(i))
-        label.append('mean_dataset' + str(i))
-        label.append('std_dataset' + str(i))
+    for i in range(1,3):
+        label.append('Best_Alg_Data' + str(i))
+        label.append('Mean_Data' + str(i))
+        label.append('Std_Data' + str(i))
 
     master_list = []
     j = 0
@@ -211,8 +230,10 @@ def job(experiment_path):
                     result = stats.mannwhitneyu(set1, set2)
 
                 tempList.append(str(metric))
-                tempList.append(str(datasets[x]))
-                tempList.append(str(datasets[y]))
+                #tempList.append(str(datasets[x]))
+                #tempList.append(str(datasets[y]))
+                tempList.append('D'+str(x+1))
+                tempList.append('D'+str(y+1))
                 tempList.append(str(round(result[0], 6)))
                 tempList.append(str(round(result[1], 6)))
 
@@ -234,9 +255,7 @@ def job(experiment_path):
 
     df = pd.DataFrame(master_list)
     df.columns = label
-    df.to_csv(experiment_path + '/DatasetComparisons/BestCompare_MannWhitney.csv')
-
-    print("Phase 6 complete")
+    df.to_csv(experiment_path + '/DatasetComparisons/BestCompare_MannWhitney.csv',index=False)
 
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2])
+    job(sys.argv[1],float(sys.argv[2]))

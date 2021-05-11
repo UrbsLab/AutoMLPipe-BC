@@ -148,7 +148,7 @@ def countsSummary(data,class_label,experiment_path,dataset_name,instance_label,m
     class_counts.plot(kind='bar')
     plt.ylabel('Count')
     plt.title('Class Counts')
-    plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'ClassCounts.png')
+    plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'ClassCounts.png',bbox_inches='tight')
     if jupyterRun:
         plt.show()
     else:
@@ -164,7 +164,7 @@ def basicExploratory(data,experiment_path,dataset_name,jupyterRun):
     plt.xlabel("Missing Value Counts")
     plt.ylabel("Frequency")
     plt.title("Histogram of Missing Value Counts In Feature Set")
-    plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'FeatureMissingnessHistogram.png')
+    plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'FeatureMissingnessHistogram.png',bbox_inches='tight')
     if jupyterRun:
         plt.show()
     else:
@@ -180,7 +180,7 @@ def featureCorrelationPlot(data,class_label,instance_label,match_label,experimen
     corrmat = data_cor.corr(method='pearson')
     f,ax=plt.subplots(figsize=(40,20))
     sns.heatmap(corrmat,vmax=1,square=True)
-    plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'FeatureCorrelations.png')
+    plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'FeatureCorrelations.png',bbox_inches='tight')
     if jupyterRun:
         plt.show()
     else:
@@ -429,16 +429,6 @@ def cv_partitioner(td, cv_partitions, partition_method, outcomeLabel, categorica
         test_dfs.append(pd.DataFrame(testList, columns=header))
 
     return train_dfs, test_dfs
-
-###################################
-#def identifyCategoricalFeatures(x_data,categorical_cutoff):
-#    """ Takes a dataframe (of independent variables) with column labels and returns a list of column names identified as
-#    being categorical based on user defined cutoff. """
-#    categorical_variables = []
-#    for each in x_data:
-#        if x_data[each].nunique() <= categorical_cutoff or not pd.api.types.is_numeric_dtype(x_data[each]):
-#            categorical_variables.append(each)
-#    return categorical_variables
 
 if __name__ == '__main__':
     job(sys.argv[1],sys.argv[2],int(sys.argv[3]),sys.argv[4],int(sys.argv[5]),sys.argv[6],sys.argv[7],sys.argv[8],sys.argv[9],sys.argv[10],sys.argv[11],int(sys.argv[12]),sys.argv[13],sys.argv[14],float(sys.argv[15]))

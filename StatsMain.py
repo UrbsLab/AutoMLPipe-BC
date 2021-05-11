@@ -26,7 +26,6 @@ def main(argv):
     parser.add_argument('--plot-PRC', dest='plot_PRC', type=str,help='Plot PRC curves individually for each algorithm including all CV results and averages', default='True')
     parser.add_argument('--plot-box', dest='plot_metric_boxplots', type=str,help='Plot box plot summaries comparing algorithms for each metric', default='True')
     parser.add_argument('--plot-FI_box', dest='plot_FI_box', type=str,help='Plot feature importance boxplots for each algorithm', default='True')
-    parser.add_argument('--metric', dest='primary_metric', type=str,help='scoring metric used feature importance composite plot weighting (based on Summary_performance_mean.csv file headers)', default='Balanced Accuracy')
     parser.add_argument('--top-results', dest='top_results', type=int,help='number of top features to illustrate in figures', default=20)
     #Lostistical arguments
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")
@@ -42,7 +41,6 @@ def main(argv):
     plot_PRC = options.plot_PRC
     plot_metric_boxplots = options.plot_metric_boxplots
     plot_FI_box = options.plot_FI_box
-    primary_metric = options.primary_metric
     top_results = options.top_results
 
     run_parallel = options.run_parallel == 'True'
@@ -65,19 +63,20 @@ def main(argv):
     cv_partitions = int(metadata[5,1])
     sig_cutoff = metadata[4,1]
 
-    do_LR = metadata[18,1]
-    do_DT = metadata[19,1]
-    do_RF = metadata[20,1]
-    do_NB = metadata[21,1]
-    do_XGB = metadata[22,1]
-    do_LGB = metadata[23,1]
-    do_SVM = metadata[24,1]
-    do_ANN = metadata[25,1]
-    do_ExSTraCS = metadata[26,1]
-    do_eLCS = metadata[27,1]
-    do_XCS = metadata[28,1]
-    do_GB = metadata[29, 1]
-    do_KN = metadata[30, 1]
+    do_LR = metadata[17,1]
+    do_DT = metadata[18,1]
+    do_RF = metadata[19,1]
+    do_NB = metadata[20,1]
+    do_XGB = metadata[21,1]
+    do_LGB = metadata[22,1]
+    do_SVM = metadata[23,1]
+    do_ANN = metadata[24,1]
+    do_ExSTraCS = metadata[25,1]
+    do_eLCS = metadata[26,1]
+    do_XCS = metadata[27,1]
+    do_GB = metadata[28, 1]
+    do_KN = metadata[29, 1]
+    primary_metric = metadata[30,1]
 
     encodedAlgos = ''
     encodedAlgos = encode(do_LR,encodedAlgos)

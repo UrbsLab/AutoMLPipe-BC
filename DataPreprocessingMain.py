@@ -23,8 +23,8 @@ def main(argv):
     parser.add_argument('--output-path',dest='output_path',type=str,help='path to output directory')
     parser.add_argument('--experiment-name', dest='experiment_name',type=str, help='name of experiment output folder (no spaces)')
     #Defaults available
-    parser.add_argument('--scale-data',dest='scale_data',type=str,help='perform data scaling?',default="True")
-    parser.add_argument('--impute-data', dest='impute_data',type=str,help='perform missing value data imputation? (required for most ML algorithms if missing data is present)',default="True")
+    parser.add_argument('--scale-data',dest='scale_data',type=str,help='perform data scaling (required for SVM, and to use Logistic regression with non-uniform feature importance estimation)',default="True")
+    parser.add_argument('--impute-data', dest='impute_data',type=str,help='perform missing value data imputation (required for most ML algorithms if missing data is present)',default="True")
     parser.add_argument('--overwrite-cv', dest='overwrite_cv',type=str,help='overwrites earlier cv datasets with new scaled/imputed ones',default="True")
     #Lostistical arguments
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")

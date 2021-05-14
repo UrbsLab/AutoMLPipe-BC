@@ -41,6 +41,13 @@ def job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_
 
     data = removeRowsColumns(data,class_label,ignore_features)
 
+    #Check for presence of match label (this allows multiple datasets to be analyzed in the pipeline where not all of them have match labels if specified)
+    if not match_label == 'None':
+        dfHeader = list(data.columns.values)
+        if not match_label in dfHeader:
+            match_label = 'None'
+            print("Warning: Specified 'Match label' could not be found in dataset. Analysis moving forward assuming there is no 'match label' column.")
+
     categorical_variables = idFeatureTypes(data,categorical_feature_headers,instance_label,match_label,class_label,categorical_cutoff)
 
     countsSummary(data,class_label,experiment_path,dataset_name,instance_label,match_label,categorical_variables,jupyterRun)
@@ -112,6 +119,7 @@ def idFeatureTypes(data,categorical_feature_headers,instance_label,match_label,c
             x_data = data.drop([instance_label], axis=1)
         if not match_label == "None":
             x_data = data.drop([match_label], axis=1)
+
 
         categorical_variables = []
         for each in x_data:

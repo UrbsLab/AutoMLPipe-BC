@@ -213,6 +213,8 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             FI_all.append(tempList)
 
         #CV ROC plot ------------------------------------------------------------------
+        if jupyterRun:
+            print(algorithm)
         mean_tpr = np.mean(tprs, axis=0)
         mean_tpr[-1] = 1.0
         mean_auc = np.mean(aucs)
@@ -248,9 +250,9 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             for i in range(cv_partitions):
                 plt.plot(alg_result_table[i][3], alg_result_table[i][4], lw=1, alpha=0.3, label='PRC fold %d (AUC = %0.2f)' % (i, alg_result_table[i][5]))
 
-            test = pd.read_csv(full_path + '/CVDatasets/' + data_name + '_CV_0_Test.csv')
-            if instance_label != 'None':
-                test = test.drop(instance_label, axis=1)
+            test = pd.read_csv(full_path + '/CVDatasets/' + data_name + '_CV_0_Test.csv') #Technically there could be a unique no-skill line for each CV dataset based on final class balance (however only one is needed, and stratified CV attempts to keep partitions with similar/same class balance)
+            #if instance_label != 'None':
+            #    test = test.drop(instance_label, axis=1)
             testY = test[class_label].values
             noskill = len(testY[testY == 1]) / len(testY)  # Fraction of cases
             plt.plot([0, 1], [noskill, noskill], color='orange', linestyle='--', label='No-Skill', alpha=.8)
@@ -636,8 +638,73 @@ def parseRuntime(full_path,abbrev):
 
     with open(full_path+'/runtimes.csv',mode='w') as file:
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        for key,value in dict.items():
-            writer.writerow([key+str(' total runtime'),value])
+        writer.writerow(["Pipeline Component","Time (sec)"])
+        writer.writerow(["Exploratory Analysis",dict['exploratory']])
+        writer.writerow(["Preprocessing",dict['preprocessing']])
+        try:
+            writer.writerow(["Mutual Information",dict['mutualinformation']])
+        except:
+            pass
+        try:
+            writer.writerow(["MultiSURF",dict['multisurf']])
+        except:
+            pass
+        writer.writerow(["Feature Selection",dict['featureselection']])
+        try:
+            writer.writerow(["Logistic Regression",dict['LR']])
+        except:
+            pass
+        try:
+            writer.writerow(["Naive Bayes",dict['NB']])
+        except:
+            pass
+        try:
+            writer.writerow(["Decision Tree",dict['DT']])
+        except:
+            pass
+        try:
+            writer.writerow(["Random Forest",dict['RF']])
+        except:
+            pass
+        try:
+            writer.writerow(["XGB",dict['XGB']])
+        except:
+            pass
+        try:
+            writer.writerow(["LGB",dict['LGB']])
+        except:
+            pass
+        try:
+            writer.writerow(["Support Vector Machine",dict['SVM']])
+        except:
+            pass
+        try:
+            writer.writerow(["Artificial Neural Network",dict['ANN']])
+        except:
+            pass
+        try:
+            writer.writerow(["K Nearest Neighbors",dict['KN']])
+        except:
+            pass
+        try:
+            writer.writerow(["Gradient Boosting",dict['GB']])
+        except:
+            pass
+        try:
+            writer.writerow(["ExSTraCS",dict['ExSTraCS']])
+        except:
+            pass
+        try:
+            writer.writerow(["eLCS",dict['eLCS']])
+        except:
+            pass
+        try:
+            writer.writerow(["XCS",dict['XCS']])
+        except:
+            pass
+        writer.writerow(["Stats Summary",dict['Stats']])
+        #for key,value in dict.items():
+        #    writer.writerow([key,value])
 
 def save_FI(FI_all,algorithm,globalFeatureList,full_path):
     dr = pd.DataFrame(FI_all)

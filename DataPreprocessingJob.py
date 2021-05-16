@@ -9,9 +9,7 @@ import random
 from sklearn.preprocessing import StandardScaler
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
-#from ExploratoryAnalysisJob import identifyCategoricalFeatures
 import ExploratoryAnalysisJob
-#from ExploratoryAnalysisJob import idFeatureTypes
 import csv
 import time
 import pickle
@@ -35,7 +33,7 @@ def job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwr
 
     #Scale Data
     if eval(scale_data):
-        data_train,data_test,scaler = dataScaling(data_train,data_test,class_label,instance_label,header,experiment_path,dataset_name,cvCount)
+        data_train,data_test = dataScaling(data_train,data_test,class_label,instance_label,header,experiment_path,dataset_name,cvCount)
 
     #Impute Missing Values in Training and Testing Data
     if eval(impute_data):
@@ -96,7 +94,7 @@ def writeCVFiles(overwrite_cv,cv_train_path,cv_test_path,experiment_path,dataset
 
 def saveRuntime(experiment_path,dataset_name,job_start_time):
     #Save Runtime
-    runtime_file = open(experiment_path + '/' + dataset_name + '/runtime/runtime_exploratory.txt','w')
+    runtime_file = open(experiment_path + '/' + dataset_name + '/runtime/runtime_preprocessing.txt','w')
     runtime_file.write(str(time.time()-job_start_time))
     runtime_file.close()
 
@@ -146,7 +144,7 @@ def dataScaling(df,data_test,class_label,instance_label,header,experiment_path,d
     pickle.dump(scaler, outfile)
     outfile.close()
 
-    return scale_train_df, scale_test_df, scaler
+    return scale_train_df, scale_test_df
 
 ###################################
 def imputeCVData(class_label,instance_label,categorical_variables,data_train,data_test,random_state,header,experiment_path,dataset_name,cvCount):

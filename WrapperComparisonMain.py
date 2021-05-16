@@ -34,7 +34,7 @@ def main(argv):
     maximum_memory = options.maximum_memory
 
     metadata = pd.read_csv(output_path + '/' + experiment_name + '/' + 'metadata.csv').values
-    sig_cutoff = metadata[4,1]
+    sig_cutoff = metadata[5,1]
 
     if eval(run_parallel):
         submitClusterJob(output_path+'/'+experiment_name,reserved_memory,maximum_memory,queue,sig_cutoff)

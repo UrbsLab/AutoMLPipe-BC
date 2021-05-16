@@ -60,23 +60,23 @@ def main(argv):
 
     class_label = metadata[0, 1]
     instance_label = metadata[1, 1]
-    cv_partitions = int(metadata[5,1])
-    sig_cutoff = metadata[4,1]
+    sig_cutoff = metadata[5,1]
+    cv_partitions = int(metadata[6,1])
 
-    do_LR = metadata[17,1]
-    do_DT = metadata[18,1]
-    do_RF = metadata[19,1]
-    do_NB = metadata[20,1]
-    do_XGB = metadata[21,1]
-    do_LGB = metadata[22,1]
-    do_SVM = metadata[23,1]
-    do_ANN = metadata[24,1]
-    do_ExSTraCS = metadata[25,1]
-    do_eLCS = metadata[26,1]
-    do_XCS = metadata[27,1]
-    do_GB = metadata[28, 1]
-    do_KN = metadata[29, 1]
-    primary_metric = metadata[30,1]
+    do_LR = metadata[19,1]
+    do_DT = metadata[20,1]
+    do_RF = metadata[21,1]
+    do_NB = metadata[22,1]
+    do_XGB = metadata[23,1]
+    do_LGB = metadata[24,1]
+    do_SVM = metadata[25,1]
+    do_ANN = metadata[26,1]
+    do_ExSTraCS = metadata[27,1]
+    do_eLCS = metadata[28,1]
+    do_XCS = metadata[29,1]
+    do_GB = metadata[30, 1]
+    do_KN = metadata[31, 1]
+    primary_metric = metadata[32,1]
 
     encodedAlgos = ''
     encodedAlgos = encode(do_LR,encodedAlgos)

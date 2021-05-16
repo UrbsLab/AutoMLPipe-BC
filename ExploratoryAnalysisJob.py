@@ -46,7 +46,8 @@ def job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_
         dfHeader = list(data.columns.values)
         if not match_label in dfHeader:
             match_label = 'None'
-            print("Warning: Specified 'Match label' could not be found in dataset. Analysis moving forward assuming there is no 'match label' column.")
+            partition_method = 'S'
+            print("Warning: Specified 'Match label' could not be found in dataset. Analysis moving forward assuming there is no 'match label' column using stratified (S) CV partitioning.")
 
     categorical_variables = idFeatureTypes(data,categorical_feature_headers,instance_label,match_label,class_label,categorical_cutoff)
 
@@ -278,12 +279,12 @@ def saveRuntime(experiment_path,dataset_name,job_start_time):
     runtime_file.close()
 
 ########Univariate##############
-def test_selector(featureName, outcomeLabel, td, categorical_variables):
+def test_selector(featureName, class_label, td, categorical_variables):
     p_val = 0
     # Feature and Outcome are discrete/categorical/binary
     if featureName in categorical_variables:
         # Calculate Contingency Table - Counts
-        table = pd.crosstab(td[featureName], td[outcomeLabel])
+        table = pd.crosstab(td[featureName], td[class_label])
 
         # Univariate association test (Chi Square Test of Independence - Non-parametric)
         c, p, dof, expected = scs.chi2_contingency(table)
@@ -292,17 +293,17 @@ def test_selector(featureName, outcomeLabel, td, categorical_variables):
     # Feature is continuous and Outcome is discrete/categorical/binary
     else:
         # Univariate association test (Mann-Whitney Test - Non-parametric)
-        c, p = scs.mannwhitneyu(x=td[featureName].loc[td[outcomeLabel] == 0], y=td[featureName].loc[td[outcomeLabel] == 1])
+        c, p = scs.mannwhitneyu(x=td[featureName].loc[td[class_label] == 0], y=td[featureName].loc[td[class_label] == 1])
         p_val = p
 
     return p_val
 
-def graph_selector(featureName, outcomeLabel, td, categorical_variables,experiment_path,dataset_name):
+def graph_selector(featureName, class_label, td, categorical_variables,experiment_path,dataset_name):
     # Feature and Outcome are discrete/categorical/binary
     if featureName in categorical_variables:
         # Generate contingency table count bar plot. ------------------------------------------------------------------------
         # Calculate Contingency Table - Counts
-        table = pd.crosstab(td[featureName], td[outcomeLabel])
+        table = pd.crosstab(td[featureName], td[class_label])
         geom_bar_data = pd.DataFrame(table)
         mygraph = geom_bar_data.plot(kind='bar')
         plt.ylabel('Count')
@@ -314,7 +315,7 @@ def graph_selector(featureName, outcomeLabel, td, categorical_variables,experime
     # Feature is continuous and Outcome is discrete/categorical/binary
     else:
         # Generate boxplot-----------------------------------------------------------------------------------------------------
-        mygraph = td.boxplot(column=featureName, by=outcomeLabel)
+        mygraph = td.boxplot(column=featureName, by=class_label)
         plt.ylabel(featureName)
         plt.title('')
         new_feature_name = featureName.replace(" ","")       # Deal with the dataset specific characters causing problems in this dataset.
@@ -324,7 +325,7 @@ def graph_selector(featureName, outcomeLabel, td, categorical_variables,experime
         plt.close('all')
 
 ###################################
-def cv_partitioner(td, cv_partitions, partition_method, outcomeLabel, categoricalOutcome, matchName, randomSeed):
+def cv_partitioner(td, cv_partitions, partition_method, class_label, categoricalOutcome, match_label, randomSeed):
     """ Takes data frame (td), number of cv partitions, partition method
     (R, S, or M), outcome label, Boolean indicated whether outcome is categorical
     and the column name used for matched CV. Returns list of training and testing
@@ -342,7 +343,7 @@ def cv_partitioner(td, cv_partitions, partition_method, outcomeLabel, categorica
     outcomeIndex = None
     classList = None
     if eval(categoricalOutcome):
-        outcomeIndex = td.columns.get_loc(outcomeLabel)
+        outcomeIndex = td.columns.get_loc(class_label)
         classList = []
         for each in datasetList:
             if each[outcomeIndex] not in classList:
@@ -387,8 +388,8 @@ def cv_partitioner(td, cv_partitions, partition_method, outcomeLabel, categorica
     elif partition_method == 'M':
         if eval(categoricalOutcome):
             # Get match variable column index
-            outcomeIndex = td.columns.get_loc(outcomeLabel)
-            matchIndex = td.columns.get_loc(matchName)
+            outcomeIndex = td.columns.get_loc(class_label)
+            matchIndex = td.columns.get_loc(match_label)
 
             # Create data sublists, each having all rows with the same match identifier
             matchList = []

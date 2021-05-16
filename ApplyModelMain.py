@@ -21,11 +21,15 @@ def main(argv):
     parser = argparse.ArgumentParser(description='')
     #No defaults
     parser.add_argument('--rep-data-path',dest='rep_data_path',type=str,help='path to directory containing replication or hold-out testing datasets (must have at least all features with same labels as in original training dataset)')
-    parser.add_argument('--data-name',dest='data_name',type=str,help='name of original training dataset (is also the name of experiment data folder)')
+    parser.add_argument('--data-path',dest='data_path',type=str,help='path to target original training dataset')
     parser.add_argument('--output-path', dest='output_path', type=str, help='path to output directory')
     parser.add_argument('--experiment-name', dest='experiment_name', type=str, help='name of experiment (no spaces)')
     #Defaults available
+    parser.add_argument('--plot-ROC', dest='plot_ROC', type=str,help='Plot ROC curves individually for each algorithm including all CV results and averages', default='True')
+    parser.add_argument('--plot-PRC', dest='plot_PRC', type=str,help='Plot PRC curves individually for each algorithm including all CV results and averages', default='True')
+    parser.add_argument('--plot-box', dest='plot_metric_boxplots', type=str,help='Plot box plot summaries comparing algorithms for each metric', default='True')
     parser.add_argument('--top-results', dest='top_results', type=int,help='number of top features to illustrate in figures', default=20)
+    parser.add_argument('--match-label', dest='match_label', type=str, help='applies if original training data included column with matched instance ids', default="None")
 
     #Lostistical arguments
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")
@@ -36,11 +40,15 @@ def main(argv):
 
     options = parser.parse_args(argv[1:])
     rep_data_path = option.rep_data_path
-    data_name = option.data_name
+    data_path = option.data_path
     output_path = options.output_path
     experiment_name = options.experiment_name
 
+    plot_ROC = options.plot_ROC
+    plot_PRC = options.plot_PRC
+    plot_metric_boxplots = options.plot_metric_boxplots
     top_results = option.top_results
+    match_label = option.match_label
 
     run_parallel = options.run_parallel
     queue = options.queue
@@ -50,27 +58,30 @@ def main(argv):
 
     metadata = pd.read_csv(output_path + '/' + experiment_name + '/' + 'metadata.csv').values
 
+    data_name = data_path.split('/')[-1].split('.')[0] #Save unique dataset names so that analysis is run only once if there is both a .txt and .csv version of dataset with same name.
+
     class_label = metadata[0, 1]
     instance_label = metadata[1, 1]
-    categorical_cutoff = metadata[3, 1]
-    sig_cutoff = metadata[4,1]
-    cv_partitions = int(metadata[5,1])
-    scale_data = metadata[8,1]
-    impute_data = metadata[9,1]
-    do_LR = metadata[17,1]
-    do_DT = metadata[18,1]
-    do_RF = metadata[19,1]
-    do_NB = metadata[20,1]
-    do_XGB = metadata[21,1]
-    do_LGB = metadata[22,1]
-    do_SVM = metadata[23,1]
-    do_ANN = metadata[24,1]
-    do_ExSTraCS = metadata[25,1]
-    do_eLCS = metadata[26,1]
-    do_XCS = metadata[27,1]
-    do_GB = metadata[28, 1]
-    do_KN = metadata[29, 1]
-    primary_metric = metadata[30,1]
+    categorical_cutoff = metadata[4, 1]
+    sig_cutoff = metadata[5,1]
+    cv_partitions = int(metadata[6,1])
+    scale_data = metadata[10,1]
+    impute_data = metadata[11,1]
+
+    do_LR = metadata[19,1]
+    do_DT = metadata[20,1]
+    do_RF = metadata[21,1]
+    do_NB = metadata[22,1]
+    do_XGB = metadata[23,1]
+    do_LGB = metadata[24,1]
+    do_SVM = metadata[25,1]
+    do_ANN = metadata[26,1]
+    do_ExSTraCS = metadata[27,1]
+    do_eLCS = metadata[28,1]
+    do_XCS = metadata[29,1]
+    do_GB = metadata[30, 1]
+    do_KN = metadata[31, 1]
+    primary_metric = metadata[32,1]
 
     # Argument checks
     if not os.path.exists(output_path):
@@ -84,32 +95,31 @@ def main(argv):
     if not os.path.exists(full_path+"/applymodel"):
         os.mkdir(full_path+"/applymodel")
 
-    if not os.path.exists(full_path+"/applymodel/"+data_name):
-        os.mkdir(full_path+"/applymodel/"+data_name)
-
     #Determine file extension of datasets in target folder:
     file_count = 0
     unique_datanames = []
     for datasetFilename in glob.glob(rep_data_path+'/*'):
         file_extension = datasetFilename.split('/')[-1].split('.')[-1]
         apply_name = datasetFilename.split('/')[-1].split('.')[0] #Save unique dataset names so that analysis is run only once if there is both a .txt and .csv version of dataset with same name.
+        if not os.path.exists(full_path+"/applymodel/"+apply_name):
+            os.mkdir(full_path+"/applymodel/"+apply_name)
+
         if file_extension == 'txt' or file_extension == 'csv':
             if apply_name not in unique_datanames:
                 unique_datanames.append(apply_name)
-                for i in range(0,cv_partitions): #each of the CV models from the original training dataset
-                    if eval(run_parallel):
-                        submitClusterJob(reserved_memory,maximum_memory,queue,datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric)
-                    else:
-                        submitLocalJob(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric)
+                if eval(run_parallel):
+                    submitClusterJob(reserved_memory,maximum_memory,queue,datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots)
+                else:
+                    submitLocalJob(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots)
                 file_count += 1
 
     if file_count == 0: #Check that there was at least 1 dataset
         raise Exception("There must be at least one .txt or .csv dataset in rep_data_path directory")
 
-def submitLocalJob(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric):
-    FeatureSelectionJob.job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric)
+def submitLocalJob(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots):
+    FeatureSelectionJob.job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots)
 
-def submitClusterJob(reserved_memory,maximum_memory,queue,datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric):
+def submitClusterJob(reserved_memory,maximum_memory,queue,datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots):
     job_ref = str(time.time())
     job_name = experiment_path+'/jobs/Apply_'+job_ref+'_run.sh'
     sh_file = open(job_name,'w')
@@ -123,7 +133,7 @@ def submitClusterJob(reserved_memory,maximum_memory,queue,datasetFilename,full_p
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
     sh_file.write('python '+this_file_path+'/ApplyModelJob.py '+datasetFilename+" "+full_path+" "+class_label+" "+instance_label+" "+categorical_cutoff+" "+sig_cutoff+" "+cv_partitions+" "+scale_data+" "+impute_data+" "+do_LR+" "+do_DT+" "+do_RF+" "+do_NB+" "+do_XGB+" "+
-                  do_LGB+" "+do_SVM+" "+do_ANN+" "+do_ExSTraCS+" "+do_eLCS+" "+do_XCS+" "+do_GB+" "+do_KN+" "+primary_metric+'\n')
+                  do_LGB+" "+do_SVM+" "+do_ANN+" "+do_ExSTraCS+" "+do_eLCS+" "+do_XCS+" "+do_GB+" "+do_KN+" "+primary_metric+" "+data_path+" "+match_label+" "+plot_ROC+" "+plot_PRC+" "+plot_metric_boxplots+'\n')
     sh_file.close()
     os.system('bsub < ' + job_name)
     pass

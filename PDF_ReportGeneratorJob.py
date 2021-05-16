@@ -300,7 +300,37 @@ def job(experiment_path):
                 analy_report.cell(0, 4, 'Warning: Additional dataset results could not be displayed', 1, align="C")
     except:
         pass
-        
+
+    footer(analy_report)
+
+    #Create Runtime Summary Page---------------------------------------
+    print("Publishing Runtime Summary")
+
+    analy_report.add_page(orientation='P')
+    analy_report.set_margins(left=1, top=10, right=1, )
+
+    analy_report.set_font('Times', 'B', 12)
+    analy_report.cell(w=0, h = 8, txt='Pipeline Runtime Summary', border=1, align="L", ln=2)
+    analy_report.set_font(family='times', size=7)
+    analy_report.y += 4
+    col_width = 50 #maximum column width
+
+    for n in range(len(ds)):
+        analy_report.cell(100, 4, str(ds[n]), 1, align="L")
+        analy_report.y += 4
+        analy_report.x = 1
+
+        time_df = pd.read_csv(experiment_path+'/'+ds[n]+'/runtimes.csv')
+        time_df.iloc[:, 1] = time_df.iloc[:, 1].round(2)
+        time_df = time_df.columns.to_frame().T.append(time_df, ignore_index=True)
+
+        time_df = time_df.to_numpy()
+        for row in time_df:
+            for datum in row:
+                analy_report.cell(col_width, th, str(datum), border=1)
+            analy_report.ln(th) #critical
+        analy_report.y += 4
+
     footer(analy_report)
 
     #Output The PDF Object

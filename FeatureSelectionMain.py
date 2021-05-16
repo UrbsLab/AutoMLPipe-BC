@@ -53,9 +53,9 @@ def main(argv):
 
     class_label = metadata[0, 1]
     instance_label = metadata[1, 1]
-    cv_partitions = int(metadata[5,1])
-    do_mutual_info = metadata[10,1]
-    do_multisurf = metadata[11,1]
+    cv_partitions = int(metadata[6,1])
+    do_mutual_info = metadata[12,1]
+    do_multisurf = metadata[13,1]
 
     # Argument checks
     if not os.path.exists(output_path):
@@ -78,7 +78,7 @@ def main(argv):
                 submitLocalJob(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv)
 
         #Update metadata
-        if metadata.shape[0] == 15: #Only update if metadata below hasn't been added before
+        if metadata.shape[0] == 17: #Only update if metadata below hasn't been added before
             with open(output_path + '/' + experiment_name + '/' + 'metadata.csv',mode='a') as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(["Max Features to keep",max_features_to_keep])

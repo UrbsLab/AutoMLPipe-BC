@@ -63,9 +63,9 @@ def main(argv):
 
     class_label = metadata[0, 1]
     instance_label = metadata[1,1]
-    random_state = int(metadata[2, 1])
-    categorical_cutoff = int(metadata[3,1])
-    cv_partitions = int(metadata[5,1])
+    random_state = int(metadata[3, 1])
+    categorical_cutoff = int(metadata[4,1])
+    cv_partitions = int(metadata[6,1])
 
     if not do_check:
         #Iterate through datasets, ignoring common folders
@@ -99,7 +99,7 @@ def main(argv):
                         submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,instance_subset,'ms',n_jobs,use_TURF,TURF_pct)
 
         #Update metadata
-        if metadata.shape[0] == 10: #Only update if metadata below hasn't been added before (i.e. in a previous phase 2 run)
+        if metadata.shape[0] == 12: #Only update if metadata below hasn't been added before (i.e. in a previous phase 2 run)
             with open(output_path + '/' + experiment_name + '/' + 'metadata.csv',mode='a') as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(["Do Mutual Info",do_mutual_info])

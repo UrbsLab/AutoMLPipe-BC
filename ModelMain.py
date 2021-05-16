@@ -205,9 +205,9 @@ def main(argv):
 
     class_label = metadata[0, 1]
     instance_label = metadata[1, 1]
-    random_state = int(metadata[2,1])
-    cv_partitions = int(metadata[5,1])
-    filter_poor_features = metadata[13,1]
+    random_state = int(metadata[3,1])
+    cv_partitions = int(metadata[6,1])
+    filter_poor_features = metadata[15,1]
 
     if not do_check:
         dataset_paths = os.listdir(output_path + "/" + experiment_name)
@@ -232,7 +232,7 @@ def main(argv):
                         submitLocalJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric)
 
         # Update metadata
-        if metadata.shape[0] == 17: #Only update if metadata below hasn't been added before
+        if metadata.shape[0] == 19: #Only update if metadata below hasn't been added before
             with open(output_path + '/' + experiment_name + '/' + 'metadata.csv', mode='a') as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(["LR", str(do_LR)])

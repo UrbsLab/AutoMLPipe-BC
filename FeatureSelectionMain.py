@@ -27,7 +27,7 @@ def main(argv):
     parser.add_argument('--filter-features', dest='filter_poor_features', type=str, help='filter out the worst performing features prior to modeling',default='True')
     parser.add_argument('--top-results', dest='top_results', type=int,help='number of top features to illustrate in figures', default=20)
     parser.add_argument('--export-scores', dest='export_scores', type=str,help='export figure summarizing average feature importance scores over cv partitions', default='True')
-    parser.add_argument('--overwrite-cv', dest='overwrite_cv',type=str,help='overwrites working cv datasets with new feature subset datasets',default="False")
+    parser.add_argument('--overwrite-cv', dest='overwrite_cv',type=str,help='overwrites working cv datasets with new feature subset datasets',default="True")
     #Lostistical arguments
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")
     parser.add_argument('--queue',dest='queue',type=str,help='specify name of LPC queue',default="i2c2_normal") #specific to our research institution and computing cluster

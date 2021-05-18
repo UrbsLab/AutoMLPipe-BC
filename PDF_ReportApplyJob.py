@@ -8,6 +8,7 @@
 import pandas as pd
 from fpdf import FPDF
 from datetime import datetime
+import glob
 import os
 import re
 import sys
@@ -16,7 +17,7 @@ def job(experiment_path,rep_data_path,data_path):
 
     time = str(datetime.now())
     train_name = data_path.split('/')[-1].split('.')[0]
-
+    experiment_name = experiment_path.split('/')[-1]
     #Function to Convert Dataset lists into Usable Strings to Write to the PDF
     #Find folders inside directory
     ds = []
@@ -45,21 +46,21 @@ def job(experiment_path,rep_data_path,data_path):
 
     #ML Pipeline Analysis Report-------------------------------------------------------------------------------------------------------
     print("Starting Report")
-    ls1 = ars_dic[0:51]
-    ls2 = ars_dic[51:90]
-    ls3 = ars_dic[90:104]
-    ls4 = ars_dic[104:120]
+    ls1 = ars_dic[0:55]
+    ls2 = ars_dic[56:95]  #ML modeling algorithms
+    ls3 = ars_dic[94:111]
+    ls4 = ars_dic[110:125]  #LCS parameters
     analy_report.set_font('Times', 'B', 12)
     analy_report.cell(w=180, h=8, txt='AutoMLPipe-BC Apply Summary Report: '+time, ln=2, border=1, align='L')
     analy_report.y += 3
     analy_report.set_font(family='times', size=9)
     analy_report.multi_cell(w = 90,h = 4,txt='Pipeline Settings:'+'\n'+'\n'+listToString(ls1)+' '+listToString(ls3), border=1, align='L')
     analy_report.x += 90
-    analy_report.y = analy_report.y - 96
+    analy_report.y = analy_report.y - 104 #96
     analy_report.multi_cell(w = 90,h = 4,txt='ML Modeling Algorithms:'+'\n'+'\n'+listToString(ls2), border=1, align='L')
     analy_report.x += 90
-    analy_report.y += 2
-    analy_report.multi_cell(w = 90,h = 4,txt='LCS Settings:'+'\n'+listToString(ls4), border=1, align='L')
+    analy_report.y += 4
+    analy_report.multi_cell(w = 90,h = 4,txt='LCS Settings (ExSTraCS,eLCS,XCS):'+'\n'+listToString(ls4), border=1, align='L')
     analy_report.y +=10
 
     analy_report.cell(w = 180, h = 4, txt='Target Training Dataset: '+train_name, border=1, align='L')

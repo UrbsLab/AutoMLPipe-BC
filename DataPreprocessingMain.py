@@ -80,8 +80,8 @@ def main(argv):
         if metadata.shape[0] == 10: #Only update if metadata below hasn't been added before (i.e. in a previous phase 2 run)
             with open(output_path + '/' + experiment_name + '/' + 'metadata.csv',mode='a') as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow(["Do Data Scaling",scale_data])
-                writer.writerow(["Do Data Imputation",impute_data])
+                writer.writerow(["data scaling",scale_data])
+                writer.writerow(["data imputation",impute_data])
             file.close()
 
     else: #run job checks

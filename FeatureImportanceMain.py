@@ -102,11 +102,11 @@ def main(argv):
         if metadata.shape[0] == 12: #Only update if metadata below hasn't been added before (i.e. in a previous phase 2 run)
             with open(output_path + '/' + experiment_name + '/' + 'metadata.csv',mode='a') as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow(["Do Mutual Info",do_mutual_info])
-                writer.writerow(["Do MultiSURF", do_multisurf])
-                writer.writerow(["Use TURF",use_TURF])
+                writer.writerow(["mutual information",do_mutual_info])
+                writer.writerow(["MultiSURF", do_multisurf])
+                writer.writerow(["TURF",use_TURF])
                 writer.writerow(["TURF cutoff", TURF_pct])
-                writer.writerow(["MultiSURF Instance Subset", instance_subset])
+                writer.writerow(["MultiSURF instance subset", instance_subset])
             file.close()
 
     else: #run job checks

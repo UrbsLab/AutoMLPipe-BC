@@ -13,6 +13,10 @@ def job(experiment_path,sig_cutoff):
     datasets.remove('jobs')
     datasets.remove('jobsCompleted')
     datasets.remove('metadata.csv')
+    try:
+        datasets.remove('DatasetComparisons')
+    except:
+        pass
     datasets = sorted(datasets) #ensures consistent ordering of datasets and assignment of temporary identifier
 
     dataset_directory_paths = []

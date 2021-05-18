@@ -81,8 +81,8 @@ def main(argv):
         if metadata.shape[0] == 17: #Only update if metadata below hasn't been added before
             with open(output_path + '/' + experiment_name + '/' + 'metadata.csv',mode='a') as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow(["Max Features to keep",max_features_to_keep])
-                writer.writerow(["Filter poor features", filter_poor_features])
+                writer.writerow(["max features to keep",max_features_to_keep])
+                writer.writerow(["filter poor features", filter_poor_features])
             file.close()
 
     else: #run job checks

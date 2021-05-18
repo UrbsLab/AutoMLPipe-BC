@@ -20,7 +20,7 @@ def job(experiment_path):
 
     #Find folders inside directory
     ds = os.listdir(experiment_path)
-    experiment_name = experiment_path.split('/')[-1].split('.')[-1]
+    experiment_name = experiment_path.split('/')[-1]
 
     nonds = ['DatasetComparisons', 'jobs', 'jobsCompleted', 'logs','KeyFileCopy','metadata.csv',experiment_name+'_ML_Pipeline_Report.pdf']
     for i in nonds:
@@ -48,21 +48,21 @@ def job(experiment_path):
 
     #ML Pipeline Analysis Report-------------------------------------------------------------------------------------------------------
     print("Starting Report")
-    ls1 = ars_dic[0:51]
-    ls2 = ars_dic[51:90]
-    ls3 = ars_dic[90:104]
-    ls4 = ars_dic[104:120]
+    ls1 = ars_dic[0:55]
+    ls2 = ars_dic[56:95]  #ML modeling algorithms
+    ls3 = ars_dic[94:111]
+    ls4 = ars_dic[110:125]  #LCS parameters
     analy_report.set_font('Times', 'B', 12)
     analy_report.cell(w=180, h=8, txt='AutoMLPipe-BC Training Summary Report: '+time, ln=2, border=1, align='L')
     analy_report.y += 3
     analy_report.set_font(family='times', size=9)
     analy_report.multi_cell(w = 90,h = 4,txt='Pipeline Settings:'+'\n'+'\n'+listToString(ls1)+' '+listToString(ls3), border=1, align='L')
     analy_report.x += 90
-    analy_report.y = analy_report.y - 96
+    analy_report.y = analy_report.y - 104 #96
     analy_report.multi_cell(w = 90,h = 4,txt='ML Modeling Algorithms:'+'\n'+'\n'+listToString(ls2), border=1, align='L')
     analy_report.x += 90
-    analy_report.y += 2
-    analy_report.multi_cell(w = 90,h = 4,txt='LCS Settings:'+'\n'+listToString(ls4), border=1, align='L')
+    analy_report.y += 4
+    analy_report.multi_cell(w = 90,h = 4,txt='LCS Settings (ExSTraCS,eLCS,XCS):'+'\n'+listToString(ls4), border=1, align='L')
     analy_report.y +=10
 
     listDatasets = ''

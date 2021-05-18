@@ -56,12 +56,8 @@ def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,
     #Create Folder hierarchy
     if not os.path.exists(full_path+"/applymodel/"+apply_name+'/'+'exploratory'):
         os.mkdir(full_path+"/applymodel/"+apply_name+'/'+'exploratory')
-    if not os.path.exists(full_path+"/applymodel/"+apply_name+'/'+'CVDatasets'):
-        os.mkdir(full_path+"/applymodel/"+apply_name+'/'+'CVDatasets')
     if not os.path.exists(full_path+"/applymodel/"+apply_name+'/'+'training'):
         os.mkdir(full_path+"/applymodel/"+apply_name+'/'+'training')
-    if not os.path.exists(full_path+"/applymodel/"+apply_name+'/'+'training'+'/'+'pickledModels'):
-        os.mkdir(full_path+"/applymodel/"+apply_name+'/'+'training'+'/'+'pickledModels')
     if not os.path.exists(full_path+"/applymodel/"+apply_name+'/'+'training'+'/'+'results'):
         os.mkdir(full_path+"/applymodel/"+apply_name+'/'+'training'+'/'+'results')
 

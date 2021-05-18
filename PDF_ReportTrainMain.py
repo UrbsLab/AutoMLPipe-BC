@@ -44,15 +44,15 @@ def submitLocalJob(experiment_path):
 
 def submitClusterJob(experiment_path,reserved_memory,maximum_memory,queue):
     job_ref = str(time.time())
-    job_name = experiment_path + '/jobs/PDF_' + job_ref + '_run.sh'
+    job_name = experiment_path + '/jobs/PDF_Train_' + job_ref + '_run.sh'
     sh_file = open(job_name,'w')
     sh_file.write('#!/bin/bash\n')
     sh_file.write('#BSUB -q '+queue+'\n')
     sh_file.write('#BSUB -J '+job_ref+'\n')
     sh_file.write('#BSUB -R "rusage[mem='+str(reserved_memory)+'G]"'+'\n')
     sh_file.write('#BSUB -M '+str(maximum_memory)+'GB'+'\n')
-    sh_file.write('#BSUB -o ' + experiment_path+'/logs/PDF_'+job_ref+'.o\n')
-    sh_file.write('#BSUB -e ' + experiment_path+'/logs/PDF_'+job_ref+'.e\n')
+    sh_file.write('#BSUB -o ' + experiment_path+'/logs/PDF_Train_'+job_ref+'.o\n')
+    sh_file.write('#BSUB -e ' + experiment_path+'/logs/PDF_Train_'+job_ref+'.e\n')
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
     sh_file.write('python ' + this_file_path + '/PDF_ReportTrainJob.py ' + experiment_path + '\n')

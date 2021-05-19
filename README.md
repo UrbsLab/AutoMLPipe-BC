@@ -24,9 +24,10 @@ This multi-phase pipeline has been set up in a way that it can be easily run in 
 * As an editable Jupyter Notebook that can be run all at once utilizing the associated code from the aforementioned scripts.
 
 ***
-## Suggested Use
-* To easily conduct a rigorous, customizable ML analysis of one or more datasets using a variety of ML algorithms. 
-* As the basis to create a new expanded, adapted, or modified ML analysis pipeline.
+## Suggested Uses
+* To easily conduct a rigorous, customizable ML analysis of one or more datasets using one or more of the included ML algorithms. 
+* As an analysis framework to evaluate and compare existing or other new ML modeling approaches.
+* As the basis to create a new expanded, adapted, or modified AutoML tool.
 * As an educational example of how to program many of the most commontly used ML analysis proceedures, and generate a variety of standard and novel plots.
 
 ***

@@ -33,6 +33,8 @@ This multi-phase pipeline has been set up in a way that it can be easily run in 
 ***
 ## Assumptions For Use (data and run preparation)
 * Target datasets for analysis are in comma-separated format (.txt or .csv)
+* Missing data values should be empty or indicated with an 'NA'.
+* Dataset includes a header with column names.
 * Data columns include features, class label, and optionally instance (i.e. row) labels, or match labels (if matched cross validation will be used)
 * Binary class values are encoded as 0 (e.g. negative), and 1 (positive) with respect to true positive, true negative, false positive, false negative metrics. PRC plots focus on classification of 'positives'.
 * All feature values (both categorical and quantitative) are numerically encoded. Scikit-learn does not accept text-based values. However both instance_label and match_label values may be either numeric or text.
@@ -94,20 +96,9 @@ Additionally, while currently commented out in the file (modeling_methods.py) if
 
 Lastly, in order to include the stand-alone algorithm 'ExSTraCS' we needed to call this from the command line within this Jupyter Notebook.  As a result, the part of this notebook running ExSTraCS will only run properly if the path to the working directory used to run this notebook includes no spaces.  In other words if your path includes a folder called 'My Folder' vs. 'My_Folder' you will likely get a run error for ExSTraCS (at least on a Windows machine). Thus, make sure to check that wherever you are running this notebook from, that the entire path to the working directory does note include any spaces.
 
-***
-## Dataset Requirements
-This notebook loads a single dataset to be run through the entire pipeline. Here we summarize the requirements for this dataset:
-* Ensure your data is in a single file: (If you have a pre-partitioned training/testing dataset, you should combine them into a single dataset before running this notebook)
-* Any dataset specific cleaning, feature transformation, or feature engineering that may be needed in order to maximize ML performance should be conducted by the user separately or added to the beginning of this notebook.
-* The dataset should be in tab-delimited .txt format to run this notebook (as is).  Commented-out code to load a comma separated file (.csv) and excel file (.xlsx) is included in the notebook as an alternative.
-* Missing data values should be empty or indicated with an 'NA'.
-* Dataset includes a header with column names. This should include a column for the binary class label and (optionally) a column for the instance ID, as well as columns for other 'features', e.g. independend variables.
-* The class labels should be 0 for the major class (i.e. the most frequent class), and 1 for the minor class.  This is important for generation of the precision/recall curve (PRC) plots.
-* This dataset is saved in the working directory containing the jupyter notebook file, and all other files in this repository.
-* All variables in the dataset have been numerically encoded (otherwise additional data preprocessing may be needed)
 
 ***
-# Usage
+# Jupyter Notebook Usage
 * First, ensure all of the environment and dataset requirments above are satisfied.
 * Next, save this repository to the desired 'working directory' on your pc (make sure there are no 'spaces' in the path to this directory!)
 * Open the jupyter notebook file (https://jupyter.readthedocs.io/en/latest/running.html). We found that the most reliable way to do this and ensure your run environment is correct is to open the 'anaconda prompt' which comes with your anaconda installation.  Once opened type the command 'jupyter notebook'.  Then navigate to your working directory and click on the notebook file: 'Supervised_Classification_ML_Pipeline.ipynb'.

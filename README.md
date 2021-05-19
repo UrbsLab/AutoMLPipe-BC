@@ -8,6 +8,8 @@ The following 13 ML modeling algorithms are currently included as options: 1. Na
 
 This pipeline does NOT: (1) conduct feature engineering, or feature construction, (2) conduct feature encoding (e.g. apply one-hot-encoding to categorical features, or numerically encode text-based feature values), (3) account for bias in data collection, or (4) conduct anything beyond simple data cleaning (i.e. it only removes instances with no class label, or where all features are missing). These elements should be conducted externally at the discression of the user.
 
+Of course, we do not suggest that this is the best or only viable way to assemble an ML analysis pipeline for any classification problem, nor that the included ML modeling algorithms are the best options for inclusion. Certainly, this pipeline could be expanded much further and adapted to different problems or goals. We welcome feedback and suggestions for improvement.
+
 ***
 ## Schematic of AutoMLPipe-BC
 This schematic breaks the overall pipeline down into 4 generalized stages: (1) preprocessing and feature transformation, (2) feature importance evaluation and selection, (3) modeling, and (4) postprocessing.

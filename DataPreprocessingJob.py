@@ -78,14 +78,14 @@ def writeCVFiles(overwrite_cv,cv_train_path,cv_test_path,experiment_path,dataset
         os.rename(cv_test_path,experiment_path + '/' + dataset_name + '/CVDatasets/'+dataset_name+'_CVOnly_' + str(cvCount) +"_Test.csv")
 
     #Write new CV files
-    with open(cv_train_path,mode='w') as file:
+    with open(cv_train_path,mode='w', newline="") as file:
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(data_train.columns.values.tolist())
         for row in data_train.values:
             writer.writerow(row)
     file.close()
 
-    with open(cv_test_path,mode='w') as file:
+    with open(cv_test_path,mode='w', newline="") as file:
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(data_test.columns.values.tolist())
         for row in data_test.values:

@@ -109,7 +109,7 @@ def main(argv):
             raise Exception("There must be at least one .txt or .csv dataset in data_path directory")
 
         # Save metadata to file
-        with open(output_path+'/'+experiment_name+'/'+'metadata.csv',mode='w') as file:
+        with open(output_path+'/'+experiment_name+'/'+'metadata.csv',mode='w', newline="") as file:
             writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(["DATA LABEL", "VALUE"])
             writer.writerow(["class label",class_label])

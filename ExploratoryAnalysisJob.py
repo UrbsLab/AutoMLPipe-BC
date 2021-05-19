@@ -240,7 +240,7 @@ def reportHeaders(data,experiment_path,dataset_name,class_label,instance_label,m
     if partition_method == 'M':
         headers.remove(match_label)
 
-    with open(experiment_path + '/' + dataset_name + '/exploratory/OriginalHeaders.csv',mode='w') as file:
+    with open(experiment_path + '/' + dataset_name + '/exploratory/OriginalHeaders.csv',mode='w', newline="") as file:
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(headers)
     file.close()
@@ -252,7 +252,7 @@ def saveCVDatasets(experiment_path,dataset_name,train_dfs,test_dfs):
     counter = 0
     for each in train_dfs:
         a = each.values
-        with open(experiment_path + '/' + dataset_name + '/CVDatasets/'+dataset_name+'_CV_' + str(counter) +"_Train.csv", mode="w") as file:
+        with open(experiment_path + '/' + dataset_name + '/CVDatasets/'+dataset_name+'_CV_' + str(counter) +"_Train.csv", mode="w", newline="") as file:
             writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(each.columns.values.tolist())
             for row in a:
@@ -262,7 +262,7 @@ def saveCVDatasets(experiment_path,dataset_name,train_dfs,test_dfs):
     counter = 0
     for each in test_dfs:
         a = each.values
-        with open(experiment_path + '/' + dataset_name + '/CVDatasets/'+dataset_name+'_CV_' + str(counter) +"_Test.csv", mode="w") as file:
+        with open(experiment_path + '/' + dataset_name + '/CVDatasets/'+dataset_name+'_CV_' + str(counter) +"_Test.csv", mode="w", newline="") as file:
             writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(each.columns.values.tolist())
             for row in a:

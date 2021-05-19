@@ -350,7 +350,7 @@ def doPlotPRC(result_table,colors,full_path,data_name,instance_label,class_label
 
 def saveMetricMeans(full_path,metrics,metric_dict):
     #Save Average Metrics (mean)
-    with open(full_path+'/training/results/Summary_performance_mean.csv',mode='w') as file:
+    with open(full_path+'/training/results/Summary_performance_mean.csv',mode='w', newline="") as file:
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         e = ['']
         e.extend(metrics)
@@ -368,7 +368,7 @@ def saveMetricMeans(full_path,metrics,metric_dict):
 
 def saveMetricStd(full_path,metrics,metric_dict):
     # Save Average Metrics (std)
-    with open(full_path + '/training/results/Summary_performance_std.csv', mode='w') as file:
+    with open(full_path + '/training/results/Summary_performance_std.csv', mode='w', newline="") as file:
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         e = ['']
         e.extend(metrics)
@@ -636,7 +636,7 @@ def parseRuntime(full_path,abbrev):
         else:
             dict[ref] += val
 
-    with open(full_path+'/runtimes.csv',mode='w') as file:
+    with open(full_path+'/runtimes.csv',mode='w', newline="") as file:
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(["Pipeline Component","Time (sec)"])
         writer.writerow(["Exploratory Analysis",dict['exploratory']])

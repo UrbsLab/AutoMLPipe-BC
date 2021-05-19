@@ -110,7 +110,7 @@ def sort_save_fi_scores(scores, ordered_feature_names, filename, algo_name):
     score_sorted_features = sorted(scoreDict, key=lambda x: scoreDict[x], reverse=True)
 
     # Save scores to 'formatted' file
-    with open(filename,mode='w') as file:
+    with open(filename,mode='w', newline="") as file:
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(["Sorted "+algo_name+" Scores"])
         for k in score_sorted_features:

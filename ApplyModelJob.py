@@ -20,7 +20,7 @@ from sklearn import metrics
 from scipy import interp,stats
 from statistics import mean,stdev
 
-def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots):
+def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots,export_feature_correlations):
     jupyterRun = 'False'
     train_name = full_path.split('/')[-1] #original training data name
     apply_name = datasetFilename.split('/')[-1].split('.')[0]
@@ -67,6 +67,9 @@ def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,
 
     categorical_variables = ExploratoryAnalysisJob.idFeatureTypes(repData,[],instance_label,"None",class_label,categorical_cutoff)
     ExploratoryAnalysisJob.countsSummary(repData,class_label,full_path,'applymodel/'+apply_name,instance_label,match_label,categorical_variables,jupyterRun)
+
+    if eval(export_feature_correlations):
+        ExploratoryAnalysisJob.featureCorrelationPlot(repData,class_label,instance_label,match_label,full_path,'applymodel/'+apply_name,jupyterRun)
 
     #Rep Data Preparation for each Training Partion Model set (rep data will potentially be scaled, imputed and feature selected in the same was as was done for each corresponding CV training partition)
     for cvCount in range(0,cv_partitions):
@@ -432,4 +435,4 @@ def doPlotPRC(result_table,colors,full_path,apply_name,instance_label,class_labe
         plt.close('all')
 
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],int(sys.argv[5]),float(sys.argv[6]),int(sys.argv[7]),sys.argv[8],sys.argv[9],sys.argv[10],sys.argv[11],sys.argv[12],sys.argv[13],sys.argv[14],sys.argv[15],sys.argv[16],sys.argv[17],sys.argv[18],sys.argv[19],sys.argv[20],sys.argv[21],sys.argv[22],sys.argv[23],sys.argv[24],sys.argv[25],sys.argv[26],sys.argv[27],sys.argv[28])
+    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],int(sys.argv[5]),float(sys.argv[6]),int(sys.argv[7]),sys.argv[8],sys.argv[9],sys.argv[10],sys.argv[11],sys.argv[12],sys.argv[13],sys.argv[14],sys.argv[15],sys.argv[16],sys.argv[17],sys.argv[18],sys.argv[19],sys.argv[20],sys.argv[21],sys.argv[22],sys.argv[23],sys.argv[24],sys.argv[25],sys.argv[26],sys.argv[27],sys.argv[28],sys.argv[29])

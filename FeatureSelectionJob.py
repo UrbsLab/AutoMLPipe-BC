@@ -191,14 +191,14 @@ def genFilteredDatasets(cv_selected_list,class_label,instance_label,cv_partition
             os.rename(path_to_csv+'/'+dataset_name+'_CV_' + str(i) + "_Test.csv",path_to_csv+'/'+dataset_name+'_CVPre_' + str(i) +"_Test.csv")
 
         #Write new CV files
-        with open(path_to_csv+'/'+dataset_name+'_CV_' + str(i) +"_Train.csv",mode='w') as file:
+        with open(path_to_csv+'/'+dataset_name+'_CV_' + str(i) +"_Train.csv",mode='w', newline="") as file:
             writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(td_train.columns.values.tolist())
             for row in td_train.values:
                 writer.writerow(row)
         file.close()
 
-        with open(path_to_csv+'/'+dataset_name+'_CV_' + str(i) +"_Test.csv",mode='w') as file:
+        with open(path_to_csv+'/'+dataset_name+'_CV_' + str(i) +"_Test.csv",mode='w', newline="") as file:
             writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(td_test.columns.values.tolist())
             for row in td_test.values:

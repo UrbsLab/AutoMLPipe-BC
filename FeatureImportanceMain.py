@@ -100,7 +100,7 @@ def main(argv):
 
         #Update metadata
         if metadata.shape[0] == 12: #Only update if metadata below hasn't been added before (i.e. in a previous phase 2 run)
-            with open(output_path + '/' + experiment_name + '/' + 'metadata.csv',mode='a') as file:
+            with open(output_path + '/' + experiment_name + '/' + 'metadata.csv',mode='a', newline="") as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(["mutual information",do_mutual_info])
                 writer.writerow(["MultiSURF", do_multisurf])

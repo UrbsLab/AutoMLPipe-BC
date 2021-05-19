@@ -47,7 +47,7 @@ def main(argv):
     parser.add_argument('--timeout', dest='timeout', type=int,help='seconds until hyperparameter sweep stops running new trials (Note: it may run longer to finish last trial started)', default=300)
     parser.add_argument('--export-hyper-sweep', dest='export_hyper_sweep_plots', type=str, default='True')
     #LCS specific parameters - Defaults available
-    parser.add_argument('--do-LCS-sweep', dest='do_LCS_sweep', type=str, help='do LCS hyperparam tuning or use below params',default='False')
+    parser.add_argument('--do-LCS-sweep', dest='do_lcs_sweep', type=str, help='do LCS hyperparam tuning or use below params',default='False')
     parser.add_argument('--nu', dest='nu', type=int, help='fixed LCS nu param', default=1)
     parser.add_argument('--iter', dest='iterations', type=int, help='fixed LCS # learning iterations param', default=200000)
     parser.add_argument('--N', dest='N', type=int, help='fixed LCS rule population maximum size param', default=2000)
@@ -183,7 +183,7 @@ def main(argv):
     export_hyper_sweep_plots = options.export_hyper_sweep_plots
 
     lcs_timeout = options.lcs_timeout
-    do_lcs_sweep = options.do_LCS_sweep
+    do_lcs_sweep = options.do_lcs_sweep
     nu = options.nu
     iterations = options.iterations
     N = options.N
@@ -233,7 +233,7 @@ def main(argv):
 
         # Update metadata
         if metadata.shape[0] == 19: #Only update if metadata below hasn't been added before
-            with open(output_path + '/' + experiment_name + '/' + 'metadata.csv', mode='a') as file:
+            with open(output_path + '/' + experiment_name + '/' + 'metadata.csv', mode='a', newline="") as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(["LR", str(do_LR)])
                 writer.writerow(["DT", str(do_DT)])
@@ -253,7 +253,7 @@ def main(argv):
                 writer.writerow(["uniform feature importance estimation (models)",use_uniform_FI])
                 writer.writerow(["hypersweep number of trials",n_trials])
                 writer.writerow(["hypersweep timeout",timeout])
-                writer.writerow(['do LCS sweep',options.do_LCS_sweep])
+                writer.writerow(['do LCS sweep',options.do_lcs_sweep])
                 writer.writerow(['nu', options.nu])
                 writer.writerow(['training iterations', options.iterations])
                 writer.writerow(['N (rule population size)', options.N])

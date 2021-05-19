@@ -19,7 +19,7 @@ This schematic breaks the overall pipeline down into 4 generalized stages: (1) p
 AutoMLPipe-BC is coded in Python 3 relying heavily on pandas and scikit-learn as well as a variety of other python packages. 
 
 ***
-## Modes of Use
+## Run Modes
 This multi-phase pipeline has been set up in a way that it can be easily run in one of three ways:
 * A series of scripts that are run as parallelized jobs within a linux-based computing cluster (see https://github.com/UrbsLab/I2C2-Documentation for a description of the computing cluster for which this functionality was designed).
 * A series of scripts (not parallelized) running on a local PC from the command line.
@@ -46,7 +46,7 @@ This multi-phase pipeline has been set up in a way that it can be easily run in 
 * Logistic Regression' baseline model feature importance estimation is determined by the exponential of the feature's coefficient. This should only be used if data scaling is applied by the pipeline.  Otherwise 'use_uniform_FI' should be True.
 
 ***
-## Unique Features (ordered by appearence in pipeline)
+## Unique Characteristics (ordered by appearence in pipeline)
 * Pipeline includes reliable default run parameters that can be adjusted for further customization.
 * Easily compare ML performance between multiple target datasets (e.g. with different feature subsets)
 * Easily conduct an exploratory analysis including: (1) basic dataset characteristics: data dimensions, feature stats, missing value counts, and class balance, (2) detection of categorical vs. quantiative features, (3) feature correlation (with heatmap), and (4) univariate analyses with Chi-Square (categorical features), or Mann-Whitney U-Test (quantitative features).

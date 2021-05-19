@@ -15,7 +15,7 @@ This code represents our first ML analysis pipeline implementation as described 
 
 ***
 ## Schematic of ML Analysis Pipeline
-![alttext](https://github.com/UrbsLab/AutoMLPipe-BC/blob/master/ML_pipeline_schematic.png?raw=true)
+![alttext](https://github.com/UrbsLab/AutoMLPipe-BC/blob/main/ML_pipe_schematic.png?raw=true)
 
 ***
 # Prerequisites for Use

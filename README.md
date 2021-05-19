@@ -13,11 +13,31 @@ This pipeline does NOT: (1) conduct feature engineering, or feature construction
 ![alttext](https://github.com/UrbsLab/AutoMLPipe-BC/blob/main/ML_pipe_schematic.png?raw=true)
 
 ***
-## Usibility
+## Implementation
+AutoMLPipe-BC is coded in Python 3 relying heavily on pandas and scikit-learn as well as a variety of other python packages. 
+
+***
+## Modes of Use
 This multi-phase pipeline has been set up in a way that it can be easily run in one of three ways:
 * A series of scripts that are run as parallelized jobs within a linux-based computing cluster (see https://github.com/UrbsLab/I2C2-Documentation for a description of the computing cluster for which this functionality was designed).
 * A series of scripts (not parallelized) running on a local PC from the command line.
 * As an editable Jupyter Notebook that can be run all at once utilizing the associated code from the scripts above.
+
+***
+## Suggested Use
+* To easily conduct a rigorous, customizable ML analysis of one or more datasets using a variety of ML algorithms. 
+* As the basis to create a new expanded, adapted, or modified ML analysis pipeline.
+* As an educational example of how to program many of the most commontly used ML analysis proceedures, and generate a variety of standard and novel plots.
+
+***
+## Assumptions For Use (Data and Run Preparation)
+* Target datasets for analysis are in comma-separated format (.txt or .csv)
+* Data columns include features, class label, and optionally instance (i.e. row) labels, or match labels (if matched cross validation will be used)
+* Binary class values are encoded as 0 (e.g. negative), and 1 (positive) with respect to true positive, true negative, false positive, false negative metrics. PRC plots focus on classification of 'positives'.
+* All feature values (both categorical and quantitative) are numerically encoded. Scikit-learn does not accept text-based values. However both instance_label and match_label values may be either numeric or text.
+* One or more target datasets for analysis are put in the same folder. The path to this folder is a critical pipeline run parameter. If multiple datasets are being analyzed they must have the same class_label, and (if present) the same instance_label and match_label.
+* SVM modeling should only be applied when data scaling is applied by the pipeline
+* Logistic Regression' baseline model feature importance estimation is determined by the exponential of the feature's coefficient. This should only be used if data scaling is applied by the pipeline.  Otherwise 'use_uniform_FI' should be True.
 
 ***
 ## Unique Features
@@ -52,26 +72,9 @@ This multi-phase pipeline has been set up in a way that it can be easily run in 
 * A formatted PDF report is automatically generated giving a snapshot of all key pipeline results.
 * A script is included to apply all trained (and 'pickled') models to an external replication dataset to further evaluate model generalizability. This script (1) conducts an exploratory analysis of the new dataset, (2) uses the same scaling, imputation, and feature subsets determined from n-fold cv training, yielding 'n' versions of the replication dataset to be applied to the respective models, (3) applies and evaluates all models with these respective versions of the replication data, (4) outputs the same set of aforementioned boxplots, ROC, and PRC plots, and (5) automatically generates a new, formatted PDF report summarizing these applied results.
 
-***
-## Implementation
-AutoMLPipe-BC is coded in Python 3 relying heavily on pandas and scikit-learn as well as a variety of other python packages. 
+# Installation
 
-***
-## Assumptions For Use (Data and Run Preparation)
-* Target datasets for analysis are in comma-separated format (.txt or .csv)
-* Data columns include features, class label, and optionally instance (i.e. row) labels, or match labels (if matched cross validation will be used)
-* Binary class values are encoded as 0 (e.g. negative), and 1 (positive) with respect to true positive, true negative, false positive, false negative metrics. PRC plots focus on classification of 'positives'.
-* All feature values (both categorical and quantitative) are numerically encoded. Scikit-learn does not accept text-based values. However both instance_label and match_label values may be either numeric or text.
-* One or more target datasets for analysis are put in the same folder. The path to this folder is a critical pipeline run parameter. If multiple datasets are being analyzed they must have the same class_label, and (if present) the same instance_label and match_label.
-* SVM modeling should only be applied when data scaling is applied by the pipeline
-* Logistic Regression' baseline model feature importance estimation is determined by the exponential of the feature's coefficient. This should only be used if data scaling is applied by the pipeline.  Otherwise 'use_uniform_FI' should be True.
-
-***
-## Suggested Use
-* To easily conduct a rigorous, customizable ML analysis of one or more datasets using a variety of ML algorithms. 
-* As the basis to create a new expanded, adapted, or modified ML analysis pipeline.
-* As an educational example of how to program many of the most commontly used ML analysis proceedures, and generate a variety of standard and novel plots.
-
+# Usage
 
 ***
 # Prerequisites for Use

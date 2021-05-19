@@ -31,7 +31,7 @@ This multi-phase pipeline has been set up in a way that it can be easily run in 
 * As an educational example of how to program many of the most commontly used ML analysis proceedures, and generate a variety of standard and novel plots.
 
 ***
-## Assumptions For Use (Data and Run Preparation)
+## Assumptions For Use (data and run preparation)
 * Target datasets for analysis are in comma-separated format (.txt or .csv)
 * Data columns include features, class label, and optionally instance (i.e. row) labels, or match labels (if matched cross validation will be used)
 * Binary class values are encoded as 0 (e.g. negative), and 1 (positive) with respect to true positive, true negative, false positive, false negative metrics. PRC plots focus on classification of 'positives'.
@@ -41,7 +41,7 @@ This multi-phase pipeline has been set up in a way that it can be easily run in 
 * Logistic Regression' baseline model feature importance estimation is determined by the exponential of the feature's coefficient. This should only be used if data scaling is applied by the pipeline.  Otherwise 'use_uniform_FI' should be True.
 
 ***
-## Unique Features (Ordered by appearence in pipeline)
+## Unique Features (ordered by appearence in pipeline)
 * Pipeline includes reliable default run parameters that can be adjusted for further customization.
 * Easily compare ML performance between multiple target datasets (e.g. with different feature subsets)
 * Easily conduct an exploratory analysis including: (1) basic dataset characteristics: data dimensions, feature stats, missing value counts, and class balance, (2) detection of categorical vs. quantiative features, (3) feature correlation (with heatmap), and (4) univariate analyses with Chi-Square (categorical features), or Mann-Whitney U-Test (quantitative features).

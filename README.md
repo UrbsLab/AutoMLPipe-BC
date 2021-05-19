@@ -15,7 +15,7 @@ This code represents our first ML analysis pipeline implementation as described 
 
 ***
 ## Schematic of ML Analysis Pipeline
-![alttext](https://github.com/UrbsLab/ExSTraCS_ML_Pipeline_Binary_Notebook/blob/master/ML%20pipeline%20schematic2.png?raw=true)
+![alttext](https://github.com/UrbsLab/ExSTraCS_ML_Pipeline_Binary_Notebook/blob/master/ML%20pipeline%20schematic.png?raw=true)
 
 ***
 # Prerequisites for Use

@@ -10,6 +10,8 @@ This pipeline does NOT: (1) conduct feature engineering, or feature construction
 
 ***
 ## Schematic of AutoMLPipe-BC
+This schematic breaks the overall pipeline down into 4 generalized stages: (1) preprocessing and feature transformation, (2) feature importance evaluation and selection, (3) modeling, and (4) postprocessing.
+
 ![alttext](https://github.com/UrbsLab/AutoMLPipe-BC/blob/main/ML_pipe_schematic.png?raw=true)
 
 ***

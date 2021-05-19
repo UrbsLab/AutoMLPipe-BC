@@ -21,7 +21,7 @@ AutoMLPipe-BC is coded in Python 3 relying heavily on pandas and scikit-learn as
 This multi-phase pipeline has been set up in a way that it can be easily run in one of three ways:
 * A series of scripts that are run as parallelized jobs within a linux-based computing cluster (see https://github.com/UrbsLab/I2C2-Documentation for a description of the computing cluster for which this functionality was designed).
 * A series of scripts (not parallelized) running on a local PC from the command line.
-* As an editable Jupyter Notebook that can be run all at once utilizing the associated code from the scripts above.
+* As an editable Jupyter Notebook that can be run all at once utilizing the associated code from the aforementioned scripts.
 
 ***
 ## Suggested Use

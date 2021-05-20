@@ -25,19 +25,19 @@ def main(argv):
     #Sets default run all or none to make algorithm selection from command line simpler
     parser.add_argument('--do-all', dest='do_all', type=str, help='run all modeling algorithms by default (when set True, individual algorithms can still be turned off and vice versa)',default='True')
     #ML modeling algorithms: Defaults available
+    parser.add_argument('--do-NB', dest='do_NB', type=str, help='run naive bayes modeling',default='True')
     parser.add_argument('--do-LR', dest='do_LR', type=str, help='run logistic regression modeling',default='True')
     parser.add_argument('--do-DT', dest='do_DT', type=str, help='run decision tree modeling',default='True')
     parser.add_argument('--do-RF', dest='do_RF', type=str, help='run random forest modeling',default='True')
-    parser.add_argument('--do-NB', dest='do_NB', type=str, help='run naive bayes modeling',default='True')
+    parser.add_argument('--do-GB', dest='do_GB', type=str, help='run gradient boosting modeling',default='True')
     parser.add_argument('--do-XGB', dest='do_XGB', type=str, help='run XGBoost modeling',default='True')
     parser.add_argument('--do-LGB', dest='do_LGB', type=str, help='run LGBoost modeling',default='True')
     parser.add_argument('--do-SVM', dest='do_SVM', type=str, help='run support vector machine modeling',default='True')
     parser.add_argument('--do-ANN', dest='do_ANN', type=str, help='run artificial neural network modeling',default='True')
-    parser.add_argument('--do-ExSTraCS', dest='do_ExSTraCS', type=str, help='run ExSTraCS modeling (a learning classifier system designed for biomedical data mining)',default='True')
+    parser.add_argument('--do-KN', dest='do_KN', type=str, help='run k-neighbors classifier modeling',default='True')
     parser.add_argument('--do-eLCS', dest='do_eLCS', type=str, help='run eLCS modeling (a basic supervised-learning learning classifier system)',default='True')
     parser.add_argument('--do-XCS', dest='do_XCS', type=str, help='run XCS modeling (a supervised-learning-only implementation of the best studied learning classifier system)',default='True')
-    parser.add_argument('--do-KN', dest='do_KN', type=str, help='run k-neighbors classifier modeling',default='True')
-    parser.add_argument('--do-GB', dest='do_GB', type=str, help='run gradient boosting modeling',default='True')
+    parser.add_argument('--do-ExSTraCS', dest='do_ExSTraCS', type=str, help='run ExSTraCS modeling (a learning classifier system designed for biomedical data mining)',default='True')
     #Other Analysis Parameters - Defaults available
     parser.add_argument('--metric', dest='primary_metric', type=str,help='primary scikit-learn specified scoring metric used for hyperparameter optimization and permutation-based model feature importance evaluation', default='balanced_accuracy')
     parser.add_argument('--subsample', dest='training_subsample', type=int, help='for long running algos, option to subsample training set (0 for no subsample)', default=0)
@@ -62,24 +62,27 @@ def main(argv):
     options = parser.parse_args(argv[1:])
     output_path = options.output_path
     experiment_name = options.experiment_name
-
     do_all = options.do_all
 
     if do_all:
+        do_NB = True
         do_LR = True
         do_DT = True
         do_RF = True
-        do_NB = True
+        do_GB = True
         do_XGB = True
         do_LGB = True
         do_SVM = True
         do_ANN = True
-        do_ExSTraCS = True
+        do_KN = True
         do_eLCS = True
         do_XCS = True
-        do_GB = True
-        do_KN = True
-        algorithms = ['logistic_regression','decision_tree','random_forest','naive_bayes','XGB','LGB','SVM','ANN','ExSTraCS','eLCS','XCS','gradient_boosting','k_neighbors']
+        do_ExSTraCS = True
+
+        algorithms = ['naive_bayes','logistic_regression','decision_tree','random_forest','gradient_boosting','XGB','LGB','SVM','ANN','k_neighbors','eLCS','XCS','ExSTraCS']
+        if options.do_NB == 'False':
+            do_NB = False
+            algorithms.remove('naive_bayes')
         if options.do_LR == 'False':
             do_LR = False
             algorithms.remove("logistic_regression")
@@ -89,9 +92,9 @@ def main(argv):
         if options.do_RF == 'False':
             do_RF = False
             algorithms.remove('random_forest')
-        if options.do_NB == 'False':
-            do_NB = False
-            algorithms.remove('naive_bayes')
+        if options.do_GB == 'False':
+            do_GB = False
+            algorithms.remove('gradient_boosting')
         if options.do_XGB == 'False':
             do_XGB = False
             algorithms.remove('XGB')
@@ -104,36 +107,37 @@ def main(argv):
         if options.do_ANN == 'False':
             do_ANN = False
             algorithms.remove('ANN')
-        if options.do_ExSTraCS == 'False':
-            do_ExSTraCS = False
-            algorithms.remove('ExSTraCS')
+        if options.do_KN == 'False':
+            do_KN = False
+            algorithms.remove('k_neighbors')
         if options.do_eLCS == 'False':
             do_eLCS = False
             algorithms.remove('eLCS')
         if options.do_XCS == 'False':
             do_XCS = False
             algorithms.remove('XCS')
-        if options.do_GB == 'False':
-            do_GB = False
-            algorithms.remove('gradient_boosting')
-        if options.do_KN == 'False':
-            do_KN = False
-            algorithms.remove('k_neighbors')
+        if options.do_ExSTraCS == 'False':
+            do_ExSTraCS = False
+            algorithms.remove('ExSTraCS')
     else:
+        do_NB = False
         do_LR = False
         do_DT = False
         do_RF = False
-        do_NB = False
+        do_GB = False
         do_XGB = False
         do_LGB = False
         do_SVM = False
         do_ANN = False
-        do_ExSTraCS = False
+        do_KN = False
         do_eLCS = False
         do_XCS = False
-        do_GB = False
-        do_KN = False
+        do_ExSTraCS = False
+
         algorithms = []
+        if options.do_NB == 'True':
+            do_NB = True
+            algorithms.append('naive_bayes')
         if options.do_LR == 'True':
             do_LR = True
             algorithms.append("logistic_regression")
@@ -143,9 +147,9 @@ def main(argv):
         if options.do_RF == 'True':
             do_RF = True
             algorithms.append('random_forest')
-        if options.do_NB == 'True':
-            do_NB = True
-            algorithms.append('naive_bayes')
+        if options.do_GB == 'True':
+            do_GB = True
+            algorithms.append('gradient_boosting')
         if options.do_XGB == 'True':
             do_XGB = True
             algorithms.append('XGB')
@@ -158,21 +162,18 @@ def main(argv):
         if options.do_ANN == 'True':
             do_ANN = True
             algorithms.append('ANN')
-        if options.do_ExSTraCS == 'True':
-            do_ExSTraCS = True
-            algorithms.append('ExSTraCS')
+        if options.do_KN == 'True':
+            do_KN = True
+            algorithms.append('k_neighbors')
         if options.do_eLCS == 'True':
             do_eLCS = True
             algorithms.append('eLCS')
         if options.do_XCS == 'True':
             do_XCS = True
             algorithms.append('XCS')
-        if options.do_GB == 'True':
-            do_GB = True
-            algorithms.append('gradient_boosting')
-        if options.do_KN == 'True':
-            do_KN = True
-            algorithms.append('k_neighbors')
+        if options.do_ExSTraCS == 'True':
+            do_ExSTraCS = True
+            algorithms.append('ExSTraCS')
 
     primary_metric = options.primary_metric
     training_subsample = options.training_subsample
@@ -235,19 +236,19 @@ def main(argv):
         if metadata.shape[0] == 19: #Only update if metadata below hasn't been added before
             with open(output_path + '/' + experiment_name + '/' + 'metadata.csv', mode='a', newline="") as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                writer.writerow(["NB", str(do_NB)])
                 writer.writerow(["LR", str(do_LR)])
                 writer.writerow(["DT", str(do_DT)])
                 writer.writerow(["RF", str(do_RF)])
-                writer.writerow(["NB", str(do_NB)])
+                writer.writerow(["GB",str(do_GB)])
                 writer.writerow(["XGB", str(do_XGB)])
                 writer.writerow(["LGB", str(do_LGB)])
                 writer.writerow(["SVM", str(do_SVM)])
                 writer.writerow(["ANN", str(do_ANN)])
-                writer.writerow(["ExSTraCS",str(do_ExSTraCS)])
+                writer.writerow(["KN", str(do_KN)])
                 writer.writerow(["eLCS", str(do_eLCS)])
                 writer.writerow(["XCS",str(do_XCS)])
-                writer.writerow(["GB",str(do_GB)])
-                writer.writerow(["KN", str(do_KN)])
+                writer.writerow(["ExSTraCS",str(do_ExSTraCS)])
                 writer.writerow(["primary metric",primary_metric])
                 writer.writerow(["training subsample for KN,ANN,SVM,and XGB",training_subsample])
                 writer.writerow(["uniform feature importance estimation (models)",use_uniform_FI])
@@ -258,11 +259,10 @@ def main(argv):
                 writer.writerow(['training iterations', options.iterations])
                 writer.writerow(['N (rule population size)', options.N])
                 writer.writerow(["LCS hypersweep timeout",lcs_timeout])
-
             file.close()
 
     else: #run job checks
-        abbrev = {'logistic_regression':'LR','decision_tree':'DT','random_forest':'RF','naive_bayes':'NB','XGB':'XGB','LGB':'LGB','ANN':'ANN','SVM':'SVM','ExSTraCS':'ExSTraCS','eLCS':'eLCS','XCS':'XCS','gradient_boosting':'GB','k_neighbors':'KN'}
+        abbrev = {'naive_bayes':'NB','logistic_regression':'LR','decision_tree':'DT','random_forest':'RF','gradient_boosting':'GB','XGB':'XGB','LGB':'LGB','ANN':'ANN','SVM':'SVM','k_neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
 
         datasets = os.listdir(output_path + "/" + experiment_name)
         datasets.remove('logs')

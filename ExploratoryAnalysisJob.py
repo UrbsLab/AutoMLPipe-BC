@@ -15,12 +15,7 @@ import time
 '''Phase 1 of Machine Learning Analysis Pipeline:'''
 #test comment
 
-def job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff):
-    job_start_time = time.time()
-    random.seed(random_state)
-    np.random.seed(random_state)
-    jupyterRun = 'False' #controls whether plots are shown or closed depending on whether jupyter notebook is used to run code or not
-    topFeatures = 20 #only used with jupyter notebook reporting
+def job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun):
     if ignore_features_path == 'None':
         ignore_features = []
     else:
@@ -32,6 +27,16 @@ def job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_
     else:
         categorical_feature_headers = pd.read_csv(categorical_feature_path,sep=',')
         categorical_feature_headers = list(categorical_feature_headers)
+
+    runExplore(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features,categorical_feature_headers,sig_cutoff,jupyterRun)
+
+
+def runExplore(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features,categorical_feature_headers,sig_cutoff,jupyterRun):
+    job_start_time = time.time()
+    random.seed(random_state)
+    np.random.seed(random_state)
+    topFeatures = 20 #only used with jupyter notebook reporting
+
 
     dataset_name,dataset_ext = makeFolders(dataset_path,experiment_path)
 
@@ -440,4 +445,4 @@ def cv_partitioner(td, cv_partitions, partition_method, class_label, categorical
     return train_dfs, test_dfs
 
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],int(sys.argv[3]),sys.argv[4],int(sys.argv[5]),sys.argv[6],sys.argv[7],sys.argv[8],sys.argv[9],sys.argv[10],sys.argv[11],int(sys.argv[12]),sys.argv[13],sys.argv[14],float(sys.argv[15]))
+    job(sys.argv[1],sys.argv[2],int(sys.argv[3]),sys.argv[4],int(sys.argv[5]),sys.argv[6],sys.argv[7],sys.argv[8],sys.argv[9],sys.argv[10],sys.argv[11],int(sys.argv[12]),sys.argv[13],sys.argv[14],float(sys.argv[15]),sys.argv[16])

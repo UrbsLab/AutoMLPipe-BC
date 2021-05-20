@@ -56,6 +56,7 @@ def main(argv):
     cv_partitions = int(metadata[6,1])
     do_mutual_info = metadata[12,1]
     do_multisurf = metadata[13,1]
+    jupyterRun = 'False'
 
     # Argument checks
     if not os.path.exists(output_path):
@@ -73,9 +74,9 @@ def main(argv):
         for dataset_directory_path in dataset_paths:
             full_path = output_path + "/" + experiment_name + "/" + dataset_directory_path
             if eval(run_parallel):
-                submitClusterJob(full_path,output_path+'/'+experiment_name,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,reserved_memory,maximum_memory,queue)
+                submitClusterJob(full_path,output_path+'/'+experiment_name,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,reserved_memory,maximum_memory,queue,jupyterRun)
             else:
-                submitLocalJob(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv)
+                submitLocalJob(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,jupyterRun)
 
         #Update metadata
         if metadata.shape[0] == 17: #Only update if metadata below hasn't been added before
@@ -110,10 +111,10 @@ def main(argv):
             print("Above Phase 4 Jobs Not Completed")
         print()
 
-def submitLocalJob(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv):
-    FeatureSelectionJob.job(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv)
+def submitLocalJob(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,jupyterRun):
+    FeatureSelectionJob.job(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,jupyterRun)
 
-def submitClusterJob(full_path,experiment_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,reserved_memory,maximum_memory,queue):
+def submitClusterJob(full_path,experiment_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,reserved_memory,maximum_memory,queue,jupyterRun):
     job_ref = str(time.time())
     job_name = experiment_path+'/jobs/P4_'+job_ref+'_run.sh'
     sh_file = open(job_name,'w')
@@ -127,7 +128,7 @@ def submitClusterJob(full_path,experiment_path,do_mutual_info,do_multisurf,max_f
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
     sh_file.write('python '+this_file_path+'/FeatureSelectionJob.py '+full_path+" "+do_mutual_info+" "+do_multisurf+" "+
-                  str(max_features_to_keep)+" "+filter_poor_features+" "+str(top_results)+" "+export_scores+" "+class_label+" "+instance_label+" "+str(cv_partitions)+" "+overwrite_cv+'\n')
+                  str(max_features_to_keep)+" "+filter_poor_features+" "+str(top_results)+" "+export_scores+" "+class_label+" "+instance_label+" "+str(cv_partitions)+" "+overwrite_cv+" "+jupyterRun+'\n') 
     sh_file.close()
     os.system('bsub < ' + job_name)
     pass

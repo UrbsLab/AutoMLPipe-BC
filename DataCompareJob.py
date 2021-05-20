@@ -8,13 +8,15 @@ import copy
 def job(experiment_path,sig_cutoff):
     # Get dataset paths
     datasets = os.listdir(experiment_path)
-
-    datasets.remove('logs')
-    datasets.remove('jobs')
-    datasets.remove('jobsCompleted')
     datasets.remove('metadata.csv')
+    datasets.remove('jobsCompleted')
     try:
-        datasets.remove('DatasetComparisons')
+        datasets.remove('logs')
+        datasets.remove('jobs')
+    except:
+        pass
+    try:
+        datasets.remove('DatasetComparisons') #If it has been run previously (overwrite)
     except:
         pass
     datasets = sorted(datasets) #ensures consistent ordering of datasets and assignment of temporary identifier
@@ -26,11 +28,12 @@ def job(experiment_path,sig_cutoff):
 
     # Get algorithms
     algorithms = []
-    name_to_abbrev = {'logistic_regression': 'LR', 'decision_tree': 'DT', 'random_forest': 'RF', 'naive_bayes': 'NB',
-                      'XGB': 'XGB', 'LGB': 'LGB', 'ANN': 'ANN', 'SVM': 'SVM', 'ExSTraCS': 'ExSTraCS', 'eLCS': 'eLCS',
-                      'XCS': 'XCS','gradient_boosting':'GB','k_neighbors':'KN'}
+    name_to_abbrev = {'naive_bayes': 'NB','logistic_regression': 'LR', 'decision_tree': 'DT', 'random_forest': 'RF','gradient_boosting':'GB',
+                      'XGB': 'XGB', 'LGB': 'LGB', 'SVM': 'SVM', 'ANN': 'ANN','k_neighbors':'KN', 'eLCS': 'eLCS',
+                      'XCS': 'XCS', 'ExSTraCS': 'ExSTraCS'}
     abbrev_to_name = dict([(value, key) for key, value in name_to_abbrev.items()])
     for filepath in glob.glob(dataset_directory_paths[0] + '/training/pickledModels/*'):
+        filepath = str(filepath).replace('\\','/')
         algo_name = abbrev_to_name[filepath.split('/')[-1].split('_')[0]]
         if not algo_name in algorithms:
             algorithms.append(algo_name)
@@ -125,8 +128,6 @@ def mannWhitneyU(experiment_path,datasets,algorithms,metrics,dataset_directory_p
                         result = stats.mannwhitneyu(set1, set2)
 
                     tempList.append(str(metric))
-                    #tempList.append(str(datasets[x]))
-                    #tempList.append(str(datasets[y]))
                     tempList.append('D'+str(x+1))
                     tempList.append('D'+str(y+1))
                     tempList.append(str(round(result[0], 6)))
@@ -234,8 +235,6 @@ def bestMannWhitneyU(experiment_path,datasets,algorithms,metrics,dataset_directo
                     result = stats.mannwhitneyu(set1, set2)
 
                 tempList.append(str(metric))
-                #tempList.append(str(datasets[x]))
-                #tempList.append(str(datasets[y]))
                 tempList.append('D'+str(x+1))
                 tempList.append('D'+str(y+1))
                 tempList.append(str(round(result[0], 6)))

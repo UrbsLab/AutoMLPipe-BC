@@ -13,10 +13,9 @@ from statistics import mean,stdev
 import pickle
 import copy
 
-def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff):
+def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun):
     job_start_time = time.time()
     data_name = full_path.split('/')[-1]
-    jupyterRun = 'False'
     print(full_path)
 
     #Translate metric from scikitlearn standard
@@ -54,29 +53,29 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
         #Generate FI boxplots for each modeling algorithm
         doFIBoxplots(full_path,fi_df_list,algorithms,original_headers,jupyterRun)
 
-    #Normalize FI scores for normalized compound FI plot
+    #Normalize FI scores for normalized composite FI plot
     top_fi_ave_norm_list,all_feature_listToViz = normalizeFI(featuresToViz,all_feature_list,algorithms,fi_ave_norm_list)
 
-    #Generate Normalized Compound FI plot
-    compound_FI_plot(top_fi_ave_norm_list, algorithms, list(colors.values()), all_feature_listToViz, 'Norm',full_path,jupyterRun)
+    #Generate Normalized composite FI plot
+    composite_FI_plot(top_fi_ave_norm_list, algorithms, list(colors.values()), all_feature_listToViz, 'Norm',full_path,jupyterRun, 'Normalized Feature Importance')
 
-    #Fractionate FI scores for normalized and fractionated compound FI plot
+    #Fractionate FI scores for normalized and fractionated composite FI plot
     fracLists = fracFI(top_fi_ave_norm_list)
 
-    #Generate Normalized and Fractioned Compound FI plot
-    compound_FI_plot(fracLists, algorithms, list(colors.values()), all_feature_listToViz, 'Norm_Frac',full_path,jupyterRun)
+    #Generate Normalized and Fractioned composite FI plot
+    composite_FI_plot(fracLists, algorithms, list(colors.values()), all_feature_listToViz, 'Norm_Frac',full_path,jupyterRun, 'Normalized/Fractioned Feature Importance')
 
-    #Weight FI scores for normalized and (model performance) weighted compound FI plot
+    #Weight FI scores for normalized and (model performance) weighted composite FI plot
     weightedLists,weights = weightFI(ave_metric_list,top_fi_ave_norm_list)
 
     #Generate Normalized and Weighted Compount FI plot
-    compound_FI_plot(weightedLists, algorithms, list(colors.values()), all_feature_listToViz, 'Norm_Weight',full_path,jupyterRun)
+    composite_FI_plot(weightedLists, algorithms, list(colors.values()), all_feature_listToViz, 'Norm_Weight',full_path,jupyterRun, 'Normalized/Weighted Feature Importance')
 
     #Weight the Fractionated FI scores for normalized,fractionated, and weighted compount FI plot
     weightedFracLists = weighFracFI(fracLists,weights)
 
     #Generate Normalized, Fractionated, and Weighted Compount FI plot
-    compound_FI_plot(weightedFracLists, algorithms, list(colors.values()), all_feature_listToViz, 'Norm_Frac_Weight',full_path,jupyterRun)
+    composite_FI_plot(weightedFracLists, algorithms, list(colors.values()), all_feature_listToViz, 'Norm_Frac_Weight',full_path,jupyterRun, 'Normalized/Fractioned/Weighted Feature Importance')
 
     saveRuntime(full_path,job_start_time)
     parseRuntime(full_path,abbrev)
@@ -94,8 +93,7 @@ def preparation(full_path,encoded_algos):
         os.mkdir(full_path+'/training/results')
     #Decode algos
     algorithms = []
-    possible_algos = ['Logistic Regression','Decision Tree','Random Forest','Naive Bayes','XGB','LGB','ANN','SVM','ExSTraCS','eLCS','XCS','Gradient Boosting','K Neighbors']
-    #possible_algos = ['logistic_regression','decision_tree','random_forest','naive_bayes','XGB','LGB','ANN','SVM','ExSTraCS','eLCS','XCS','gradient_boosting','k_neighbors']
+    possible_algos = ['Naive Bayes','Logistic Regression','Decision Tree','Random Forest','Gradient Boosting','XGB','LGB','SVM','ANN','K Neighbors','eLCS','XCS','ExSTraCS']
     algorithms = decode(algorithms, encoded_algos, possible_algos, 0)
     algorithms = decode(algorithms, encoded_algos, possible_algos, 1)
     algorithms = decode(algorithms, encoded_algos, possible_algos, 2)
@@ -109,8 +107,8 @@ def preparation(full_path,encoded_algos):
     algorithms = decode(algorithms, encoded_algos, possible_algos, 10)
     algorithms = decode(algorithms, encoded_algos, possible_algos, 11)
     algorithms = decode(algorithms, encoded_algos, possible_algos, 12)
-    abbrev = {'Logistic Regression':'LR','Decision Tree':'DT','Random Forest':'RF','Naive Bayes':'NB','XGB':'XGB','LGB':'LGB','ANN':'ANN','SVM':'SVM','ExSTraCS':'ExSTraCS','eLCS':'eLCS','XCS':'XCS','Gradient Boosting':'GB','K Neighbors':'KN'}
-    colors = {'Logistic Regression':'black','Decision Tree':'yellow','Random Forest':'orange','Naive Bayes':'grey','XGB':'purple','LGB':'aqua','ANN':'red','SVM':'blue','ExSTraCS':'lightcoral','eLCS':'firebrick','XCS':'deepskyblue','Gradient Boosting':'bisque','K Neighbors':'seagreen'}
+    abbrev = {'Naive Bayes':'NB','Logistic Regression':'LR','Decision Tree':'DT','Random Forest':'RF','Gradient Boosting':'GB','XGB':'XGB','LGB':'LGB','SVM':'SVM','ANN':'ANN','K Neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
+    colors = {'Naive Bayes':'grey','Logistic Regression':'black','Decision Tree':'yellow','Random Forest':'orange','Gradient Boosting':'bisque','XGB':'purple','LGB':'aqua','SVM':'blue','ANN':'red','eLCS':'firebrick','XCS':'deepskyblue','K Neighbors':'seagreen','ExSTraCS':'lightcoral'}
     #Get Original Headers
     original_headers = pd.read_csv(full_path+"/exploratory/OriginalHeaders.csv",sep=',').columns.values.tolist()
     return algorithms,abbrev,colors,original_headers
@@ -457,15 +455,15 @@ def prepFI(algorithms,full_path,abbrev,metric_dict,primary_metric,top_results):
     fi_df_list = []         # algorithm feature importance dataframe list (used to generate FI boxplots for each algorithm)
     fi_ave_list = []        # algorithm feature importance averages list (used to generate composite FI barplots)
     ave_metric_list = []    # algorithm focus metric averages list (used in weighted FI viz)
-    all_feature_list = []   # list of pre-feature selection features as they appear in FI reports for each algorithm
+    all_feature_list = []   # list of pre-feature selection feature names as they appear in FI reports for each algorithm
 
     for algorithm in algorithms:
         # Get relevant feature importance info
-        temp_df = pd.read_csv(full_path+'/training/results/FI/'+abbrev[algorithm]+"_FI.csv")
+        temp_df = pd.read_csv(full_path+'/training/results/FI/'+abbrev[algorithm]+"_FI.csv") #CV FI scores for all original features in dataset.
         if algorithm == algorithms[0]:  # Should be same for all algorithm files (i.e. all original features in standard CV dataset order)
             all_feature_list = temp_df.columns.tolist()
         fi_df_list.append(temp_df)
-        fi_ave_list.append(temp_df.mean().tolist())
+        fi_ave_list.append(temp_df.mean().tolist()) #Saves average FI scores over CV runs
 
         # Get relevant metric info
         avgBA = mean(metric_dict[algorithm][primary_metric])
@@ -476,24 +474,24 @@ def prepFI(algorithms,full_path,abbrev,metric_dict,primary_metric,top_results):
     for each in fi_ave_list:  # each algorithm
         normList = []
         for i in range(len(each)):
-            if each[i] <= 0:
+            if each[i] <= 0: #Feature importance scores assumed to be uninformative if at or below 0
                 normList.append(0)
             else:
                 normList.append((each[i]) / (max(each)))
         fi_ave_norm_list.append(normList)
 
     #Identify features with non-zero averages
-    alg_non_zero_FI_list = []
+    alg_non_zero_FI_list = [] #stores list of feature name lists that are non-zero for each algorithm
     for each in fi_ave_list:  # each algorithm
         temp_non_zero_list = []
         for i in range(len(each)):  # each feature
             if each[i] > 0.0:
-                temp_non_zero_list.append(all_feature_list[i])
+                temp_non_zero_list.append(all_feature_list[i]) #add feature names with positive values (doesn't need to be normalized for this)
         alg_non_zero_FI_list.append(temp_non_zero_list)
 
     non_zero_union_features = alg_non_zero_FI_list[0]  # grab first algorithm's list
 
-    #Identify union of features with non-zero averages over all algorithms
+    #Identify union of features with non-zero averages over all algorithms (i.e. if any algorithm found a non-zero score it will be considered for inclusion in top feature visualizations)
     for j in range(1, len(algorithms)):
         non_zero_union_features = list(set(non_zero_union_features) | set(alg_non_zero_FI_list[j]))
     non_zero_union_indexes = []
@@ -503,9 +501,9 @@ def prepFI(algorithms,full_path,abbrev,metric_dict,primary_metric,top_results):
     return fi_df_list,fi_ave_list,fi_ave_norm_list,ave_metric_list,all_feature_list,non_zero_union_features,non_zero_union_indexes
 
 def selectForViz(top_results,non_zero_union_features,non_zero_union_indexes,algorithms,ave_metric_list,fi_ave_norm_list):
-    #Identify list of top features over all algorithms to visualize
+    #Identify list of top features over all algorithms to visualize (note that best features to vizualize are chosen using algorithm performanc weighting and normalization: frac plays no useful role here only for viz)
     featuresToViz = None
-    if len(non_zero_union_features) > top_results:
+    if len(non_zero_union_features) > top_results: #Keep all features if there are fewer than specified top results
         # Identify a top set of feature values
         scoreSumDict = {}
         i = 0
@@ -550,7 +548,7 @@ def doFIBoxplots(full_path,fi_df_list,algorithms,original_headers,jupyterRun):
         counter += 1
 
 def normalizeFI(featuresToViz,all_feature_list,algorithms,fi_ave_norm_list):
-    #Create Normalized dataframes with feature viz subsets
+    #Create Normalized dataframes with feature viz subsets (normalization itself was already completed in prepFI)
     feature_indexToViz = []
     for i in featuresToViz:
         feature_indexToViz.append(all_feature_list.index(i))
@@ -573,11 +571,12 @@ def normalizeFI(featuresToViz,all_feature_list,algorithms,fi_ave_norm_list):
     return top_fi_ave_norm_list,all_feature_listToViz
 
 def fracFI(top_fi_ave_norm_list):
+    #Transforms feature scores so that they sum to 1 over all features.  This way Norm_Frac plot, there is equal total bar area for each algorithm.
     fracLists = []
-    for each in top_fi_ave_norm_list:
+    for each in top_fi_ave_norm_list: #each algorithm
         fracList = []
-        for i in range(len(each)):
-            if sum(each) == 0:
+        for i in range(len(each)): #each feature
+            if sum(each) == 0: #check that all feature scores are not zero to avoid zero division error
                 fracList.append(0)
             else:
                 fracList.append((each[i] / (sum(each))))
@@ -585,6 +584,7 @@ def fracFI(top_fi_ave_norm_list):
     return fracLists
 
 def weightFI(ave_metric_list,top_fi_ave_norm_list):
+    #Weights the feature importance scores by algorithm performance (intuitive because when interpreting featuer importances we want to place more weight on better performing algorithms)
     # Prepare weights
     weights = []
     # replace all balanced accuraces <=.5 with 0
@@ -608,7 +608,7 @@ def weightFI(ave_metric_list,top_fi_ave_norm_list):
     return weightedLists,weights
 
 def weighFracFI(fracLists,weights):
-    # Weight normalized feature importances
+    # Weight normalized and fractionated feature importances (This combination gives the most intutive visualization for comparing and contrasting FI across all algorithms)
     weightedFracLists = []
 
     for i in range(len(fracLists)):
@@ -651,11 +651,11 @@ def parseRuntime(full_path,abbrev):
             pass
         writer.writerow(["Feature Selection",dict['featureselection']])
         try:
-            writer.writerow(["Logistic Regression",dict['LR']])
+            writer.writerow(["Naive Bayes",dict['NB']])
         except:
             pass
         try:
-            writer.writerow(["Naive Bayes",dict['NB']])
+            writer.writerow(["Logistic Regression",dict['LR']])
         except:
             pass
         try:
@@ -664,6 +664,10 @@ def parseRuntime(full_path,abbrev):
             pass
         try:
             writer.writerow(["Random Forest",dict['RF']])
+        except:
+            pass
+        try:
+            writer.writerow(["Gradient Boosting",dict['GB']])
         except:
             pass
         try:
@@ -687,19 +691,15 @@ def parseRuntime(full_path,abbrev):
         except:
             pass
         try:
-            writer.writerow(["Gradient Boosting",dict['GB']])
-        except:
-            pass
-        try:
-            writer.writerow(["ExSTraCS",dict['ExSTraCS']])
-        except:
-            pass
-        try:
             writer.writerow(["eLCS",dict['eLCS']])
         except:
             pass
         try:
             writer.writerow(["XCS",dict['XCS']])
+        except:
+            pass
+        try:
+            writer.writerow(["ExSTraCS",dict['ExSTraCS']])
         except:
             pass
         writer.writerow(["Stats Summary",dict['Stats']])
@@ -719,7 +719,7 @@ def decode(algorithms,encoded_algos,possible_algos,index):
     return algorithms
 
 
-def compound_FI_plot(fi_list, algorithms, algColors, all_feature_listToViz, figName,full_path,jupyterRun):
+def composite_FI_plot(fi_list, algorithms, algColors, all_feature_listToViz, figName,full_path,jupyterRun,yLabelText):
     # y-axis in bold
     rc('font', weight='bold', size=16)
 
@@ -752,9 +752,9 @@ def compound_FI_plot(fi_list, algorithms, algColors, all_feature_listToViz, figN
     # Custom X axis
     plt.xticks(np.arange(len(all_feature_listToViz)), all_feature_listToViz, rotation='vertical')
     plt.xlabel("Feature", fontsize=20)
-    plt.ylabel("Normalized Feature Importance", fontsize=20)
+    plt.ylabel(yLabelText, fontsize=20)
     #plt.legend(lines, algorithms, loc=0, fontsize=16)
-    plt.legend(lines, algorithms,loc="upper left", bbox_to_anchor=(1.01,1))
+    plt.legend(lines[::-1], algorithms[::-1],loc="upper left", bbox_to_anchor=(1.01,1))
     plt.savefig(full_path+'/training/results/FI/Compare_FI_' + figName + '.png', bbox_inches='tight')
     if eval(jupyterRun):
         plt.show()
@@ -762,4 +762,4 @@ def compound_FI_plot(fi_list, algorithms, algColors, all_feature_listToViz, figN
         plt.close('all')
 
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],sys.argv[7],int(sys.argv[8]),sys.argv[9],sys.argv[10],int(sys.argv[11]),float(sys.argv[12]))
+    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],sys.argv[7],int(sys.argv[8]),sys.argv[9],sys.argv[10],int(sys.argv[11]),float(sys.argv[12]),sys.argv[13])

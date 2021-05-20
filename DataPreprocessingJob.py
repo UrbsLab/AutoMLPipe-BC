@@ -17,15 +17,18 @@ import pickle
 '''Phase 2 of Machine Learning Analysis Pipeline:'''
 
 def job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,categorical_feature_path):
-
-    job_start_time = time.time()
-    random.seed(random_state)
-    np.random.seed(random_state)
     if categorical_feature_path == 'None':
         categorical_feature_headers = []
     else:
         categorical_feature_headers = pd.read_csv(categorical_feature_path,sep=',')
         categorical_feature_headers = list(categorical_feature_headers)
+    runProcess(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,categorical_feature_headers)
+
+
+def runProcess(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,categorical_feature_headers):
+    job_start_time = time.time()
+    random.seed(random_state)
+    np.random.seed(random_state)
 
     data_train,data_test,header,dataset_name,cvCount = loadData(cv_train_path,cv_test_path,experiment_path,class_label,instance_label)
 

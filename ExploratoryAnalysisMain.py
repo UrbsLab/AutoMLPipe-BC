@@ -85,24 +85,23 @@ def main(argv):
     maximum_memory = options.maximum_memory
     do_check = options.do_check
 
-    jupyterRun = False #controls whether plots are shown or closed depending on whether jupyter notebook is used to run code or not
-
+    jupyterRun = 'False' #controls whether plots are shown or closed depending on whether jupyter notebook is used to run code or not
     if not do_check:
         makeDirTree(data_path,output_path,experiment_name,jupyterRun) #check file/path names and create directory tree for output
 
         #Determine file extension of datasets in target folder:
         file_count = 0
         unique_datanames = []
-        for datasetFilename in glob.glob(data_path+'/*'):
-            file_extension = datasetFilename.split('/')[-1].split('.')[-1]
-            data_name = datasetFilename.split('/')[-1].split('.')[0] #Save unique dataset names so that analysis is run only once if there is both a .txt and .csv version of dataset with same name.
+        for dataset_path in glob.glob(data_path+'/*'):
+            file_extension = dataset_path.split('/')[-1].split('.')[-1]
+            data_name = dataset_path.split('/')[-1].split('.')[0] #Save unique dataset names so that analysis is run only once if there is both a .txt and .csv version of dataset with same name.
             if file_extension == 'txt' or file_extension == 'csv':
                 if data_name not in unique_datanames:
                     unique_datanames.append(data_name)
                     if eval(run_parallel):
-                        submitClusterJob(datasetFilename,output_path+'/'+experiment_name,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,reserved_memory,maximum_memory,queue,ignore_features_path,categorical_feature_path,sig_cutoff)
+                        submitClusterJob(dataset_path,output_path+'/'+experiment_name,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,reserved_memory,maximum_memory,queue,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun)
                     else:
-                        submitLocalJob(datasetFilename,output_path+'/'+experiment_name,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff)
+                        submitLocalJob(dataset_path,output_path+'/'+experiment_name,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun)
                     file_count += 1
 
         if file_count == 0: #Check that there was at least 1 dataset
@@ -167,15 +166,16 @@ def makeDirTree(data_path,output_path,experiment_name,jupyterRun):
 
     #Create Experiment folder, with log and job folders
     os.mkdir(output_path+'/'+experiment_name)
-    if not jupyterRun:
+    os.mkdir(output_path+'/'+ experiment_name+'/jobsCompleted')
+    if not eval(jupyterRun):
         os.mkdir(output_path+'/'+experiment_name+'/jobs')
         os.mkdir(output_path+'/'+experiment_name+'/logs')
-        os.mkdir(output_path+'/'+ experiment_name+'/jobsCompleted')
 
-def submitLocalJob(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff):
-    ExploratoryAnalysisJob.job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff)
 
-def submitClusterJob(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,reserved_memory,maximum_memory,queue,ignore_features_path,categorical_feature_path,sig_cutoff):
+def submitLocalJob(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun):
+    ExploratoryAnalysisJob.job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun)
+
+def submitClusterJob(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,reserved_memory,maximum_memory,queue,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun):
     job_ref = str(time.time())
     job_name = experiment_path+'/jobs/P1_'+job_ref+'_run.sh'
     sh_file = open(job_name,'w')
@@ -189,7 +189,7 @@ def submitClusterJob(dataset_path,experiment_path,cv_partitions,partition_method
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
     sh_file.write('python '+this_file_path+'/ExploratoryAnalysisJob.py '+dataset_path+" "+experiment_path+" "+str(cv_partitions)+" "+partition_method+" "+str(categorical_cutoff)+" "+export_exploratory_analysis+
-                  " "+export_feature_correlations+" "+export_univariate_plots+" "+class_label+" "+instance_label+" "+match_label+" "+str(random_state)+" "+str(ignore_features_path)+" "+str(categorical_feature_path)+" "+str(sig_cutoff)+'\n')
+                  " "+export_feature_correlations+" "+export_univariate_plots+" "+class_label+" "+instance_label+" "+match_label+" "+str(random_state)+" "+str(ignore_features_path)+" "+str(categorical_feature_path)+" "+str(sig_cutoff)+" "+str(jupyterRun)+'\n')
     sh_file.close()
     os.system('bsub < '+job_name)
     pass

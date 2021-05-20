@@ -56,42 +56,42 @@ def main(argv):
     if not os.path.exists(output_path + '/' + experiment_name):
         raise Exception("Experiment must exist (from phase 1) before phase 6 can begin")
 
+    jupyterRun = 'False'
     metadata = pd.read_csv(output_path + '/' + experiment_name + '/' + 'metadata.csv').values
 
     class_label = metadata[0, 1]
     instance_label = metadata[1, 1]
     sig_cutoff = metadata[5,1]
     cv_partitions = int(metadata[6,1])
-
-    do_LR = metadata[19,1]
-    do_DT = metadata[20,1]
-    do_RF = metadata[21,1]
-    do_NB = metadata[22,1]
-    do_XGB = metadata[23,1]
-    do_LGB = metadata[24,1]
-    do_SVM = metadata[25,1]
-    do_ANN = metadata[26,1]
-    do_ExSTraCS = metadata[27,1]
-    do_eLCS = metadata[28,1]
-    do_XCS = metadata[29,1]
-    do_GB = metadata[30, 1]
-    do_KN = metadata[31, 1]
+    do_NB = metadata[19,1]
+    do_LR = metadata[20,1]
+    do_DT = metadata[21,1]
+    do_RF = metadata[22,1]
+    do_GB = metadata[23, 1]
+    do_XGB = metadata[24,1]
+    do_LGB = metadata[25,1]
+    do_SVM = metadata[26,1]
+    do_ANN = metadata[27,1]
+    do_KN = metadata[28, 1]
+    do_eLCS = metadata[29,1]
+    do_XCS = metadata[30,1]
+    do_ExSTraCS = metadata[31,1]
     primary_metric = metadata[32,1]
 
     encodedAlgos = ''
+    encodedAlgos = encode(do_NB, encodedAlgos)
     encodedAlgos = encode(do_LR,encodedAlgos)
     encodedAlgos = encode(do_DT, encodedAlgos)
     encodedAlgos = encode(do_RF, encodedAlgos)
-    encodedAlgos = encode(do_NB, encodedAlgos)
+    encodedAlgos = encode(do_GB, encodedAlgos)
     encodedAlgos = encode(do_XGB, encodedAlgos)
     encodedAlgos = encode(do_LGB, encodedAlgos)
-    encodedAlgos = encode(do_ANN, encodedAlgos)
     encodedAlgos = encode(do_SVM, encodedAlgos)
-    encodedAlgos = encode(do_ExSTraCS, encodedAlgos)
+    encodedAlgos = encode(do_ANN, encodedAlgos)
+    encodedAlgos = encode(do_KN, encodedAlgos)
     encodedAlgos = encode(do_eLCS, encodedAlgos)
     encodedAlgos = encode(do_XCS, encodedAlgos)
-    encodedAlgos = encode(do_GB, encodedAlgos)
-    encodedAlgos = encode(do_KN, encodedAlgos)
+    encodedAlgos = encode(do_ExSTraCS, encodedAlgos)
 
     if not do_check:
         # Iterate through datasets
@@ -103,9 +103,9 @@ def main(argv):
         for dataset_directory_path in dataset_paths:
             full_path = output_path + "/" + experiment_name + "/" + dataset_directory_path
             if eval(run_parallel):
-                submitClusterJob(full_path,encodedAlgos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,output_path+'/'+experiment_name,cv_partitions,reserved_memory,maximum_memory,queue,plot_metric_boxplots,primary_metric,top_results,sig_cutoff)
+                submitClusterJob(full_path,encodedAlgos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,output_path+'/'+experiment_name,cv_partitions,reserved_memory,maximum_memory,queue,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun)
             else:
-                submitLocalJob(full_path,encodedAlgos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff)
+                submitLocalJob(full_path,encodedAlgos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun)
     else:
         datasets = os.listdir(output_path + "/" + experiment_name)
         datasets.remove('logs')
@@ -131,10 +131,10 @@ def main(argv):
             print("Above Phase 6 Jobs Not Completed")
         print()
 
-def submitLocalJob(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff):
-    StatsJob.job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff)
+def submitLocalJob(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun):
+    StatsJob.job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun)
 
-def submitClusterJob(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,experiment_path,cv_partitions,reserved_memory,maximum_memory,queue,plot_metric_boxplots,primary_metric,top_results,sig_cutoff):
+def submitClusterJob(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,experiment_path,cv_partitions,reserved_memory,maximum_memory,queue,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun):
     job_ref = str(time.time())
     job_name = experiment_path + '/jobs/P6_' + job_ref + '_run.sh'
     sh_file = open(job_name,'w')
@@ -147,7 +147,7 @@ def submitClusterJob(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class
     sh_file.write('#BSUB -e ' + experiment_path+'/logs/P6_'+job_ref+'.e\n')
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
-    sh_file.write('python '+this_file_path+'/StatsJob.py '+full_path+" "+encoded_algos+" "+plot_ROC+" "+plot_PRC+" "+plot_FI_box+" "+class_label+" "+instance_label+" "+str(cv_partitions)+" "+str(plot_metric_boxplots)+" "+str(primary_metric)+" "+str(top_results)+" "+str(sig_cutoff)+'\n')
+    sh_file.write('python '+this_file_path+'/StatsJob.py '+full_path+" "+encoded_algos+" "+plot_ROC+" "+plot_PRC+" "+plot_FI_box+" "+class_label+" "+instance_label+" "+str(cv_partitions)+" "+str(plot_metric_boxplots)+" "+str(primary_metric)+" "+str(top_results)+" "+str(sig_cutoff)+" "+str(jupyterRun)+'\n')   
     sh_file.close()
     os.system('bsub < ' + job_name)
     pass

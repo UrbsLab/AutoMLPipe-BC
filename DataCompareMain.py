@@ -11,7 +11,7 @@ import pandas as pd
 
 '''Phase 7 of Machine Learning Analysis Pipeline:
 Sample Run Command:
-python WrapperComparisonMain.py --output-path /Users/robert/Desktop/outputs --experiment-name test1
+python DataCompareMain.py --output-path /Users/robert/Desktop/outputs --experiment-name test1
 '''
 
 def main(argv):

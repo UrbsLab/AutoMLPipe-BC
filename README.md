@@ -1,21 +1,88 @@
-# AutoMLPipe-BC
-A rigorous automated machine learning pipeline for binary classification tasks (scikit-learn based).
+# AutoMLPipe-BC Summary
+AutoMLPipe-BC is an automated, rigorous, and largely scikit-learn based machine learning (ML) analysis pipeline for binary classification. Adopts current best practices to avoid bias, optimize performance, ensure replicatability, capture complex associations (e.g. interactions and heterogeneity), and enhance interpretability. Includes (1) exploratory analysis, (2) data cleaning, (3) partitioning, (4) scaling, (5) imputation, (6) filter-based feature selection, (7) collective feature selection, (8) modeling with 'optuna' hyperparameter optimization across 13 implemented ML algorithms (including three rule-based machine learning algorithms: ExSTraCS, XCS, and eLCS), (9) testing evaluations with 16 classification metrics, model feature importance estimation, (10) automatically saves all results, models, and publication-ready plots (including proposed composite feature importance plots), (11) non-parametric statistical comparisons across ML algorithms and analyzed datasets, and (12) automatically generated PDF summary reports.
 
-# Introduction
-This respository includes the code (including a Jupyter Notebook) to run the machine learning analysis pipeline (for binary classification) that pairs with our paper titled "A Rigorous Machine Learning Analysis Pipeline for Biomedical Binary Classification: Application in Pancreatic Cancer Nested Case-control Studies with Implications for Bias Assessments". This notebook presents an example of a 'rigorous' and well annotated machine learning (ML) analysis pipeline that could be reasonablly applied to various supervised learning classification tasks, but was developed here specifically for biomedical data mining/modeling. This pipeline could be used as follows:
+# Overview
+This AutoML tool empowers anyone with a basic understanding of python to easily run a comprehensive and customizable machine learning analysis. Unlike most other AutoML tools, AutoMLPipe-BC was designed as a framework to rigorously apply and compare a variety of ML modeling algorithms and collectively learn from them as opposed to simply identifying a best performing model and/or attempting to evolutionarily optimize the analysis pipeline itself. Instead, its design focused on automating (1) application of best practices in data science and ML for binary classification, (2) avoiding potential sources of bias (e.g. by conducting data transformations, imputation, and feature selection withing distinct CV partitions), (3) providing transparency in the modeling and evaluation of models, (4) the detection and characterization of complex patterns of association (e.g. interactions and heterogeneity), (5) generation of publication-ready plots/figures, and (6) generation of a PDF summary report for quick interpretation.
 
-* Apply/run pipeline (as is) on other binary classification datasets
-* Utilize this pipeline as a blueprint to implement your own expanded or simplified anlaysis pipeline
-* Utilize as an educational tool/example of how to run python-based data handling, preprocessing, feature selection, machine learning modeling, generating relevant visualizations, and running non-parametric statistical comparisons. Packages such as pandas, scikit-learn and scipy are used.
-* Obtain the code to generate our porposed 'compound feature importance barplots'.
+The following 13 ML modeling algorithms are currently included as options: 1. Naive Bayes (NB), 2. Logistic Regression (LR), 3. Decision Tree (DT), 4. Random Forest (RF), 5. Gradient Boosting (GB), 6. XGBoost (XGB), 7. LGBoost (LGB), 8. Support Vector Machine (SVM), 9. Artificial Neural Network (ANN), 10. K-Nearest Neighbors (k-NN), 11. Eductional Learning Classifier System (eLCS), 12. 'X' Classifier System (XCS), and 13. Extended Supervised Tracking and Classifying System (ExSTraCS).
 
-***
-## Alternative Pipeline Code
-This code represents our first ML analysis pipeline implementation as described in the paper above. It includes the ExSTraCS machine learning modeler which is a stand alone python implementation (outside of scikit-learn).  More recently we have implemented scikit-learn compatible versions of ExSTraCS and two other LCS algorithms (i.e. XCS, and eLCS). We have since implemented an updated/improved version of this ML analysis pipeline to include those three new scikit-learn compatible LCS algorithms along with nearest neighbors and gradient boosting classifiers.  For users looking to replicate the pipeline in the above paper, use this present repository. For those looking for the most up-to-date pipeline including 5 additional ML modeling algorithms we recommend using the very similar pipeline available at: https://github.com/UrbsLab/scikit_ML_Pipeline_Binary_Notebook
+This pipeline does NOT: (1) conduct feature engineering, or feature construction, (2) conduct feature encoding (e.g. apply one-hot-encoding to categorical features, or numerically encode text-based feature values), (3) account for bias in data collection, or (4) conduct anything beyond simple data cleaning (i.e. it only removes instances with no class label, or where all features are missing). These elements should be conducted externally at the discression of the user.
+
+Of course, we do not suggest that this is the best or only viable way to assemble an ML analysis pipeline for any classification problem, nor that the included ML modeling algorithms are the best options for inclusion. Certainly, this pipeline could be expanded much further and adapted to different problems or goals. We welcome feedback and suggestions for improvement.
 
 ***
-## Schematic of ML Analysis Pipeline
-![alttext](https://github.com/UrbsLab/ExSTraCS_ML_Pipeline_Binary_Notebook/blob/master/ML%20pipeline%20schematic2.png?raw=true)
+## Schematic of AutoMLPipe-BC
+This schematic breaks the overall pipeline down into 4 generalized stages: (1) preprocessing and feature transformation, (2) feature importance evaluation and selection, (3) modeling, and (4) postprocessing.
+
+![alttext](https://github.com/UrbsLab/AutoMLPipe-BC/blob/main/ML_pipe_schematic.png?raw=true)
+
+***
+## Implementation
+AutoMLPipe-BC is coded in Python 3 relying heavily on pandas and scikit-learn as well as a variety of other python packages. 
+
+***
+## Run Modes
+This multi-phase pipeline has been set up in a way that it can be easily run in one of three ways:
+* A series of scripts that are run as parallelized jobs within a linux-based computing cluster (see https://github.com/UrbsLab/I2C2-Documentation for a description of the computing cluster for which this functionality was designed).
+* A series of scripts (not parallelized) running on a local PC from the command line.
+* As an editable Jupyter Notebook that can be run all at once utilizing the associated code from the aforementioned scripts.
+
+***
+## Suggested Uses
+* To easily conduct a rigorous, customizable ML analysis of one or more datasets using one or more of the included ML algorithms. 
+* As an analysis framework to evaluate and compare existing or other new ML modeling approaches.
+* As a standard (or negative control) with which to compare other other autoML tools and determine if the added computational effort of searching pipeline configurations is paying off.
+* As the basis to create a new expanded, adapted, or modified AutoML tool.
+* As an educational example of how to program many of the most commontly used ML analysis proceedures, and generate a variety of standard and novel plots.
+
+***
+## Assumptions For Use (data and run preparation)
+* Target datasets for analysis are in comma-separated format (.txt or .csv)
+* Missing data values should be empty or indicated with an 'NA'.
+* Dataset includes a header with column names.
+* Data columns include features, class label, and optionally instance (i.e. row) labels, or match labels (if matched cross validation will be used)
+* Binary class values are encoded as 0 (e.g. negative), and 1 (positive) with respect to true positive, true negative, false positive, false negative metrics. PRC plots focus on classification of 'positives'.
+* All feature values (both categorical and quantitative) are numerically encoded. Scikit-learn does not accept text-based values. However both instance_label and match_label values may be either numeric or text.
+* One or more target datasets for analysis are put in the same folder. The path to this folder is a critical pipeline run parameter. If multiple datasets are being analyzed they must have the same class_label, and (if present) the same instance_label and match_label.
+* SVM modeling should only be applied when data scaling is applied by the pipeline
+* Logistic Regression' baseline model feature importance estimation is determined by the exponential of the feature's coefficient. This should only be used if data scaling is applied by the pipeline.  Otherwise 'use_uniform_FI' should be True.
+
+***
+## Unique Characteristics (ordered by appearence in pipeline)
+* Pipeline includes reliable default run parameters that can be adjusted for further customization.
+* Easily compare ML performance between multiple target datasets (e.g. with different feature subsets)
+* Easily conduct an exploratory analysis including: (1) basic dataset characteristics: data dimensions, feature stats, missing value counts, and class balance, (2) detection of categorical vs. quantiative features, (3) feature correlation (with heatmap), and (4) univariate analyses with Chi-Square (categorical features), or Mann-Whitney U-Test (quantitative features).
+* Option to manually specify which features to treat as categorical vs. quantitative.
+* Option to manually specify features in loaded dataset to ignore in analysis.
+* Option to utilize 'matched' cross validation partitioning: Case/control pairs or groups that have been matched based on one or more covariates will be kept together within CV data partitions.
+* Imputation is completed using mode imputation for categorical variables first, followed by MICE-based iterative imputation for quantitaive features.
+* Data scaling, imputation, and feature selection are all conducted within respective CV partitions to prevent data leakage (i.e. testing data is not seen for any aspect of learning until final model evaluation).
+* The scaling, imputation, and feature selection data transformations (based only on the training data) are saved (i.e. 'pickled') so that they can be applied in the same way to testing partitions, and in the future to any replication data.
+* Collective feature selection is used: Both mutual information (proficient at detectin univariate associations) and MultiSURF (a Relief-based algorithm proficient at detecting both univariate and epistatic interactions) are run, and features are only removed from consideration if both algorithms fail to detect an informative signal (i.e. score > 0). This ensures that interacting features that may have no univariate association with class are not removed from the data prior to modeling. 
+* Automatically outputs average feature importance bar-plots from feature importance/feature selection phase.
+* Since MultiSURF scales linearly with # of features and quadratically with # of instances, there is an option to select a random instance subset for MultiSURF scoring to reduce computational burden.
+* Includes 3 rule-based machine learning algorithms: ExSTraCS, XCS, and eLCS (to run optionally). These 'learning classifier systems' have been demonstrated to be able to detect complex associations while providing human interpretable models in the form of IF:THEN rule-sets. The ExSTraCS algorithm was developed by our research group to specifically handle the challenges of scalability, noise, and detection of epistasis and genetic heterogeneity in biomedical data mining.  
+* Utilizes the 'optuna' package to conduct automated Bayesian hyperparameter optimization during modeling (and optionally outputs plots summarizing the sweep).
+* We have sought to specify a comprehensive range of relevant hyperparameter options for all included ML algorithms.
+* All ML algorithms that have a build in strategy to gather model feature importance estimates use them by default (i.e. LR,DT,RF,XGB,LGB,GB,eLCS,XCS,ExSTraCS).
+* All other algorithms (NB,SVM,ANN,k-NN) estimate feature importance using permutation feature importance.
+* The pipeline includes the option to apply permutation feature importance estimation uniformly (i.e. for all algorithms) by setting the 'use_uniform_FI' parameter to 'True'.
+* All models are evaluated, reporting 16 classification metrics: Accuracy, Balanced Accuracy, F1 Score, Sensitivity(Recall), Specificity, Precision (PPV), True Positives (TP), True Negatives (TN), False Positives (FP), False Negatives (FN), Negative Predictive Value (NPV), Likeliehood Ratio + (LR+), Likeliehood Ratio - (LR-), ROC AUC, PRC AUC, and PRC APS. 
+* All models are saved as 'pickle' files so that they can be loaded and reapplied in the future.
+* Outputs ROC and PRC plots for each ML modeling algorithm displaying individual n-fold CV runs and average the average curve.
+* Outputs boxplots for each classification metric comparing ML modeling performance (across n-fold CV).
+* Outputs boxplots of feature importance estimation for each ML modeling algorithm (across n-fold CV).
+* Outputs our proposed 'composite feature importance plots' to examine feature importance estimate consistency (or lack of consistency) across all ML models (i.e. all algorithms) 
+* Outputs summary ROC and PRC plots comparing average curves across all ML algorithms.
+* Collects run-time information on each phase of the pipeline and for the training of each ML algorithm model.
+* For each dataset, Kruskall-Wallis and subsequent pairwise Mann-Whitney U-Tests evaluates statistical significance of ML algorithm modeling performance differences for all metrics.
+* The same statistical tests (Kruskall-Wallis and Mann-Whitney U-Test) are conducted comparing datasets using the best performing modeling algorithm (for a given metric and dataset). 
+* A formatted PDF report is automatically generated giving a snapshot of all key pipeline results.
+* A script is included to apply all trained (and 'pickled') models to an external replication dataset to further evaluate model generalizability. This script (1) conducts an exploratory analysis of the new dataset, (2) uses the same scaling, imputation, and feature subsets determined from n-fold cv training, yielding 'n' versions of the replication dataset to be applied to the respective models, (3) applies and evaluates all models with these respective versions of the replication data, (4) outputs the same set of aforementioned boxplots, ROC, and PRC plots, and (5) automatically generates a new, formatted PDF report summarizing these applied results.
+
+# Installation
+
+# Usage
 
 ***
 # Prerequisites for Use
@@ -34,20 +101,9 @@ Additionally, while currently commented out in the file (modeling_methods.py) if
 
 Lastly, in order to include the stand-alone algorithm 'ExSTraCS' we needed to call this from the command line within this Jupyter Notebook.  As a result, the part of this notebook running ExSTraCS will only run properly if the path to the working directory used to run this notebook includes no spaces.  In other words if your path includes a folder called 'My Folder' vs. 'My_Folder' you will likely get a run error for ExSTraCS (at least on a Windows machine). Thus, make sure to check that wherever you are running this notebook from, that the entire path to the working directory does note include any spaces.
 
-***
-## Dataset Requirements
-This notebook loads a single dataset to be run through the entire pipeline. Here we summarize the requirements for this dataset:
-* Ensure your data is in a single file: (If you have a pre-partitioned training/testing dataset, you should combine them into a single dataset before running this notebook)
-* Any dataset specific cleaning, feature transformation, or feature engineering that may be needed in order to maximize ML performance should be conducted by the user separately or added to the beginning of this notebook.
-* The dataset should be in tab-delimited .txt format to run this notebook (as is).  Commented-out code to load a comma separated file (.csv) and excel file (.xlsx) is included in the notebook as an alternative.
-* Missing data values should be empty or indicated with an 'NA'.
-* Dataset includes a header with column names. This should include a column for the binary class label and (optionally) a column for the instance ID, as well as columns for other 'features', e.g. independend variables.
-* The class labels should be 0 for the major class (i.e. the most frequent class), and 1 for the minor class.  This is important for generation of the precision/recall curve (PRC) plots.
-* This dataset is saved in the working directory containing the jupyter notebook file, and all other files in this repository.
-* All variables in the dataset have been numerically encoded (otherwise additional data preprocessing may be needed)
 
 ***
-# Usage
+# Jupyter Notebook Usage
 * First, ensure all of the environment and dataset requirments above are satisfied.
 * Next, save this repository to the desired 'working directory' on your pc (make sure there are no 'spaces' in the path to this directory!)
 * Open the jupyter notebook file (https://jupyter.readthedocs.io/en/latest/running.html). We found that the most reliable way to do this and ensure your run environment is correct is to open the 'anaconda prompt' which comes with your anaconda installation.  Once opened type the command 'jupyter notebook'.  Then navigate to your working directory and click on the notebook file: 'Supervised_Classification_ML_Pipeline.ipynb'.

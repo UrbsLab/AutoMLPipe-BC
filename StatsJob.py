@@ -29,7 +29,7 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
     doPlotROC(result_table,colors,full_path,jupyterRun)
     doPlotPRC(result_table,colors,full_path,data_name,instance_label,class_label,jupyterRun)
 
-    metrics = list(metric_dict[algorithms[0]].keys())
+    metrics = list(metric_dict[algorithms[0]].keys()) #metric names
 
     saveMetricMeans(full_path,metrics,metric_dict)
     saveMetricStd(full_path,metrics,metric_dict)
@@ -42,9 +42,9 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
         kruskal_summary = kruskalWallis(full_path,metrics,algorithms,metric_dict,sig_cutoff)
         mannWhitneyU(full_path,metrics,algorithms,metric_dict,kruskal_summary,sig_cutoff)
 
-    #Visualize FI
+    #Visualize FI - Currently set up to only use Balanced Accuracy for composite FI plot visualization
     #Prepare for feature importance visualizations
-    fi_df_list,fi_ave_list,fi_ave_norm_list,ave_metric_list,all_feature_list,non_zero_union_features,non_zero_union_indexes = prepFI(algorithms,full_path,abbrev,metric_dict,primary_metric,top_results)
+    fi_df_list,fi_ave_list,fi_ave_norm_list,ave_metric_list,all_feature_list,non_zero_union_features,non_zero_union_indexes = prepFI(algorithms,full_path,abbrev,metric_dict,'Balanced Accuracy',top_results)
 
     #Select 'top' feature for vizualization
     featuresToViz = selectForViz(top_results,non_zero_union_features,non_zero_union_indexes,algorithms,ave_metric_list,fi_ave_norm_list)
@@ -63,19 +63,19 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
     fracLists = fracFI(top_fi_ave_norm_list)
 
     #Generate Normalized and Fractioned composite FI plot
-    composite_FI_plot(fracLists, algorithms, list(colors.values()), all_feature_listToViz, 'Norm_Frac',full_path,jupyterRun, 'Normalized/Fractioned Feature Importance')
+    composite_FI_plot(fracLists, algorithms, list(colors.values()), all_feature_listToViz, 'Norm_Frac',full_path,jupyterRun, 'Normalized and Fractioned Feature Importance')
 
     #Weight FI scores for normalized and (model performance) weighted composite FI plot
     weightedLists,weights = weightFI(ave_metric_list,top_fi_ave_norm_list)
 
     #Generate Normalized and Weighted Compount FI plot
-    composite_FI_plot(weightedLists, algorithms, list(colors.values()), all_feature_listToViz, 'Norm_Weight',full_path,jupyterRun, 'Normalized/Weighted Feature Importance')
+    composite_FI_plot(weightedLists, algorithms, list(colors.values()), all_feature_listToViz, 'Norm_Weight',full_path,jupyterRun, 'Normalized and Weighted Feature Importance')
 
     #Weight the Fractionated FI scores for normalized,fractionated, and weighted compount FI plot
     weightedFracLists = weighFracFI(fracLists,weights)
 
     #Generate Normalized, Fractionated, and Weighted Compount FI plot
-    composite_FI_plot(weightedFracLists, algorithms, list(colors.values()), all_feature_listToViz, 'Norm_Frac_Weight',full_path,jupyterRun, 'Normalized/Fractioned/Weighted Feature Importance')
+    composite_FI_plot(weightedFracLists, algorithms, list(colors.values()), all_feature_listToViz, 'Norm_Frac_Weight',full_path,jupyterRun, 'Normalized, Fractioned, and Weighted Feature Importance')
 
     saveRuntime(full_path,job_start_time)
     parseRuntime(full_path,abbrev)
@@ -356,6 +356,7 @@ def saveMetricMeans(full_path,metrics,metric_dict):
         for algorithm in metric_dict:
             astats = []
             for l in list(metric_dict[algorithm].values()):
+                l = [float(i) for i in l]
                 meani = mean(l)
                 std = stdev(l)
                 astats.append(str(meani))
@@ -374,6 +375,7 @@ def saveMetricStd(full_path,metrics,metric_dict):
         for algorithm in metric_dict:
             astats = []
             for l in list(metric_dict[algorithm].values()):
+                l = [float(i) for i in l]
                 std = stdev(l)
                 astats.append(str(std))
             toAdd = [algorithm]

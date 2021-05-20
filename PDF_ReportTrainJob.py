@@ -233,7 +233,7 @@ def job(experiment_path):
         analy_report.cell(0, 8, "Composite Feature Importance Plot", 1, align="L")
             #Images
 
-        analy_report.image(experiment_path+'/'+ds[k]+'/training/results/FI/Compare_FI_Norm_Frac_Weight.png', 5, 159, 200)
+        analy_report.image(experiment_path+'/'+ds[k]+'/training/results/FI/Compare_FI_Norm_Weight.png', 5, 159, 200)
         footer(analy_report)
 
     #Create Best Kruskall Wallis Dataset Comparison Page---------------------------------------

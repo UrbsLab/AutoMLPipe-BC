@@ -306,7 +306,7 @@ Here we review the run parameters available for each of the 11 phases and provid
 ### Phase 1: Exploratory Analysis
 
 | Argument | Description | Default |
-|:------------- |:-------------------------------------------  | ----------- |
+|:---------------------- |:-------------------------------------------  | ----------- |
 | --data-path | path to directory containing datasets | MANDATORY |
 | --out-path | path to output directory | MANDATORY |
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |

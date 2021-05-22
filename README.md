@@ -149,7 +149,7 @@ conda install -c plotly plotly-orca
 See https://pypi.org/project/plotly/ for details or updates for installing these plotly dependencies.
 
 # Usage
-
+Here we give an overview of the codebase and how to run AutoMLPipe-BC in different contexts.
 ***
 ## Code Orientation
 The base code for AutoMLPipe-BC is organized into a series of script phases designed to best optimize the parallelization of a given analysis. These loosely correspond with the pipeline schematic above. These phases are designed to be run in order. Phases 1-7 make up the core automated pipeline, with Phase 7 and beyond being run optionally based on user needs. In general this pipeline will run more slowly when a larger number of 'target' dataset are being analyzed and when a larger number of CV 'folds' are requested.
@@ -240,7 +240,7 @@ Here we detail how to run AutoMLPipe-BC within the provided jupyter notebook. Th
 ## Run From Command Line (Local or Cluster Parallelization)
 The primary way to run AutoMLPipe-BC is via the command line, one phase at a time (running the next phase only after the previous one has completed). As indicated above, each phase can run locally (not parallelized) or parallelized using a Linux based computing cluster. With a little tweaking of the 'Main' scripts this code could also be parallelized with cloud computing. We welcome help in extending the code for that purpose.
 
-### Local Run
+### Local Run Example
 Below we give an example of the set of all commands needed to run AutoMLPipe-BC in it's entirety using mostly default run parameters. In this example we specify instance and class label run parameters to emphasize the importance setting these values correctly.
 ```
 python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test --instance-label InstanceID --class-label Class --run-parallel False
@@ -264,11 +264,10 @@ python PDF_ReportTrainMain.py --output-path /myoutputpath/output --experiment-na
 python ApplyModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv --run-parallel False
 
 python PDF_ReportApplyMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv --run-parallel False
-
 ```
 
-### Computing Cluster Run (Parallelized)
-
+### Computing Cluster Run (Parallelized) Example
+Below we give the same set of AutoMLPipe-BC run command, however in each, the run parameter --run-parallel is left to its default value of 'True'.
 ```
 python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test --instance-label InstanceID --class-label Class
 
@@ -290,6 +289,67 @@ python PDF_ReportTrainMain.py --output-path /myoutputpath/output --experiment-na
 
 python ApplyModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
 
-python PDF_ReportApplyMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv 
-
+python PDF_ReportApplyMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
 ```
+
+### Checking Phase Completion
+After running any of Phases 1-6 a 'phase-complete' file is automatically generated for each job run locally or in parallel.  Users can confirm that all jobs for that phase have been completed by running the phase command again, this time with the argument '-c'. Any incomplete jobs will be listed, or an indication of successful completion will be returned.
+
+For example, after running ModelMain.py, the following command can be given to check whether all jobs have been completed.
+```
+python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test -c
+```
+
+## Phase Details (Run Parameters and Additional Examples)
+Here we review the run parameters available for each of the 11 phases and provide some additional examples of each. Run parameters that are necessary to set are marked as 'MANDATORY' under 'default'. The additional examples illustrate how to flexibly adapt AutoMLPipe-BC to user needs.
+
+### Phase 1: Exploratory Analysis
+
+| Argument | Description | Default |
+| ---------- | --------------------  | ---------- |
+| --data-path | path to directory containing datasets | MANDATORY |
+| --output-path | path to output directory | MANDATORY |
+| --experiment-name | name of experiment output folder (no spaces) | MANDATORY |
+| ---------- | --------------------  | ---------- |
+| --class-label | outcome label of all datasets | Class |
+| --instance-label | instance label of all datasets (if present) | None |
+| --fi | path to .csv file with feature labels to be ignored in analysis | None |
+| --cf | path to .csv file with feature labels specified to be treated as categorical | None |
+| --cv | number of CV partitions | 10 |
+| --partition-method | 'S', or 'R', or 'M', for stratified, random, or matched, respectively | S |
+| --match-label | only applies when M selected for partition-method; indicates column with matched instance ids | None |
+| --categorical-cutoff | number of unique values after which a variable is considered to be quantitative vs categorical | 10 |
+| --sig | significance cutoff used throughout pipeline | 0.05 |
+| --export-ea | run and export basic exploratory analysis files, i.e. unique value counts, missingness counts, class balance barplot | True |
+| --export-fc | run and export feature correlation analysis (yields correlation heatmap) | True |
+| --export-up | export univariate analysis plots (note: univariate analysis still output by default) | False |
+| --random-state | "Dont Panic" - sets a specific random seed for reproducible results | 42 |
+| ---------- | --------------------  | ---------- |
+| --run-parallel | if run parallel | True |
+| --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
+| --res-mem | reserved memory for the job (in Gigabytes) | 4 |
+| --max-mem | maximum memory before the job is automatically terminated | 15 |
+| -c | Boolean: Specify whether to check for existence of all output files | Stores False |
+
+
+* Phase 1: Exploratory Analysis
+
+* Phase 2: Data Preprocessing
+
+* Phase 3: Feature Importance Evaluation
+
+* Phase 4: Feature Selection
+
+* Phase 5: Machine Learning Modeling
+
+* Phase 6: Statistics Summary
+
+* Phase 7: [Optional] Compare Datasets
+
+* Phase 8: [Optional] Copy Key Files
+
+* Phase 9: [Optional] Generate PDF Training Summary Report
+
+* Phase 10: [Optional] Apply Models to Replication Data
+
+* Phase 11: [Optional] Generate PDF 'Apply Replication' Summary Report

@@ -33,8 +33,8 @@ def main(argv):
     #Defaults available (but critical to check)
     parser.add_argument('--class-label', dest='class_label', type=str, help='outcome label of all datasets', default="Class")
     parser.add_argument('--instance-label', dest='instance_label', type=str, help='instance label of all datasets (if present)', default="")
-    parser.add_argument('-fi', dest='ignore_features_path',type=str, help='path to .csv file with feature lables to be ignored in analysis (e.g. /home/ryanurb/code/AutoMLPipe-BC/droppedFeatures.csv))', default="None")
-    parser.add_argument('-cf', dest='categorical_feature_path',type=str, help='path to .csv file with feature lables specified to be treated as categorical where possible', default="None")
+    parser.add_argument('--fi', dest='ignore_features_path',type=str, help='path to .csv file with feature labels to be ignored in analysis (e.g. /home/ryanurb/code/AutoMLPipe-BC/droppedFeatures.csv))', default="None")
+    parser.add_argument('--cf', dest='categorical_feature_path',type=str, help='path to .csv file with feature labels specified to be treated as categorical where possible', default="None")
     #Defaults available (but less critical to check)
     parser.add_argument('--cv',dest='cv_partitions',type=int,help='number of CV partitions',default=10)
     parser.add_argument('--partition-method',dest='partition_method',type=str,help="'S', or 'R', or 'M', for stratified, random, or matched, respectively",default="S")
@@ -47,7 +47,7 @@ def main(argv):
     parser.add_argument('--random-state', dest='random_state', type=int, help='"Dont Panic" - sets a specific random seed for reproducible results',default=42)
     #Lostistical arguments
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")
-    parser.add_argument('--queue',dest='queue',type=str,help='specify name of LPC queue',default="i2c2_normal") #specific to our research institution and computing cluster
+    parser.add_argument('--queue',dest='queue',type=str,help='specify name of parallel computing queue (uses our research groups queue by default)',default="i2c2_normal") 
     parser.add_argument('--res-mem', dest='reserved_memory', type=int, help='reserved memory for the job (in Gigabytes)',default=4)
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
     parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')

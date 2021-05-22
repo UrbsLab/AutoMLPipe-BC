@@ -305,7 +305,7 @@ Here we review the run parameters available for each of the 11 phases and provid
 
 ### Phase 1: Exploratory Analysis
 
-| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default |
+| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
 | --data-path | path to directory containing datasets | MANDATORY |
 | --out-path | path to output directory | MANDATORY |
@@ -329,11 +329,22 @@ Here we review the run parameters available for each of the 11 phases and provid
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
 | -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
+### Phase 2: Data Preprocessing
+
+| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+|:-------- |:---------------------  | ----------- |
+| --out-path | path to output directory | MANDATORY |
+| --exp-name | name of experiment output folder (no spaces) | MANDATORY |
+| --scale | perform data scaling (required for SVM, and to use Logistic regression with non-uniform feature importance estimation) | True |
+| --impute | perform missing value data imputation (required for most ML algorithms if missing data is present) | True |
+| --over-cv | overwrites earlier cv datasets with new scaled/imputed ones | True |
+| --run-parallel | if run parallel | True |
+| --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
+| --res-mem | reserved memory for the job (in Gigabytes) | 4 |
+| --max-mem | maximum memory before the job is automatically terminated | 15 |
+| -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
 
-* Phase 1: Exploratory Analysis
-
-* Phase 2: Data Preprocessing
 
 * Phase 3: Feature Importance Evaluation
 

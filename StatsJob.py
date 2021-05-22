@@ -18,7 +18,7 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
     data_name = full_path.split('/')[-1]
     print(full_path)
 
-    #Translate metric from scikitlearn standard
+    #Translate metric from scikitlearn standard (currently balanced accuracy is hardcoded for use in FI plots due to no-skill normalization)
     metric_term_dict = {'balanced_accuracy': 'Balanced Accuracy','accuracy': 'Accuracy','f1': 'F1_Score','recall': 'Sensitivity (Recall)','precision': 'Precision (PPV)','roc_auc': 'ROC_AUC'}
     primary_metric = metric_term_dict[primary_metric]
 

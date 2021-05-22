@@ -40,7 +40,7 @@ def main(argv):
     parser.add_argument('--do-ExSTraCS', dest='do_ExSTraCS', type=str, help='run ExSTraCS modeling (a learning classifier system designed for biomedical data mining)',default='True')
     #Other Analysis Parameters - Defaults available
     parser.add_argument('--metric', dest='primary_metric', type=str,help='primary scikit-learn specified scoring metric used for hyperparameter optimization and permutation-based model feature importance evaluation', default='balanced_accuracy')
-    parser.add_argument('--subsample', dest='training_subsample', type=int, help='for long running algos, option to subsample training set (0 for no subsample)', default=0)
+    parser.add_argument('--subsample', dest='training_subsample', type=int, help='for long running algos (XGB,SVM,ANN,KN), option to subsample training set (0 for no subsample)', default=0)
     parser.add_argument('--use-uniformFI', dest='use_uniform_FI', type=str, help='overrides use of any available feature importance estimate methods from models, instead using permutation_importance uniformly',default='False')
     #Hyperparameter sweep options - Defaults available
     parser.add_argument('--n-trials', dest='n_trials', type=int,help='# of bayesian hyperparameter optimization trials using optuna', default=100)

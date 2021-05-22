@@ -301,12 +301,12 @@ python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_tes
 ```
 
 ## Phase Details (Run Parameters and Additional Examples)
-Here we review the run parameters available for each of the 11 phases and provide some additional run examples. The additional examples illustrate how to flexibly adapt AutoMLPipe-BC to user needs. Run parameters that are necessary to set are marked as 'MANDATORY' under 'default'.
+Here we review the run parameters available for each of the 11 phases and provide some additional run examples. The additional examples illustrate how to flexibly adapt AutoMLPipe-BC to user needs. All examples below assume that class and instance labels set to default values for simplicity. Run parameters that are necessary to set are marked as 'MANDATORY' under 'default'.
 
 ### Phase 1: Exploratory Analysis
 Run parameters for ExploratoryAnalysisMain.py:
 
-| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+| Argument | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
 | --data-path | path to directory containing datasets | MANDATORY |
 | --out-path | path to output directory | MANDATORY |
@@ -330,10 +330,28 @@ Run parameters for ExploratoryAnalysisMain.py:
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
 | -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
+#### Example: Data with instances matched by one or more covariates
+Run on dataset with a match label (i.e. a column that identifies groups of instances matched by one or more covariates to remove their effect). Here we specify the use of matched CV partitioning and indicate the column label including the matched instance group identifiers. All instances with the same unique identifier in this column are assumed to be a part of a matched group, and are kept together within a given data partition.
+```
+python ExploratoryAnalysisMain.py --data-path /mydatapath/MatchData --output-path /myoutputpath/output --experiment-name match_test --part M --match-label MatchGroups
+```
+
+#### Example: Ignore specified feature columns in data
+A convenience for running the analysis, but ignoring one or more feature columns that were originally included in the dataset.  
+```
+python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test --fi /mydatapath/ignoreFeatureList.csv
+```
+
+#### Example: Specify features to treat as categorical
+By default AutoMLPipe-BC uses the --cat-cutoff parameter to try and automatically decide what features to treat as categorical (i.e. are there < 10 unique values in the feature column) vs. continuous valued. With this option the user can specify the list of feature names to explicitly treat as categorical. Currently this only impacts the exploratory analysis as well as the imputation in data preprocessing. The identification of categorical variables within AutoMLPipe-BC has no impact on ML modeling.
+```
+python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test --cf /mydatapath/categoricalFeatureList.csv
+```
+
 ### Phase 2: Data Preprocessing
 Run parameters for DataPreprocessingMain.py:
 
-| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+| Argument | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
 | --out-path | path to output directory | MANDATORY |
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |
@@ -349,7 +367,7 @@ Run parameters for DataPreprocessingMain.py:
 ### Phase 3: Feature Importance Evaluation
 Run parameters for FeatureImportanceMain.py:
 
-| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+| Argument | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
 | --out-path | path to output directory | MANDATORY |
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |
@@ -368,7 +386,7 @@ Run parameters for FeatureImportanceMain.py:
 ### Phase 4: Feature Selection
 Run parameters for FeatureSelectionMain.py:
 
-| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+| Argument | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
 | --out-path | path to output directory | MANDATORY |
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |
@@ -386,7 +404,7 @@ Run parameters for FeatureSelectionMain.py:
 ### Phase 5: Machine Learning Modeling
 Run parameters for ModelMain.py:
 
-| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+| Argument | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
 | --out-path | path to output directory | MANDATORY |
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |
@@ -405,7 +423,7 @@ Run parameters for ModelMain.py:
 | --do-XCS | run XCS modeling (a supervised-learning-only implementation of the best studied learning classifier system) | True |
 | --do-ExSTraCS | run ExSTraCS modeling (a learning classifier system designed for biomedical data mining) | True |
 | --metric |primary scikit-learn specified scoring metric used for hyperparameter optimization and permutation-based model feature importance evaluation | balanced_accuracy |
-| --subsample | for long running algos, option to subsample training set (0 for no subsample) | 0 |
+| --subsample | for long running algos (XGB,SVM,ANN,KN), option to subsample training set (0 for no subsample) | 0 |
 | --use-uniformFI | overrides use of any available feature importance estimate methods from models, instead using permutation_importance uniformly | False |
 | --n-trials | # of bayesian hyperparameter optimization trials using optuna | 100 |
 | --timeout | seconds until hyperparameter sweep stops running new trials (Note: it may run longer to finish last trial started) | 300 |
@@ -421,10 +439,34 @@ Run parameters for ModelMain.py:
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
 | -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
+#### Example: Run only one ML modeling algorithm
+By default AutoMLPipe-BC runs all ML modeling algorithms. If the user only wants to run one (or a small number) of these algorithms, they can run the following command first turning all algorithms off, then specifying the ones to activate. In this example we only run random forest. Other algorithms could be specified as True here to run them as well.
+```
+python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --do-all False --do-RF True
+```
+
+#### Example: Utilize the same model feature importance estimation for all algorithms
+By default AutoMLPipe-BC uses any feature importance estimation that may already be available for a given algorithm.  However, Naive Bayes, Support Vector Machines (for non-linear kernels), ANN, and k-NN do not have such built in estimates. By default, these instead estimate model feature importances using a permutation-based estimator. However, to more consistently compare feature importance scores across algorithms, the user may wish to apply the permutation-based estimator uniformly across all algorithms. This is illustrated in the following example:
+```
+python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --use-uniformFI True
+```
+
+#### Example: Specify an alternative primary evaluation metric
+By default AutoMLPipe-BC uses balanced accuracy as it's primary evaluation metric for both hyperparameter optimization and permutation-based model feature importance evaluation. However any classification metrics defined by scikit-learn (see https://scikit-learn.org/stable/modules/model_evaluation.html) could be used instead.  We chose balanced accuracy because it equally values accurate prediction of both 'positive' and 'negative' classes, and accounts for class imbalance. In this example we change this metric to the F1 score.
+```
+python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --metric f1
+```
+
+#### Example: Reduce computational burden of algorithms that run slow in large instance spaces
+By default AutoMLPipe-BC uses all available training instances to train each specified ML algorithm. However XGB, SVM, ANN, and k-NN can run very slowly when the number of training instances is very large. To be able to run these algorithms in a reasonable amount of time this pipeline includes the option to specify a random (class-balance-preserved) subset of the training instances upon which to train. In this example we set this training sample to 2000. This will only be applied to the 4 aformentioned algorithms.  All others will still train on the entire training set.
+```
+python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --subsample 2000
+```
+
 ### Phase 6: Statistics Summary
 Run parameters for StatsMain.py:
 
-| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+| Argument | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
 | --out-path | path to output directory | MANDATORY |
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |
@@ -442,7 +484,7 @@ Run parameters for StatsMain.py:
 ### Phase 7: [Optional] Compare Datasets
 Run parameters for DataCompareMain.py:
 
-| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+| Argument | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
 | --out-path | path to output directory | MANDATORY |
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |
@@ -454,7 +496,7 @@ Run parameters for DataCompareMain.py:
 ### Phase 8: [Optional] Copy Key Files
 Run parameters for KeyFileCopyMain.py:
 
-| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+| Argument | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
 | --data-path | path to directory containing datasets | MANDATORY |
 | --out-path | path to output directory | MANDATORY |
@@ -467,7 +509,7 @@ Run parameters for KeyFileCopyMain.py:
 ### Phase 9: [Optional] Generate PDF Training Summary Report
 Run parameters for PDF_ReportTrainMain.py:
 
-| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+| Argument | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
 | --out-path | path to output directory | MANDATORY |
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |
@@ -479,7 +521,7 @@ Run parameters for PDF_ReportTrainMain.py:
 ### Phase 10: [Optional] Apply Models to Replication Data
 Run parameters for ApplyModelMain.py:
 
-| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+| Argument | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
 | --out-path | path to output directory | MANDATORY |
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |
@@ -499,7 +541,7 @@ Run parameters for ApplyModelMain.py:
 ### Phase 11: [Optional] Generate PDF 'Apply Replication' Summary Report
 Run parameters for PDF_ReportApplyMain.py:
 
-| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+| Argument | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
 | --out-path | path to output directory | MANDATORY |
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |

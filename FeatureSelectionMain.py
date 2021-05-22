@@ -20,17 +20,17 @@ def main(argv):
     #Parse arguments
     parser = argparse.ArgumentParser(description='')
     #No defaults
-    parser.add_argument('--output-path', dest='output_path', type=str, help='path to output directory')
-    parser.add_argument('--experiment-name', dest='experiment_name', type=str, help='name of experiment (no spaces)')
+    parser.add_argument('--out-path', dest='output_path', type=str, help='path to output directory')
+    parser.add_argument('--exp-name', dest='experiment_name', type=str, help='name of experiment (no spaces)')
     #Defaults available
-    parser.add_argument('--max-features', dest='max_features_to_keep', type=int,help='max features to keep. None if no max', default=2000)
-    parser.add_argument('--filter-features', dest='filter_poor_features', type=str, help='filter out the worst performing features prior to modeling',default='True')
+    parser.add_argument('--max-feat', dest='max_features_to_keep', type=int,help='max features to keep. None if no max', default=2000)
+    parser.add_argument('--filter-feat', dest='filter_poor_features', type=str, help='filter out the worst performing features prior to modeling',default='True')
     parser.add_argument('--top-results', dest='top_results', type=int,help='number of top features to illustrate in figures', default=20)
     parser.add_argument('--export-scores', dest='export_scores', type=str,help='export figure summarizing average feature importance scores over cv partitions', default='True')
-    parser.add_argument('--overwrite-cv', dest='overwrite_cv',type=str,help='overwrites working cv datasets with new feature subset datasets',default="True")
+    parser.add_argument('--over-cv', dest='overwrite_cv',type=str,help='overwrites working cv datasets with new feature subset datasets',default="True")
     #Lostistical arguments
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")
-    parser.add_argument('--queue',dest='queue',type=str,help='specify name of parallel computing queue (uses our research groups queue by default)',default="i2c2_normal") 
+    parser.add_argument('--queue',dest='queue',type=str,help='specify name of parallel computing queue (uses our research groups queue by default)',default="i2c2_normal")
     parser.add_argument('--res-mem', dest='reserved_memory', type=int, help='reserved memory for the job (in Gigabytes)',default=4)
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
     parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')

@@ -15,13 +15,13 @@ def main(argv):
     #Parse arguments
     parser = argparse.ArgumentParser(description="")
     #No defaults
-    parser.add_argument('--output-path',dest='output_path',type=str,help='path to output directory')
-    parser.add_argument('--experiment-name', dest='experiment_name',type=str, help='name of experiment output folder (no spaces)')
-    parser.add_argument('--rep-data-path',dest='rep_data_path',type=str,help='path to directory containing replication or hold-out testing datasets (must have at least all features with same labels as in original training dataset)')
-    parser.add_argument('--data-path',dest='data_path',type=str,help='path to target original training dataset')
+    parser.add_argument('--rep-path',dest='rep_data_path',type=str,help='path to directory containing replication or hold-out testing datasets (must have at least all features with same labels as in original training dataset)')
+    parser.add_argument('--dataset',dest='data_path',type=str,help='path to target original training dataset')
+    parser.add_argument('--out-path',dest='output_path',type=str,help='path to output directory')
+    parser.add_argument('--exp-name', dest='experiment_name',type=str, help='name of experiment output folder (no spaces)')
     #Lostistical arguments
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")
-    parser.add_argument('--queue',dest='queue',type=str,help='specify name of parallel computing queue (uses our research groups queue by default)',default="i2c2_normal") 
+    parser.add_argument('--queue',dest='queue',type=str,help='specify name of parallel computing queue (uses our research groups queue by default)',default="i2c2_normal")
     parser.add_argument('--res-mem', dest='reserved_memory', type=int, help='reserved memory for the job (in Gigabytes)',default=4)
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
 

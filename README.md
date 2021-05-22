@@ -301,9 +301,10 @@ python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_tes
 ```
 
 ## Phase Details (Run Parameters and Additional Examples)
-Here we review the run parameters available for each of the 11 phases and provide some additional examples of each. Run parameters that are necessary to set are marked as 'MANDATORY' under 'default'. The additional examples illustrate how to flexibly adapt AutoMLPipe-BC to user needs.
+Here we review the run parameters available for each of the 11 phases and provide some additional run examples. The additional examples illustrate how to flexibly adapt AutoMLPipe-BC to user needs. Run parameters that are necessary to set are marked as 'MANDATORY' under 'default'.
 
 ### Phase 1: Exploratory Analysis
+Run parameters for ExploratoryAnalysisMain.py:
 
 | Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
@@ -330,6 +331,7 @@ Here we review the run parameters available for each of the 11 phases and provid
 | -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
 ### Phase 2: Data Preprocessing
+Run parameters for DataPreprocessingMain.py:
 
 | Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
@@ -344,22 +346,166 @@ Here we review the run parameters available for each of the 11 phases and provid
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
 | -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
+### Phase 3: Feature Importance Evaluation
+Run parameters for FeatureImportanceMain.py:
 
+| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+|:-------- |:---------------------  | ----------- |
+| --out-path | path to output directory | MANDATORY |
+| --exp-name | name of experiment output folder (no spaces) | MANDATORY |
+| --do-mi | do mutual information analysis | True |
+| --do-ms | do multiSURF analysis | True |
+| --use-turf | use TURF wrapper around MultiSURF | False |
+| --turf-pct | proportion of instances removed in an iteration (also dictates number of iterations) | 0.5 |
+| --n-jobs | number of cores dedicated to running algorithm; setting to -1 will use all available cores | 1 |
+| --inst-sub | sample subset size to use with multiSURF | 2000 |
+| --run-parallel | if run parallel | True |
+| --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
+| --res-mem | reserved memory for the job (in Gigabytes) | 4 |
+| --max-mem | maximum memory before the job is automatically terminated | 15 |
+| -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
-* Phase 3: Feature Importance Evaluation
+### Phase 4: Feature Selection
+Run parameters for FeatureSelectionMain.py:
 
-* Phase 4: Feature Selection
+| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+|:-------- |:---------------------  | ----------- |
+| --out-path | path to output directory | MANDATORY |
+| --exp-name | name of experiment output folder (no spaces) | MANDATORY |
+| --max-feat | max features to keep. None if no max | 2000 |
+| --filter-feat | filter out the worst performing features prior to modeling | True |
+| --top-results | number of top features to illustrate in figures | 20 |
+| --export-scores | export figure summarizing average feature importance scores over cv partitions | True |
+| --over-cv | overwrites working cv datasets with new feature subset datasets | True |
+| --run-parallel | if run parallel | True |
+| --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
+| --res-mem | reserved memory for the job (in Gigabytes) | 4 |
+| --max-mem | maximum memory before the job is automatically terminated | 15 |
+| -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
-* Phase 5: Machine Learning Modeling
+### Phase 5: Machine Learning Modeling
+Run parameters for ModelMain.py:
 
-* Phase 6: Statistics Summary
+| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+|:-------- |:---------------------  | ----------- |
+| --out-path | path to output directory | MANDATORY |
+| --exp-name | name of experiment output folder (no spaces) | MANDATORY |
+| --do-all | run all modeling algorithms by default (when set False, individual algorithms are activated individually) | True |
+| --do-NB | run naive bayes modeling | True |
+| --do-LR | run logistic regression modeling | True |
+| --do-DT | run decision tree modeling | True |
+| --do-RF | run random forest modeling | True |
+| --do-GB | run gradient boosting modeling | True |
+| --do-XGB | run XGBoost modeling | True |
+| --do-LGB | run LGBoost modeling | True |
+| --do-SVM | run support vector machine modeling | True |
+| --do-ANN | run artificial neural network modeling | True |
+| --do-KN | run k-neighbors classifier modeling | True |
+| --do-eLCS | run eLCS modeling (a basic supervised-learning learning classifier system) | True |
+| --do-XCS | run XCS modeling (a supervised-learning-only implementation of the best studied learning classifier system) | True |
+| --do-ExSTraCS | run ExSTraCS modeling (a learning classifier system designed for biomedical data mining) | True |
+| --metric |primary scikit-learn specified scoring metric used for hyperparameter optimization and permutation-based model feature importance evaluation | balanced_accuracy |
+| --subsample | for long running algos, option to subsample training set (0 for no subsample) | 0 |
+| --use-uniformFI | overrides use of any available feature importance estimate methods from models, instead using permutation_importance uniformly | False |
+| --n-trials | # of bayesian hyperparameter optimization trials using optuna | 100 |
+| --timeout | seconds until hyperparameter sweep stops running new trials (Note: it may run longer to finish last trial started) | 300 |
+| --export-hyper-sweep | export optuna-generated hyperparameter sweep plots | False |
+| --do-LCS-sweep | do LCS hyperparam tuning or use below params | False |
+| --nu | fixed LCS nu param | 1 |
+| --iter | fixed LCS # learning iterations param | 200000 |
+| --N | fixed LCS rule population maximum size param | 2000 |
+| --lcs-timeout | seconds until hyperparameter sweep stops for LCS algorithms | 1200 |
+| --run-parallel | if run parallel | True |
+| --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
+| --res-mem | reserved memory for the job (in Gigabytes) | 4 |
+| --max-mem | maximum memory before the job is automatically terminated | 15 |
+| -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
-* Phase 7: [Optional] Compare Datasets
+### Phase 6: Statistics Summary
+Run parameters for StatsMain.py:
 
-* Phase 8: [Optional] Copy Key Files
+| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+|:-------- |:---------------------  | ----------- |
+| --out-path | path to output directory | MANDATORY |
+| --exp-name | name of experiment output folder (no spaces) | MANDATORY |
+| --plot-ROC | Plot ROC curves individually for each algorithm including all CV results and averages | True |
+| --plot-PRC | Plot PRC curves individually for each algorithm including all CV results and averages | True |
+| --plot-box | Plot box plot summaries comparing algorithms for each metric | True |
+| --plot-FI_box | Plot feature importance boxplots for each algorithm | True |
+| --top-results| Number of top features to illustrate in figures | 20 |
+| --run-parallel | if run parallel | True |
+| --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
+| --res-mem | reserved memory for the job (in Gigabytes) | 4 |
+| --max-mem | maximum memory before the job is automatically terminated | 15 |
+| -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
-* Phase 9: [Optional] Generate PDF Training Summary Report
+### Phase 7: [Optional] Compare Datasets
+Run parameters for DataCompareMain.py:
 
-* Phase 10: [Optional] Apply Models to Replication Data
+| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+|:-------- |:---------------------  | ----------- |
+| --out-path | path to output directory | MANDATORY |
+| --exp-name | name of experiment output folder (no spaces) | MANDATORY |
+| --run-parallel | if run parallel | True |
+| --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
+| --res-mem | reserved memory for the job (in Gigabytes) | 4 |
+| --max-mem | maximum memory before the job is automatically terminated | 15 |
 
-* Phase 11: [Optional] Generate PDF 'Apply Replication' Summary Report
+### Phase 8: [Optional] Copy Key Files
+Run parameters for KeyFileCopyMain.py:
+
+| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+|:-------- |:---------------------  | ----------- |
+| --data-path | path to directory containing datasets | MANDATORY |
+| --out-path | path to output directory | MANDATORY |
+| --exp-name | name of experiment output folder (no spaces) | MANDATORY |
+| --run-parallel | if run parallel | True |
+| --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
+| --res-mem | reserved memory for the job (in Gigabytes) | 4 |
+| --max-mem | maximum memory before the job is automatically terminated | 15 |
+
+### Phase 9: [Optional] Generate PDF Training Summary Report
+Run parameters for PDF_ReportTrainMain.py:
+
+| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+|:-------- |:---------------------  | ----------- |
+| --out-path | path to output directory | MANDATORY |
+| --exp-name | name of experiment output folder (no spaces) | MANDATORY |
+| --run-parallel | if run parallel | True |
+| --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
+| --res-mem | reserved memory for the job (in Gigabytes) | 4 |
+| --max-mem | maximum memory before the job is automatically terminated | 15 |
+
+### Phase 10: [Optional] Apply Models to Replication Data
+Run parameters for ApplyModelMain.py:
+
+| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+|:-------- |:---------------------  | ----------- |
+| --out-path | path to output directory | MANDATORY |
+| --exp-name | name of experiment output folder (no spaces) | MANDATORY |
+| --rep-path | path to directory containing replication or hold-out testing datasets (must have at least all features with same labels as in original training dataset) | MANDATORY |
+| --dataset | path to target original training dataset | MANDATORY |
+| --export-fc | run and export feature correlation analysis (yields correlation heatmap) | True |
+| --plot-ROC | Plot ROC curves individually for each algorithm including all CV results and averages | True |
+| --plot-PRC | Plot PRC curves individually for each algorithm including all CV results and averages | True |
+| --plot-box | Plot box plot summaries comparing algorithms for each metric | True |
+| --top-results| Number of top features to illustrate in figures | 20 |
+| --match-label | applies if original training data included column with matched instance ids | None |
+| --run-parallel | if run parallel | True |
+| --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
+| --res-mem | reserved memory for the job (in Gigabytes) | 4 |
+| --max-mem | maximum memory before the job is automatically terminated | 15 |
+
+### Phase 11: [Optional] Generate PDF 'Apply Replication' Summary Report
+Run parameters for PDF_ReportApplyMain.py:
+
+| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default Value |
+|:-------- |:---------------------  | ----------- |
+| --out-path | path to output directory | MANDATORY |
+| --exp-name | name of experiment output folder (no spaces) | MANDATORY |
+| --rep-path | path to directory containing replication or hold-out testing datasets (must have at least all features with same labels as in original training dataset) | MANDATORY |
+| --dataset | path to target original training dataset | MANDATORY |
+| --run-parallel | if run parallel | True |
+| --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
+| --res-mem | reserved memory for the job (in Gigabytes) | 4 |
+| --max-mem | maximum memory before the job is automatically terminated | 15 |

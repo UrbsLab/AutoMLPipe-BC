@@ -20,10 +20,10 @@ def main(argv):
     #Parse arguments
     parser = argparse.ArgumentParser(description='')
     #No defaults
-    parser.add_argument('--output-path', dest='output_path', type=str, help='path to output directory')
-    parser.add_argument('--experiment-name', dest='experiment_name', type=str, help='name of experiment (no spaces)')
+    parser.add_argument('--out-path', dest='output_path', type=str, help='path to output directory')
+    parser.add_argument('--exp-name', dest='experiment_name', type=str, help='name of experiment (no spaces)')
     #Sets default run all or none to make algorithm selection from command line simpler
-    parser.add_argument('--do-all', dest='do_all', type=str, help='run all modeling algorithms by default (when set True, individual algorithms can still be turned off and vice versa)',default='True')
+    parser.add_argument('--do-all', dest='do_all', type=str, help='run all modeling algorithms by default (when set False, individual algorithms are activated individually)',default='True')
     #ML modeling algorithms: Defaults available
     parser.add_argument('--do-NB', dest='do_NB', type=str, help='run naive bayes modeling',default='True')
     parser.add_argument('--do-LR', dest='do_LR', type=str, help='run logistic regression modeling',default='True')
@@ -41,11 +41,11 @@ def main(argv):
     #Other Analysis Parameters - Defaults available
     parser.add_argument('--metric', dest='primary_metric', type=str,help='primary scikit-learn specified scoring metric used for hyperparameter optimization and permutation-based model feature importance evaluation', default='balanced_accuracy')
     parser.add_argument('--subsample', dest='training_subsample', type=int, help='for long running algos, option to subsample training set (0 for no subsample)', default=0)
-    parser.add_argument('--use-uniformFI', dest='use_uniform_FI', type=str, help='overides use of any available feature importances estimate methods from models, instead using permutation_importance uniformly',default='False')
+    parser.add_argument('--use-uniformFI', dest='use_uniform_FI', type=str, help='overrides use of any available feature importance estimate methods from models, instead using permutation_importance uniformly',default='False')
     #Hyperparameter sweep options - Defaults available
     parser.add_argument('--n-trials', dest='n_trials', type=int,help='# of bayesian hyperparameter optimization trials using optuna', default=100)
     parser.add_argument('--timeout', dest='timeout', type=int,help='seconds until hyperparameter sweep stops running new trials (Note: it may run longer to finish last trial started)', default=300)
-    parser.add_argument('--export-hyper-sweep', dest='export_hyper_sweep_plots', type=str, default='True')
+    parser.add_argument('--export-hyper-sweep', dest='export_hyper_sweep_plots', type=str, help='export optuna-generated hyperparameter sweep plots' default='False')
     #LCS specific parameters - Defaults available
     parser.add_argument('--do-LCS-sweep', dest='do_lcs_sweep', type=str, help='do LCS hyperparam tuning or use below params',default='False')
     parser.add_argument('--nu', dest='nu', type=int, help='fixed LCS nu param', default=1)
@@ -54,7 +54,7 @@ def main(argv):
     parser.add_argument('--lcs-timeout', dest='lcs_timeout', type=int, help='seconds until hyperparameter sweep stops for LCS algorithms', default=1200)
     #Lostistical arguments - Defaults available
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")
-    parser.add_argument('--queue',dest='queue',type=str,help='specify name of parallel computing queue (uses our research groups queue by default)',default="i2c2_normal") 
+    parser.add_argument('--queue',dest='queue',type=str,help='specify name of parallel computing queue (uses our research groups queue by default)',default="i2c2_normal")
     parser.add_argument('--res-mem', dest='reserved_memory', type=int, help='reserved memory for the job (in Gigabytes)',default=4)
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
     parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')

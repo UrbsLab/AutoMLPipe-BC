@@ -45,7 +45,7 @@ def main(argv):
     #Hyperparameter sweep options - Defaults available
     parser.add_argument('--n-trials', dest='n_trials', type=int,help='# of bayesian hyperparameter optimization trials using optuna', default=100)
     parser.add_argument('--timeout', dest='timeout', type=int,help='seconds until hyperparameter sweep stops running new trials (Note: it may run longer to finish last trial started)', default=300)
-    parser.add_argument('--export-hyper-sweep', dest='export_hyper_sweep_plots', type=str, help='export optuna-generated hyperparameter sweep plots' default='False')
+    parser.add_argument('--export-hyper-sweep', dest='export_hyper_sweep_plots', type=str, help='export optuna-generated hyperparameter sweep plots', default='False')
     #LCS specific parameters - Defaults available
     parser.add_argument('--do-LCS-sweep', dest='do_lcs_sweep', type=str, help='do LCS hyperparam tuning or use below params',default='False')
     parser.add_argument('--nu', dest='nu', type=int, help='fixed LCS nu param', default=1)

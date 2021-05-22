@@ -310,7 +310,6 @@ Here we review the run parameters available for each of the 11 phases and provid
 | --data-path | path to directory containing datasets | MANDATORY |
 | --output-path | path to output directory | MANDATORY |
 | --experiment-name | name of experiment output folder (no spaces) | MANDATORY |
-
 | --class-label | outcome label of all datasets | Class |
 | --instance-label | instance label of all datasets (if present) | None |
 | --fi | path to .csv file with feature labels to be ignored in analysis | None |
@@ -324,7 +323,6 @@ Here we review the run parameters available for each of the 11 phases and provid
 | --export-fc | run and export feature correlation analysis (yields correlation heatmap) | True |
 | --export-up | export univariate analysis plots (note: univariate analysis still output by default) | False |
 | --random-state | "Dont Panic" - sets a specific random seed for reproducible results | 42 |
-
 | --run-parallel | if run parallel | True |
 | --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |

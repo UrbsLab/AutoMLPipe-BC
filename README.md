@@ -306,7 +306,31 @@ Here we review the run parameters available for each of the 11 phases and provid
 ### Phase 1: Exploratory Analysis
 
 | Argument | Description | Default |
-| ------------------- | -------------------------------------------------------  | ----------- |
+| -------------------- | ----------- |------------------------------  | 
+| --data-path | MANDATORY | path to directory containing datasets |
+| --output-path | MANDATORY | path to output directory |
+| --experiment-name | MANDATORY | name of experiment output folder (no spaces) |
+| --class-label | Class | outcome label of all datasets |
+| --instance-label | None | instance label of all datasets (if present) |
+| --fi | None | path to .csv file with feature labels to be ignored in analysis |
+| --cf | None | path to .csv file with feature labels specified to be treated as categorical |
+| --cv | 10 | number of CV partitions |
+| --partition-method | S | 'S', or 'R', or 'M', for stratified, random, or matched, respectively |
+| --match-label | None | only applies when M selected for partition-method; indicates column with matched instance ids |
+| --categorical-cutoff | 10 | number of unique values after which a variable is considered to be quantitative vs categorical |
+| --sig | 0.05 |significance cutoff used throughout pipeline |
+| --export-ea | True | run and export basic exploratory analysis files, i.e. unique value counts, missingness counts, class balance barplot |
+| --export-fc | True | run and export feature correlation analysis (yields correlation heatmap) |
+| --export-up | False | export univariate analysis plots (note: univariate analysis still output by default) |
+| --random-state | 42 | "Dont Panic" - sets a specific random seed for reproducible results |
+| --run-parallel | True | if run parallel |
+| --queue | i2c2_normal | specify name of parallel computing queue (uses our research groups queue by default) |
+| --res-mem | 4 | reserved memory for the job (in Gigabytes) |
+| --max-mem | 15 | maximum memory before the job is automatically terminated |
+| -c | Stores False | Boolean: Specify whether to check for existence of all output files |
+
+| Argument | Description | Default |
+| ------------------- | -------------------------------------------  | ----------- |
 | --data-path | path to directory containing datasets | MANDATORY |
 | --output-path | path to output directory | MANDATORY |
 | --experiment-name | name of experiment output folder (no spaces) | MANDATORY |

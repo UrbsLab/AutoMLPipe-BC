@@ -155,9 +155,9 @@ See https://pypi.org/project/plotly/ for details or updates for installing these
 The base code for AutoMLPipe-BC is organized into a series of scripts designed to best optimize the parallelization of a given analysis. These loosely correspond with the pipeline schematic above.
 
 * Phase 1: Exploratory Analysis (Code: ExploratoryAnalysisMain.py and ExploratoryAnalysisJob.py)
-- Conducts an initial exploratory analysis of all target datasets to be analyzed and compared
-- Conducts basic data cleaning
-- Conducts k-fold cross validation (CV) partitioning to generate k training and k testing datasets
+  * Conducts an initial exploratory analysis of all target datasets to be analyzed and compared
+  * Conducts basic data cleaning
+  * Conducts k-fold cross validation (CV) partitioning to generate k training and k testing datasets
 
 * Phase 2: Data Preprocessing (Code: DataPreprocessingMain.py and DataPreprocessingJob.py)
 

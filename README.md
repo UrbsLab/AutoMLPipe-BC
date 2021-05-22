@@ -305,7 +305,7 @@ Here we review the run parameters available for each of the 11 phases and provid
 
 ### Phase 1: Exploratory Analysis
 
-| &nbsp; &nbsp; &nbsp; Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default |
+|`Argument      `|`Description                       `|` Default `|
 |:-------- |:-------------------------------------------  | ----------- |
 | --data-path | path to directory containing datasets | MANDATORY |
 | --out-path | path to output directory | MANDATORY |
@@ -328,6 +328,10 @@ Here we review the run parameters available for each of the 11 phases and provid
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
 | -c | Boolean: Specify whether to check for existence of all output files | Stores False |
+
+
+
+| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default |
 
 * Phase 1: Exploratory Analysis
 

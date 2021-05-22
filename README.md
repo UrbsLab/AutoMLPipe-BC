@@ -305,7 +305,7 @@ Here we review the run parameters available for each of the 11 phases and provid
 
 ### Phase 1: Exploratory Analysis
 
-|`Argument             `|`Description    `|`   Default   `|
+| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default |
 |:-------- |:---------------------  | ----------- |
 | --data-path | path to directory containing datasets | MANDATORY |
 | --out-path | path to output directory | MANDATORY |
@@ -330,8 +330,6 @@ Here we review the run parameters available for each of the 11 phases and provid
 | -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
 
-
-| Argument &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Description | Default |
 
 * Phase 1: Exploratory Analysis
 

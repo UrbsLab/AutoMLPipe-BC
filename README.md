@@ -240,18 +240,56 @@ Here we detail how to run AutoMLPipe-BC within the provided jupyter notebook. Th
 ## Run From Command Line (Local or Cluster Parallelization)
 The primary way to run AutoMLPipe-BC is via the command line, one phase at a time (running the next phase only after the previous one has completed). As indicated above, each phase can run locally (not parallelized) or parallelized using a Linux based computing cluster. With a little tweaking of the 'Main' scripts this code could also be parallelized with cloud computing. We welcome help in extending the code for that purpose.
 
-Below we give an example of the set of all commands needed to run AutoMLPipe-BC in it's entirety using mostly default run parameters. In this example we specify instance and class label run parameters to emphasize the importance setting these values correctly. 
+### Local Run
+Below we give an example of the set of all commands needed to run AutoMLPipe-BC in it's entirety using mostly default run parameters. In this example we specify instance and class label run parameters to emphasize the importance setting these values correctly.
+```
+python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test --instance-label InstanceID --class-label Class --run-parallel False
+
+python DataPreprocessingMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+
+python FeatureImportanceMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+
+python FeatureSelectionMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+
+python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+
+python StatsMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+
+python DataCompareMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+
+python KeyFileCopyMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+
+python PDF_ReportTrainMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+
+python ApplyModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv --run-parallel False
+
+python PDF_ReportApplyMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv --run-parallel False
+
+```
+
+### Computing Cluster Run (Parallelized)
+
 ```
 python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test --instance-label InstanceID --class-label Class
+
 python DataPreprocessingMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+
 python FeatureImportanceMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+
 python FeatureSelectionMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+
 python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+
 python StatsMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+
 python DataCompareMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+
 python KeyFileCopyMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test
+
 python PDF_ReportTrainMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+
 python ApplyModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
-python PDF_ReportApplyMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
+
+python PDF_ReportApplyMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv 
 
 ```

@@ -37,7 +37,7 @@ This multi-phase pipeline has been set up in a way that it can be easily run in 
 
 ***
 ## Assumptions For Use (data and run preparation)
-* Target datasets for analysis are in comma-separated format (.txt or .csv)
+* 'Target' datasets for analysis are in comma-separated format (.txt or .csv)
 * Missing data values should be empty or indicated with an 'NA'.
 * Dataset includes a header with column names.
 * Data columns include features, class label, and optionally instance (i.e. row) labels, or match labels (if matched cross validation will be used)
@@ -152,19 +152,80 @@ See https://pypi.org/project/plotly/ for details or updates for installing these
 
 ***
 ## Code Orientation
-The base code for AutoMLPipe-BC is organized into a series of scripts designed to best optimize the parallelization of a given analysis. These loosely correspond with the pipeline schematic above.
+The base code for AutoMLPipe-BC is organized into a series of script phases designed to best optimize the parallelization of a given analysis. These loosely correspond with the pipeline schematic above. These phases are designed to be run in order. Phases 1-7 make up the core automated pipeline, with Phase 7 and beyond being run optionally based on user needs. In general this pipeline will run more slowly when a larger number of 'target' dataset are being analyzed and when a larger number of CV 'folds' are requested.
 
-* Phase 1: Exploratory Analysis (Code: ExploratoryAnalysisMain.py and ExploratoryAnalysisJob.py)
+* Phase 1: Exploratory Analysis
   * Conducts an initial exploratory analysis of all target datasets to be analyzed and compared
   * Conducts basic data cleaning
   * Conducts k-fold cross validation (CV) partitioning to generate k training and k testing datasets
+  * [Code]: ExploratoryAnalysisMain.py and ExploratoryAnalysisJob.py
+  * [Runtime]: Typically fast, with the exception of generating feature correlation heatmaps in datasets with a large number of features
 
-* Phase 2: Data Preprocessing (Code: DataPreprocessingMain.py and DataPreprocessingJob.py)
+* Phase 2: Data Preprocessing
+  * Conducts feature transformations (i.e. data scaling) on all CV training datasets individually
+  * Conducts imputation of missing data values (missing data is not allowed by most scikit-learn modeling packages) on all CV training datasets individually
+  * Generates updated training and testing CV datasets
+  * [Code]: DataPreprocessingMain.py and DataPreprocessingJob.py
+  * [Runtime]: Typically fast, with the exception of imputing larger datasets with many missing values
 
+* Phase 3: Feature Importance Evaluation
+  * Conducts feature importance estimations on all CV training datasets individually
+  * Generates updated training and testing CV datasets
+  * [Code]: FeatureImportanceMain.py and FeatureImportanceJob.py
+  * [Runtime]: Typically reasonably fast, takes more time to run MultiSURF as the number of training instances approaches the default for 'instance_subset', or this parameter set higher in larger datasets
 
+* Phase 4: Feature Selection
+  * Applies 'collective' feature selection within all CV training datasets individually
+  * Features removed from a given training dataset are also removed from corresponding testing dataset
+  * Generates updated training and testing CV datasets
+  * [Code]: FeatureSelectionMain.py and FeatureSelectionJob.py
+  * [Runtime]: Fast
+
+* Phase 5: Machine Learning Modeling
+  * Conducts hyperparameter sweep for all ML modeling algorithms individually on all CV training datasets
+  * Conducts 'final' modeling for all ML algorithms individually on all CV training datasets using 'optimal' hyperparameters found in previous step
+  * Calculates and saves all evaluation metrics for all 'final' models
+  * [Code]: ModelMain.py and ModelJob.py
+  * [Runtime]: Slowest phase, can be sped up by reducing the set of ML methods selected to run, or deactivating ML methods that run slowly on large datasets
+
+* Phase 6: Statistics Summary
+  * Combines all results to generate summary statistics files, generate results plots, and conduct non-parametric statistical significance analyses comparing ML model performance across CV runs
+  * [Code]: StatsMain.py and StatsJob.py
+  * [Runtime]: Moderately fast
+
+* Phase 7: [Optional] Compare Datasets
+  * NOTE: Only can be run if the AutoMLPipe-BC was run on more than dataset
+  * Conducts non-parametric statistical significance analyses comparing separate original 'target' datasets analyzed by pipeline
+  * [Code]: DataCompareMain.py and DataCompareJob.py
+  * [Runtime]: Fast
+
+* Phase 8: [Optional] Copy Key Files
+  * Makes a copy of key results files and puts them in a folder called 'KeyFileCopy'
+  * [Code]: KeyFileCopyMain.py and KeyFileCopyJob.py
+  * [Runtime]: Fast
+
+* Phase 9: [Optional] Generate PDF Training Summary Report
+  * Generates a pre-formatted PDF including all pipeline run parameters, basic dataset information, and key exploratory analyses, ML modeling results, statistical comparisons, and runtime.
+  * [Code]: PDF_ReportTrainMain.py and PDF_ReportTrainJob.py
+  * [Runtime]: Moderately fast
+
+* Phase 10: [Optional] Apply Models to Replication Data
+  * Applies all previously trained models for a single 'target' dataset to one or more new 'replication' dataset that has all features found in the original 'target' datasets
+  * Conducts exploratory analysis on new 'replication' dataset(s)
+  * Applies scaling, imputation, and feature selection (unique to each CV partition from model training) to new 'replication' dataset(s) in preparation for model application
+  * Evaluates performance of all models the prepared 'replication' dataset(s)
+  * Generates summary statistics files, results plots, and conducts non-parametric statistical significance analyses comparing ML model performance across replications CV data transformations
+  * NOTE: feature importance evaluation and 'target' dataset statistical comparisons are irrelevant to this phase
+  * [Code]: ApplyModelMain.py and ApplyModelJob.py
+  * [Runtime]: Moderately fast
+
+* Phase 11: [Optional] Generate PDF 'Apply Replication' Summary Report
+  * Generates a pre-formatted PDF including all pipeline run parameters, basic dataset information, and key exploratory analyses, ML modeling results, and statistics.
+  * [Code]: PDF_ReportApplyMain.py and PDF_ReportApplyJob.py
+  * [Runtime]: Moderately fast
 
 ***
-## Jupyter Notebook
+## Run From Jupyter Notebook
 Here we detail how to run AutoMLPipe-BC within the provided jupyter notebook. This is likely the easiest approach for those newer to python, or for those who wish to explore, or easily test the code. However depending on the size of the target dataset(s) and the pipeline settings, this can take a long time to run locally. The included notebook is set up to run on included example datasets (HCC data taken from the UCI repository). NOTE: The user will still need to update the local folder/file paths in this notebook to be able for it to correctly run.
 * First, ensure all prerequisite packages are installed in your environment and dataset assumptions (above) are satisfied.
 * Open jupyter notebook (https://jupyter.readthedocs.io/en/latest/running.html). We recommend opening the 'anaconda prompt' which comes with your anaconda installation.  Once opened, type the command 'jupyter notebook' which will open as a webpage. Navigate to your working directory and open the included jupyter notebook file: 'AutoMLPipe-BC-Notebook.ipynb'.
@@ -175,57 +236,22 @@ Here we detail how to run AutoMLPipe-BC within the provided jupyter notebook. Th
 * To run the included example dataset with the pre-specified notebook run parameters, should only take a matter of minutes.
 * However it may take several hours or more to run this notebook in other contexts. Runtime is primarily increased by selecting additional ML modeling algorithms, picking a larger number of CV partitions, increasing 'n_trials' and 'timeout' which controls hyperparameter optimization, or increasing 'instance_subset' which controls the maximum number of instances used to run Relief-based feature selection (note: these algorithms scale quadratically with number of training instances).
 
-
-
 ***
-# Repository Orientation
-Included in this repository is the following:
-* The ML pipeline jupyter notebook, used to run the analysis - 'Supervised_Classification_ML_Pipeline.ipynb'
-* An example/test dataset taken from the UCI repository - 'hcc-data_example.txt'
-* A python script used by part 1 of the notebook - 'data_processing_methods.py'
-* A python script used by part 2 of the notebook - 'feature_selection_methods.py'
-* A python script used by part 3 of the notebook - 'modeling_methods.py'
-* A folder containing python code for the ExSTraCS ML algorithm - 'exstracs_2.0.2.1_noclassmutate_lynch'
-* A schematic summarizing the ML analysis pipeline - 'ML pipeline schematic2.png'
+## Run From Command Line (Local or Cluster Parallelization)
+The primary way to run AutoMLPipe-BC is via the command line, one phase at a time (running the next phase only after the previous one has completed). As indicated above, each phase can run locally (not parallelized) or parallelized using a Linux based computing cluster. With a little tweaking of the 'Main' scripts this code could also be parallelized with cloud computing. We welcome help in extending the code for that purpose.
 
-***
-# Notebook Organization
-## Part 1: Exploratory analysis, data cleaning, and creating n-fold CV partitioned datasets
-- Instances missing a class value are excluded
-- The user can indicate other columns that should be excluded from the analysis
-- The user can turn on/off the option to apply standard scaling to the data prior to CV partitioning or imputation
-    - We use no scaling by default. This is because most methods should work properly without it, and in applying the model downstream, it is difficult to properly scale new data so that models may be re-applied later.
-    - ANN modeling is sensitive to feature scaling, thus without it, performance not be as good. However this is only one of many challenges in getting ANN to perform well.
-- The user can turn on/off the option to impute missing values following CV partitioning
-- The user can turn on/off the option for the code to automatically attempt to discriminate nominal from ordinal features
-- The user can choose the number of CV partitions as well as the strategy for CV partitioning (i.e.  random (R), stratified (S), and matched (M)
-- CV training and testing datasets are saved as .txt files so that the same partitions may be analyzed external to this code
+Below we give an example of the set of all commands needed to run AutoMLPipe-BC in it's entirety using mostly default run parameters. In this example we specify instance and class label run parameters to emphasize the importance setting these values correctly. 
+```
+python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test --instance-label InstanceID --class-label Class
+python DataPreprocessingMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python FeatureImportanceMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python FeatureSelectionMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python StatsMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python DataCompareMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python KeyFileCopyMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test
+python PDF_ReportTrainMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python ApplyModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
+python PDF_ReportApplyMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
 
-## Part 2: Feature selection
-- The user can turn on/off the option to filter out the lowest scoring features in the data (i.e. to conduct not just feature importance evaluation but feature selection)
-- Feature importance evaluation and feature selection are conducted within each respective CV training partition
-- The pipeline reports feature importance estimates via two feature selection algorithms:
-    - Mutual Information: Proficient at detecting univariate associations
-    - MultiSURF: Proficient at detecting univariate associations, 2-way epistatic interactions, and heterogeneous associations
-
-- When selected by the user, feature selection conservatively keeps any feature identified as 'potentially relevant' (i.e. score > 0) by either algorithm
-- Since MultiSURF scales quadratically with the number of training instances, there is an option to utilize a random subset of instances when running this algorithm to save computational time.
-
-## Part 3: Machine learning modeling
-- Seven ML modeling algorithms have been implemented in this pipeline:
-    - Logistic Regression (scikit learn)
-    - Decision Tree (scikit learn)
-    - Random Forest (scikit learn)
-    - Naïve Bayes (scikit learn)
-    - XGBoost (separate python package)
-    - LightGBM (separate python package)
-    - SVM (scikit learn)
-    - ANN (scikit learn)
-    - ExSTraCS (v2.0.2.1) - a Learning Classifier System (LCS) algorithm manually configured to run in this notebook
-- User can select any subset of these methods to run
-- ML modeling is conducted within each respective CV training partition on the respective feature subset selected within the given CV partition
-- ML modeling begins with a hyperparameter sweep conducted with a grid search of hard coded run parameter options (user can edit as needed)
-- Balanced accuracy is applied as the evaluation metric for the hyperparameter sweep
-
-## Part 4: ML feature importance vizualization
-Performs normalization and transformation of feature importances scores for all algorithms and generates our proposed 'compound feature importance plots'.
+```

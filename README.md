@@ -85,7 +85,7 @@ To use AutoMLPipe-BC, download this GitHub repository to your local working dire
 
 ***
 ## Prerequisites
-To be able to run AutoMLPipe-BC you will need Python 3, Anaconda (recommended rather than individually installing all individual packages), and a handful of other Python packages that are not included within Anaconda. Anaconda is a distribution of Python and R programming languages for scientific computing, that aims to simplify package management and deployment. The distribution includes data-science packages suitable for Windows, Linux, and macOS. We recommend installing the most recent stable version of Anaconda (https://docs.anaconda.com/anaconda/install/) within your computing environment (make sure to install a version appropriate for your operating system).
+To be able to run AutoMLPipe-BC you will need Python 3, Anaconda (recommended rather than individually installing all individual packages), and a handful of other Python packages that are not included within Anaconda. Anaconda is a distribution of Python and R programming languages for scientific computing, that aims to simplify package management and deployment. The distribution includes data-science packages suitable for Windows, Linux, and macOS. We recommend installing the most recent stable version of Anaconda (https://docs.anaconda.com/anaconda/install/) within your computing environment (make sure to install a version appropriate for your operating system). Anaconda also includes jupyter notebook.
 
 As an alternative to installing Anaconda, you will need to install Python 3, as well as all python packages used by AutoMLPipe-BC, e.g. pandas, and numpy (not listed in detail here). At the time of development we had installed 'Anaconda3-2020.07-Linux-x86_64.sh', using Python 3.8.3.
 
@@ -148,43 +148,34 @@ conda install -c plotly plotly-orca
 ```
 See https://pypi.org/project/plotly/ for details or updates for installing these plotly dependencies.
 
-
-
-
-
-
 # Usage
 
 ***
-## Running within Jupyter notebook
+## Code Orientation
+The base code for AutoMLPipe-BC is organized into a series of scripts designed to best optimize the parallelization of a given analysis. These loosely correspond with the pipeline schematic above.
 
+* Phase 1: Exploratory Analysis (Code: ExploratoryAnalysisMain.py and ExploratoryAnalysisJob.py)
+- Conducts an initial exploratory analysis of all target datasets to be analyzed and compared
+- Conducts basic data cleaning
+- Conducts k-fold cross validation (CV) partitioning to generate k training and k testing datasets
 
-## Environment Requirements
-In order to run this pipeline as a Jupyter Notebook you must have the proper environment set up on your computer. Python 3 as well as a number of Python packages are required.  Most of these requirements are satisfied by installing the most recent version of anaconda (https://docs.anaconda.com/anaconda/install/). We used Anaconda3 with python version 3.7.7 during this pipeline development. In addition to the packages included in anaconda, the following packages will need to be installed separately (or possibly updated, if you have an older version installed). We recommend installing them within the 'anaconda prompt' that installs with anaconda:
+* Phase 2: Data Preprocessing (Code: DataPreprocessingMain.py and DataPreprocessingJob.py)
 
-* scikit-rebate (To install: pip install skrebate)
-* xgboost (To install: pip install xgboost)
-* lightgbm (To install: pip install lightgbm)
-* optuna (To install: pip install optuna)
-
-Additionally, while currently commented out in the file (modeling_methods.py) if you want the optuna hypterparameter sweep figures to appear within the jupyter notebook (via the command 'fig.show()' ) you will need to run the following installation commands.  This should only be required if you edit the python file to uncomment this line for any or all of the ML modeling algorithms.
-
-* pip install -U plotly>=4.0.0
-* conda install -c plotly plotly-orca
-
-Lastly, in order to include the stand-alone algorithm 'ExSTraCS' we needed to call this from the command line within this Jupyter Notebook.  As a result, the part of this notebook running ExSTraCS will only run properly if the path to the working directory used to run this notebook includes no spaces.  In other words if your path includes a folder called 'My Folder' vs. 'My_Folder' you will likely get a run error for ExSTraCS (at least on a Windows machine). Thus, make sure to check that wherever you are running this notebook from, that the entire path to the working directory does note include any spaces.
 
 
 ***
-# Jupyter Notebook Usage
-* First, ensure all of the environment and dataset requirments above are satisfied.
-* Next, save this repository to the desired 'working directory' on your pc (make sure there are no 'spaces' in the path to this directory!)
-* Open the jupyter notebook file (https://jupyter.readthedocs.io/en/latest/running.html). We found that the most reliable way to do this and ensure your run environment is correct is to open the 'anaconda prompt' which comes with your anaconda installation.  Once opened type the command 'jupyter notebook'.  Then navigate to your working directory and click on the notebook file: 'Supervised_Classification_ML_Pipeline.ipynb'.
-* Towards the beginning of the notebook in the section 'Set Dataset Pipeline Variables (Mandatory)', make sure to update your dataset-specific information (e.g. dataset name, outcome label, and instance label (if applicable)
-* In the next notebook cell, 'Set Other Pipeline Variables (Optional)', you can 'optionally' set other analysis pipeline settings (e.g. number of cross validation partitions, what algorithms to include, etc)
-* Next, in the next cell, 'ML Modeling Hyperparamters (Optional)' you can adjust the hyperparameters of all ML modeling algorithms to be explored in the respective hyperparameter sweeps. You can also adjust the overall optuna settings controlling the basics of how the hyperparameter sweeps are conducted. Note that 'adding' any other hyperparameters that have not been included in this section for a given ML modeler, will require updates to the code in the file 'modeling_methods.py'. We believe that we have included all critical run parameters for each ML algorithm so this should not be an issue for most users.
+## Jupyter Notebook
+Here we detail how to run AutoMLPipe-BC within the provided jupyter notebook. This is likely the easiest approach for those newer to python, or for those who wish to explore, or easily test the code. However depending on the size of the target dataset(s) and the pipeline settings, this can take a long time to run locally. The included notebook is set up to run on included example datasets (HCC data taken from the UCI repository). NOTE: The user will still need to update the local folder/file paths in this notebook to be able for it to correctly run.
+* First, ensure all prerequisite packages are installed in your environment and dataset assumptions (above) are satisfied.
+* Open jupyter notebook (https://jupyter.readthedocs.io/en/latest/running.html). We recommend opening the 'anaconda prompt' which comes with your anaconda installation.  Once opened, type the command 'jupyter notebook' which will open as a webpage. Navigate to your working directory and open the included jupyter notebook file: 'AutoMLPipe-BC-Notebook.ipynb'.
+* Towards the beginning of the notebook in the section 'Mandatory Parameters to Update', make sure to revise your dataset-specific information (especially your local path information for files/folders)
+* If you have a replication dataset to analyze, scroll down to the section 'Apply Models to Replication Data' and revise the dataset-specific information in 'Mandatory Parameters to Update', just below.
+* Check any other notebook cells specifying 'Run Parameters' for any of the pipeline phases and update these settings as needed.
 * Now that the code as been adapted to your desired dataset/analysis, click 'Kernel' on the Jupyter notebook GUI, and select 'Restart & Run All' to run the script.  
-* Note that due to all that is involved in running this notebook, it may take several hours or more to complete running all analyses. Runtime can be shortened by picking a subset of ML algorithms, picking a smaller number of CV partitions, reducing 'n_trials' and 'hype_cv' which controls hyperparameter optimization, or reducing 'instanceSubset' which controls the maximum number of instances used to run Relief-based feature selection (note: these algorithms scale quadratically with number of training instances).
+* To run the included example dataset with the pre-specified notebook run parameters, should only take a matter of minutes.
+* However it may take several hours or more to run this notebook in other contexts. Runtime is primarily increased by selecting additional ML modeling algorithms, picking a larger number of CV partitions, increasing 'n_trials' and 'timeout' which controls hyperparameter optimization, or increasing 'instance_subset' which controls the maximum number of instances used to run Relief-based feature selection (note: these algorithms scale quadratically with number of training instances).
+
+
 
 ***
 # Repository Orientation

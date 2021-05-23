@@ -158,8 +158,8 @@ The base code for AutoMLPipe-BC is organized into a series of script phases desi
   * Conducts an initial exploratory analysis of all target datasets to be analyzed and compared
   * Conducts basic data cleaning
   * Conducts k-fold cross validation (CV) partitioning to generate k training and k testing datasets
-  * [Code]: ExploratoryAnalysisMain.py and ExploratoryAnalysisJob.py
-  * [Runtime]: Typically fast, with the exception of generating feature correlation heatmaps in datasets with a large number of features
+  * /[Code]: ExploratoryAnalysisMain.py and ExploratoryAnalysisJob.py
+  * /[Runtime]: Typically fast, with the exception of generating feature correlation heatmaps in datasets with a large number of features
 
 * Phase 2: Data Preprocessing
   * Conducts feature transformations (i.e. data scaling) on all CV training datasets individually

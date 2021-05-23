@@ -158,21 +158,21 @@ The base code for AutoMLPipe-BC is organized into a series of script phases desi
   * Conducts an initial exploratory analysis of all target datasets to be analyzed and compared
   * Conducts basic data cleaning
   * Conducts k-fold cross validation (CV) partitioning to generate k training and k testing datasets
-  * [Code]: ExploratoryAnalysisMain.py and ExploratoryAnalysisJob.py
-  * [Runtime]: Typically fast, with the exception of generating feature correlation heatmaps in datasets with a large number of features
+  * \[Code]: ExploratoryAnalysisMain.py and ExploratoryAnalysisJob.py
+  * \[Runtime]: Typically fast, with the exception of generating feature correlation heatmaps in datasets with a large number of features
 
 * Phase 2: Data Preprocessing
   * Conducts feature transformations (i.e. data scaling) on all CV training datasets individually
   * Conducts imputation of missing data values (missing data is not allowed by most scikit-learn modeling packages) on all CV training datasets individually
   * Generates updated training and testing CV datasets
-  * [Code]: DataPreprocessingMain.py and DataPreprocessingJob.py
-  * [Runtime]: Typically fast, with the exception of imputing larger datasets with many missing values
+  * \[Code]: DataPreprocessingMain.py and DataPreprocessingJob.py
+  * \[Runtime]: Typically fast, with the exception of imputing larger datasets with many missing values
 
 * Phase 3: Feature Importance Evaluation
   * Conducts feature importance estimations on all CV training datasets individually
   * Generates updated training and testing CV datasets
-  * [Code]: FeatureImportanceMain.py and FeatureImportanceJob.py
-  * [Runtime]: Typically reasonably fast, takes more time to run MultiSURF as the number of training instances approaches the default for 'instance_subset', or this parameter set higher in larger datasets
+  * \[Code]: FeatureImportanceMain.py and FeatureImportanceJob.py
+  * \[Runtime]: Typically reasonably fast, takes more time to run MultiSURF as the number of training instances approaches the default for 'instance_subset', or this parameter set higher in larger datasets
 
 * Phase 4: Feature Selection
   * Applies 'collective' feature selection within all CV training datasets individually
@@ -185,29 +185,29 @@ The base code for AutoMLPipe-BC is organized into a series of script phases desi
   * Conducts hyperparameter sweep for all ML modeling algorithms individually on all CV training datasets
   * Conducts 'final' modeling for all ML algorithms individually on all CV training datasets using 'optimal' hyperparameters found in previous step
   * Calculates and saves all evaluation metrics for all 'final' models
-  * [Code]: ModelMain.py and ModelJob.py
-  * [Runtime]: Slowest phase, can be sped up by reducing the set of ML methods selected to run, or deactivating ML methods that run slowly on large datasets
+  * \[Code]: ModelMain.py and ModelJob.py
+  * \[Runtime]: Slowest phase, can be sped up by reducing the set of ML methods selected to run, or deactivating ML methods that run slowly on large datasets
 
 * Phase 6: Statistics Summary
   * Combines all results to generate summary statistics files, generate results plots, and conduct non-parametric statistical significance analyses comparing ML model performance across CV runs
-  * [Code]: StatsMain.py and StatsJob.py
-  * [Runtime]: Moderately fast
+  * \[Code]: StatsMain.py and StatsJob.py
+  * \[Runtime]: Moderately fast
 
 * Phase 7: [Optional] Compare Datasets
   * NOTE: Only can be run if the AutoMLPipe-BC was run on more than dataset
   * Conducts non-parametric statistical significance analyses comparing separate original 'target' datasets analyzed by pipeline
-  * [Code]: DataCompareMain.py and DataCompareJob.py
-  * [Runtime]: Fast
+  * \[Code]: DataCompareMain.py and DataCompareJob.py
+  * \[Runtime]: Fast
 
 * Phase 8: [Optional] Copy Key Files
   * Makes a copy of key results files and puts them in a folder called 'KeyFileCopy'
-  * [Code]: KeyFileCopyMain.py and KeyFileCopyJob.py
-  * [Runtime]: Fast
+  * \[Code]: KeyFileCopyMain.py and KeyFileCopyJob.py
+  * \[Runtime]: Fast
 
 * Phase 9: [Optional] Generate PDF Training Summary Report
   * Generates a pre-formatted PDF including all pipeline run parameters, basic dataset information, and key exploratory analyses, ML modeling results, statistical comparisons, and runtime.
-  * [Code]: PDF_ReportTrainMain.py and PDF_ReportTrainJob.py
-  * [Runtime]: Moderately fast
+  * \[Code]: PDF_ReportTrainMain.py and PDF_ReportTrainJob.py
+  * \[Runtime]: Moderately fast
 
 * Phase 10: [Optional] Apply Models to Replication Data
   * Applies all previously trained models for a single 'target' dataset to one or more new 'replication' dataset that has all features found in the original 'target' datasets
@@ -216,13 +216,13 @@ The base code for AutoMLPipe-BC is organized into a series of script phases desi
   * Evaluates performance of all models the prepared 'replication' dataset(s)
   * Generates summary statistics files, results plots, and conducts non-parametric statistical significance analyses comparing ML model performance across replications CV data transformations
   * NOTE: feature importance evaluation and 'target' dataset statistical comparisons are irrelevant to this phase
-  * [Code]: ApplyModelMain.py and ApplyModelJob.py
-  * [Runtime]: Moderately fast
+  * \[Code]: ApplyModelMain.py and ApplyModelJob.py
+  * \[Runtime]: Moderately fast
 
 * Phase 11: [Optional] Generate PDF 'Apply Replication' Summary Report
   * Generates a pre-formatted PDF including all pipeline run parameters, basic dataset information, and key exploratory analyses, ML modeling results, and statistics.
-  * [Code]: PDF_ReportApplyMain.py and PDF_ReportApplyJob.py
-  * [Runtime]: Moderately fast
+  * \[Code]: PDF_ReportApplyMain.py and PDF_ReportApplyJob.py
+  * \[Runtime]: Moderately fast
 
 ***
 ## Run From Jupyter Notebook

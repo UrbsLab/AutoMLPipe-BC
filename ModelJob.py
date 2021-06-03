@@ -50,7 +50,7 @@ def runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout
     np.random.seed(random_state)
 
     trainX,trainY,testX,testY = dataPrep(train_file_path,instance_label,class_label,test_file_path)
-
+    print("Dataprepared") #temporary
     #Run model
     abbrev = {'naive_bayes':'NB','logistic_regression':'LR','decision_tree':'DT','random_forest':'RF','gradient_boosting':'GB','XGB':'XGB','LGB':'LGB','SVM':'SVM','ANN':'ANN','k_neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
     if algorithm == 'naive_bayes':
@@ -684,7 +684,7 @@ def objective_SVM(trial, est, x_train, y_train, randSeed, hype_cv, param_grid, s
               'class_weight': trial.suggest_categorical('class_weight', param_grid['class_weight']),
               'random_state' : trial.suggest_categorical('random_state',param_grid['random_state'])}
     return hyper_eval(est, x_train, y_train, randSeed, hype_cv, params, scoring_metric)
-
+    
 def run_SVM_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,timeout,do_plot,full_path,training_subsample,use_uniform_FI,primary_metric):
     isSingle = True
     for key, value in param_grid.items():
@@ -704,7 +704,7 @@ def run_SVM_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     if not isSingle:
         sampler = optuna.samplers.TPESampler(seed=randSeed)  # Make the sampler behave in a deterministic way.
         study = optuna.create_study(direction='maximize', sampler=sampler)
-        optuna.logging.set_verbosity(optuna.logging.CRITICAL)
+        optuna.logging.set_verbosity(optuna.logging.DEBUG)  #.CRITICAL
         study.optimize(lambda trial: objective_SVM(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
 
         if eval(do_plot):

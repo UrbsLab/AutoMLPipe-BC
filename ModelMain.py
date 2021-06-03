@@ -7,6 +7,7 @@ import glob
 import ModelJob
 import time
 import csv
+import random
 
 '''Phase 5 of Machine Learning Analysis Pipeline:
 Sample Run Command:
@@ -44,7 +45,7 @@ def main(argv):
     parser.add_argument('--use-uniformFI', dest='use_uniform_FI', type=str, help='overrides use of any available feature importance estimate methods from models, instead using permutation_importance uniformly',default='False')
     #Hyperparameter sweep options - Defaults available
     parser.add_argument('--n-trials', dest='n_trials', type=int,help='# of bayesian hyperparameter optimization trials using optuna', default=100)
-    parser.add_argument('--timeout', dest='timeout', type=int,help='seconds until hyperparameter sweep stops running new trials (Note: it may run longer to finish last trial started)', default=300)
+    parser.add_argument('--timeout', dest='timeout', type=int,help='seconds until hyperparameter sweep stops running new trials (Note: it may run longer to finish last trial started)', default=900) #900 sec = 15 minutes default
     parser.add_argument('--export-hyper-sweep', dest='export_hyper_sweep_plots', type=str, help='export optuna-generated hyperparameter sweep plots', default='False')
     #LCS specific parameters - Defaults available
     parser.add_argument('--do-LCS-sweep', dest='do_lcs_sweep', type=str, help='do LCS hyperparam tuning or use below params',default='False')
@@ -58,6 +59,7 @@ def main(argv):
     parser.add_argument('--res-mem', dest='reserved_memory', type=int, help='reserved memory for the job (in Gigabytes)',default=4)
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
     parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')
+    parser.add_argument('-r','--do-resubmit',dest='do_resubmit', help='Boolean: Rerun any jobs that did not complete (or failed) in an earlier run.', action='store_true')
 
     options = parser.parse_args(argv[1:])
     output_path = options.output_path
@@ -194,6 +196,7 @@ def main(argv):
     reserved_memory = options.reserved_memory
     maximum_memory = options.maximum_memory
     do_check = options.do_check
+    do_resubmit = options.do_resubmit
 
     # Argument checks
     if not os.path.exists(output_path):
@@ -210,7 +213,10 @@ def main(argv):
     cv_partitions = int(metadata[6,1])
     filter_poor_features = metadata[15,1]
 
-    if not do_check:
+    if do_resubmit: #Attempts to resolve optuna hyperparameter optimization hangup (i.e. when it runs indefinitely for a given random seed attempt)
+        random_state = random.randint(1,1000)
+
+    if not do_check and not do_resubmit:
         dataset_paths = os.listdir(output_path + "/" + experiment_name)
         dataset_paths.remove('logs')
         dataset_paths.remove('jobs')
@@ -226,6 +232,7 @@ def main(argv):
             for cvCount in range(cv_partitions):
                 train_file_path = full_path+'/CVDatasets/'+dataset_directory_path+"_CV_"+str(cvCount)+"_Train.csv"
                 test_file_path = full_path + '/CVDatasets/' + dataset_directory_path + "_CV_" + str(cvCount) + "_Test.csv"
+
                 for algorithm in algorithms:
                     if run_parallel:
                         submitClusterJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,output_path+'/'+experiment_name,cvCount,filter_poor_features,reserved_memory,maximum_memory,do_lcs_sweep,nu,iterations,N,training_subsample,queue,use_uniform_FI,primary_metric)
@@ -261,7 +268,7 @@ def main(argv):
                 writer.writerow(["LCS hypersweep timeout",lcs_timeout])
             file.close()
 
-    else: #run job checks
+    elif do_check and not do_resubmit: #run job checks
         abbrev = {'naive_bayes':'NB','logistic_regression':'LR','decision_tree':'DT','random_forest':'RF','gradient_boosting':'GB','XGB':'XGB','LGB':'LGB','ANN':'ANN','SVM':'SVM','k_neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
 
         datasets = os.listdir(output_path + "/" + experiment_name)
@@ -289,6 +296,39 @@ def main(argv):
         else:
             print("Above Phase 5 Jobs Not Completed")
         print()
+
+    elif do_resubmit and not do_check: #resubmit any jobs that didn't finish in previous run
+        abbrev = {'naive_bayes':'NB','logistic_regression':'LR','decision_tree':'DT','random_forest':'RF','gradient_boosting':'GB','XGB':'XGB','LGB':'LGB','ANN':'ANN','SVM':'SVM','k_neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
+
+        datasets = os.listdir(output_path + "/" + experiment_name)
+        datasets.remove('logs')
+        datasets.remove('jobs')
+        datasets.remove('jobsCompleted')
+        if 'metadata.csv' in datasets:
+            datasets.remove('metadata.csv')
+        if 'DatasetComparisons' in datasets:
+            datasets.remove('DatasetComparisons')
+
+        #start by making list of finished jobs instead of all jobs then step through loop
+        phase5completed = []
+        for filename in glob.glob(output_path + "/" + experiment_name + '/jobsCompleted/job_model*'):
+            ref = filename.split('/')[-1]
+            phase5completed.append(ref)
+
+        for dataset in datasets:
+            for cv in range(cv_partitions):
+                for algorithm in algorithms:
+                    targetFile = 'job_model_' + dataset + '_' + str(cv) +'_' +abbrev[algorithm]+'.txt'
+                    if targetFile not in phase5completed: #target for a re-submit
+                        full_path = output_path + "/" + experiment_name + "/" + dataset
+                        train_file_path = full_path+'/CVDatasets/'+dataset+"_CV_"+str(cv)+"_Train.csv"
+                        test_file_path = full_path + '/CVDatasets/' + dataset + "_CV_" + str(cv) + "_Test.csv"
+                        if run_parallel:
+                            submitClusterJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,output_path+'/'+experiment_name,cv,filter_poor_features,reserved_memory,maximum_memory,do_lcs_sweep,nu,iterations,N,training_subsample,queue,use_uniform_FI,primary_metric)
+                        else:
+                            submitLocalJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cv,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric)
+    else:
+        print("Run options in conflict. Do not request to run check and resubmit at the same time.")
 
 def submitLocalJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric):
     ModelJob.job(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric)

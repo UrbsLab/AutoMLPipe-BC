@@ -205,7 +205,7 @@ The base code for AutoMLPipe-BC is organized into a series of script phases desi
   * \[Runtime]: Fast
 
 * Phase 9: [Optional] Generate PDF Training Summary Report
-  * Generates a pre-formatted PDF including all pipeline run parameters, basic dataset information, and key exploratory analyses, ML modeling results, statistical comparisons, and runtime.
+  * Generates a pre-formatted PDF including all pipeline run parameters, basic dataset information, and key exploratory analyses, ML modeling results, statistical comparisons, and runtime. Will properly format on analyses that include up to 20 datasets (aim to expand this in the future).
   * \[Code]: PDF_ReportTrainMain.py and PDF_ReportTrainJob.py
   * \[Runtime]: Moderately fast
 
@@ -438,6 +438,7 @@ Run parameters for ModelMain.py:
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
 | -c | Boolean: Specify whether to check for existence of all output files | Stores False |
+| -r | Boolean: Rerun any jobs that did not complete (or failed) in an earlier run. | Stores False |
 
 #### Example: Run only one ML modeling algorithm
 By default AutoMLPipe-BC runs all ML modeling algorithms. If the user only wants to run one (or a small number) of these algorithms, they can run the following command first turning all algorithms off, then specifying the ones to activate. In this example we only run random forest. Other algorithms could be specified as True here to run them as well.
@@ -551,3 +552,15 @@ Run parameters for PDF_ReportApplyMain.py:
 | --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
+
+# Troubleshooting
+
+## Rerunning a Failed Modeling Job
+If for some reason a ModelJob.py job fails, or must be stopped because it's taking much longer than expected, we have implemented a run parameter (-r) in ModelMain.py allowing the user to only rerun those failed/stopped jobs rather than the entire modeling phase. After using -c to confirm that some jobs have not completed, the user can instead use the -r command to search for missing jobs and rerun them. Note that a new random seed or a more limited hyperparameter range may be needed for a specific modeling algorithm to resolve job failures or overly long runs (see below).
+
+## Unending Modeling Jobs
+One known issue is that the Optuna hyperparameter optimization does not have a way to kill a specific hyperparameter trial during optimization.  The 'timeout' option does not set a global time limit for hyperparameter optimization, i.e. it won't stop a trial in progress once it's started. The result is that if a specific hyperparameter combination takes a very long time to run, that job will run indefinitely despite going past the 'timeout' setting. There are currently two recommended ways to address this.
+
+First, try to kill the given job(s) and use the -r command for ModelMain.py.  When using this command, a different random seed will automatically which can resolve the run completion, but will impact perfect reproducibility of the results.
+
+Second, go into the code in ModelJob.py and limit the hyperparameter ranges specified (or do this directly in the jupyter notebook if running from there).  Specifically eliminate possible hyperparameter combinations that might lead the hyperparameter sweep to run for a very long time (i.e. way beyond the 'timeout' parameter).

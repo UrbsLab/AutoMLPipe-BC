@@ -80,7 +80,10 @@ def job(experiment_path):
     analy_report.set_font('Times', 'B', 12)
     analy_report.cell(w=180, h = 8, txt='Univariate Analysis of Each Dataset (Top 10 Features)', border=1, align='L', ln=2)
     analy_report.set_font(family='times', size=9)
+
     for n in range(len(ds)):
+        if n > 4: #more than 5 datasets
+            break
         analy_report.y += 1
         sig_df = pd.read_csv(experiment_path+'/'+ds[n]+'/exploratory/univariate/Significance.csv')
         sig_ls = []
@@ -92,6 +95,69 @@ def job(experiment_path):
         analy_report.multi_cell(w=180, h=4, txt='Exploratory Univariate Analysis: '+'D'+str(n+1)+' = '+ds[n]+'\n'+'Feature:  P-Value'+'\n'+listToString(sig_ls), border=1, align='L')
         analy_report.y += 1
     footer(analy_report)
+
+    if len(ds) > 5:
+        analy_report.add_page(orientation='P')
+        analy_report.set_font('Times', 'B', 12)
+        analy_report.cell(w=180, h = 8, txt='Univariate Analysis of Each Dataset (Top 10 Features)', border=1, align='L', ln=2)
+        analy_report.set_font(family='times', size=9)
+
+        for n in range(5,len(ds)):
+            if n > 9:
+                break
+            analy_report.y += 1
+            sig_df = pd.read_csv(experiment_path+'/'+ds[n]+'/exploratory/univariate/Significance.csv')
+            sig_ls = []
+            sig_df = sig_df.nsmallest(10, ['p-value'])
+            for i in range(len(sig_df)):
+                sig_ls.append(sig_df.iloc[i,0]+': ')
+                sig_ls.append(str(sig_df.iloc[i,1]))
+                sig_ls.append('\n')
+            analy_report.multi_cell(w=180, h=4, txt='Exploratory Univariate Analysis: '+'D'+str(n+1)+' = '+ds[n]+'\n'+'Feature:  P-Value'+'\n'+listToString(sig_ls), border=1, align='L')
+            analy_report.y += 1
+        footer(analy_report)
+
+    if len(ds) > 10:
+        analy_report.add_page(orientation='P')
+        analy_report.set_font('Times', 'B', 12)
+        analy_report.cell(w=180, h = 8, txt='Univariate Analysis of Each Dataset (Top 10 Features)', border=1, align='L', ln=2)
+        analy_report.set_font(family='times', size=9)
+
+        for n in range(10,len(ds)):
+            if n > 14:
+                break
+            analy_report.y += 1
+            sig_df = pd.read_csv(experiment_path+'/'+ds[n]+'/exploratory/univariate/Significance.csv')
+            sig_ls = []
+            sig_df = sig_df.nsmallest(10, ['p-value'])
+            for i in range(len(sig_df)):
+                sig_ls.append(sig_df.iloc[i,0]+': ')
+                sig_ls.append(str(sig_df.iloc[i,1]))
+                sig_ls.append('\n')
+            analy_report.multi_cell(w=180, h=4, txt='Exploratory Univariate Analysis: '+'D'+str(n+1)+' = '+ds[n]+'\n'+'Feature:  P-Value'+'\n'+listToString(sig_ls), border=1, align='L')
+            analy_report.y += 1
+        footer(analy_report)
+
+    if len(ds) > 15:
+        analy_report.add_page(orientation='P')
+        analy_report.set_font('Times', 'B', 12)
+        analy_report.cell(w=180, h = 8, txt='Univariate Analysis of Each Dataset (Top 10 Features)', border=1, align='L', ln=2)
+        analy_report.set_font(family='times', size=9)
+
+        for n in range(15,len(ds)):
+            if n > 19:
+                break
+            analy_report.y += 1
+            sig_df = pd.read_csv(experiment_path+'/'+ds[n]+'/exploratory/univariate/Significance.csv')
+            sig_ls = []
+            sig_df = sig_df.nsmallest(10, ['p-value'])
+            for i in range(len(sig_df)):
+                sig_ls.append(sig_df.iloc[i,0]+': ')
+                sig_ls.append(str(sig_df.iloc[i,1]))
+                sig_ls.append('\n')
+            analy_report.multi_cell(w=180, h=4, txt='Exploratory Univariate Analysis: '+'D'+str(n+1)+' = '+ds[n]+'\n'+'Feature:  P-Value'+'\n'+listToString(sig_ls), border=1, align='L')
+            analy_report.y += 1
+        footer(analy_report)
 
     #Data and Model Prediction Summary--------------------------------------------------------------------------------------
     print("Publishing Model Prediction Summary")
@@ -350,7 +416,6 @@ def job(experiment_path):
 
     analy_report.add_page(orientation='P')
     analy_report.set_margins(left=1, top=10, right=1, )
-
     analy_report.set_font('Times', 'B', 12)
     analy_report.cell(w=0, h = 8, txt='Pipeline Runtime Summary', border=1, align="L", ln=2)
     analy_report.set_font(family='times', size=7)
@@ -358,22 +423,121 @@ def job(experiment_path):
     col_width = 50 #maximum column width
 
     for n in range(len(ds)):
+        if n > 3:
+            break
         analy_report.cell(100, 4, str(ds[n]), 1, align="L")
         analy_report.y += 4
         analy_report.x = 1
-
         time_df = pd.read_csv(experiment_path+'/'+ds[n]+'/runtimes.csv')
         time_df.iloc[:, 1] = time_df.iloc[:, 1].round(2)
         time_df = time_df.columns.to_frame().T.append(time_df, ignore_index=True)
-
         time_df = time_df.to_numpy()
         for row in time_df:
             for datum in row:
                 analy_report.cell(col_width, th, str(datum), border=1)
             analy_report.ln(th) #critical
         analy_report.y += 4
-
     footer(analy_report)
+
+    if len(ds) > 4:
+        analy_report.add_page(orientation='P')
+        analy_report.set_margins(left=1, top=10, right=1, )
+        analy_report.set_font('Times', 'B', 12)
+        analy_report.cell(w=0, h = 8, txt='Pipeline Runtime Summary', border=1, align="L", ln=2)
+        analy_report.set_font(family='times', size=7)
+        analy_report.y += 4
+        col_width = 50 #maximum column width
+        for n in range(4,len(ds)):
+            if n > 7:
+                break
+            analy_report.cell(100, 4, str(ds[n]), 1, align="L")
+            analy_report.y += 4
+            analy_report.x = 1
+            time_df = pd.read_csv(experiment_path+'/'+ds[n]+'/runtimes.csv')
+            time_df.iloc[:, 1] = time_df.iloc[:, 1].round(2)
+            time_df = time_df.columns.to_frame().T.append(time_df, ignore_index=True)
+            time_df = time_df.to_numpy()
+            for row in time_df:
+                for datum in row:
+                    analy_report.cell(col_width, th, str(datum), border=1)
+                analy_report.ln(th) #critical
+            analy_report.y += 4
+        footer(analy_report)
+
+    if len(ds) > 8:
+        analy_report.add_page(orientation='P')
+        analy_report.set_margins(left=1, top=10, right=1, )
+        analy_report.set_font('Times', 'B', 12)
+        analy_report.cell(w=0, h = 8, txt='Pipeline Runtime Summary', border=1, align="L", ln=2)
+        analy_report.set_font(family='times', size=7)
+        analy_report.y += 4
+        col_width = 50 #maximum column width
+        for n in range(8,len(ds)):
+            if n > 11:
+                break
+            analy_report.cell(100, 4, str(ds[n]), 1, align="L")
+            analy_report.y += 4
+            analy_report.x = 1
+            time_df = pd.read_csv(experiment_path+'/'+ds[n]+'/runtimes.csv')
+            time_df.iloc[:, 1] = time_df.iloc[:, 1].round(2)
+            time_df = time_df.columns.to_frame().T.append(time_df, ignore_index=True)
+            time_df = time_df.to_numpy()
+            for row in time_df:
+                for datum in row:
+                    analy_report.cell(col_width, th, str(datum), border=1)
+                analy_report.ln(th) #critical
+            analy_report.y += 4
+        footer(analy_report)
+
+    if len(ds) > 12:
+        analy_report.add_page(orientation='P')
+        analy_report.set_margins(left=1, top=10, right=1, )
+        analy_report.set_font('Times', 'B', 12)
+        analy_report.cell(w=0, h = 8, txt='Pipeline Runtime Summary', border=1, align="L", ln=2)
+        analy_report.set_font(family='times', size=7)
+        analy_report.y += 4
+        col_width = 50 #maximum column width
+        for n in range(12,len(ds)):
+            if n > 15:
+                break
+            analy_report.cell(100, 4, str(ds[n]), 1, align="L")
+            analy_report.y += 4
+            analy_report.x = 1
+            time_df = pd.read_csv(experiment_path+'/'+ds[n]+'/runtimes.csv')
+            time_df.iloc[:, 1] = time_df.iloc[:, 1].round(2)
+            time_df = time_df.columns.to_frame().T.append(time_df, ignore_index=True)
+            time_df = time_df.to_numpy()
+            for row in time_df:
+                for datum in row:
+                    analy_report.cell(col_width, th, str(datum), border=1)
+                analy_report.ln(th) #critical
+            analy_report.y += 4
+        footer(analy_report)
+
+    if len(ds) > 16:
+        analy_report.add_page(orientation='P')
+        analy_report.set_margins(left=1, top=10, right=1, )
+        analy_report.set_font('Times', 'B', 12)
+        analy_report.cell(w=0, h = 8, txt='Pipeline Runtime Summary', border=1, align="L", ln=2)
+        analy_report.set_font(family='times', size=7)
+        analy_report.y += 4
+        col_width = 50 #maximum column width
+        for n in range(16,len(ds)):
+            if n > 19:
+                break
+            analy_report.cell(100, 4, str(ds[n]), 1, align="L")
+            analy_report.y += 4
+            analy_report.x = 1
+            time_df = pd.read_csv(experiment_path+'/'+ds[n]+'/runtimes.csv')
+            time_df.iloc[:, 1] = time_df.iloc[:, 1].round(2)
+            time_df = time_df.columns.to_frame().T.append(time_df, ignore_index=True)
+            time_df = time_df.to_numpy()
+            for row in time_df:
+                for datum in row:
+                    analy_report.cell(col_width, th, str(datum), border=1)
+                analy_report.ln(th) #critical
+            analy_report.y += 4
+        footer(analy_report)
 
     #Output The PDF Object
     try:

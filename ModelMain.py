@@ -66,7 +66,7 @@ def main(argv):
     experiment_name = options.experiment_name
     do_all = options.do_all
 
-    if do_all:
+    if eval(do_all):
         do_NB = True
         do_LR = True
         do_DT = True

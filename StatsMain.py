@@ -46,7 +46,7 @@ def main(argv):
 
     options = parser.parse_args(argv[1:])
     jupyterRun = 'False'
-
+    job_counter = 0
     # Argument checks
     if not os.path.exists(options.output_path):
         raise Exception("Output path must exist (from phase 1) before phase 6 can begin")
@@ -99,6 +99,7 @@ def main(argv):
         for dataset_directory_path in dataset_paths:
             full_path = options.output_path + "/" + options.experiment_name + "/" + dataset_directory_path
             if eval(options.run_parallel):
+                job_counter += 1
                 submitClusterJob(full_path,encodedAlgos,options.plot_ROC,options.plot_PRC,options.plot_FI_box,class_label,instance_label,options.output_path+'/'+options.experiment_name,cv_partitions,options.reserved_memory,options.maximum_memory,options.queue,options.plot_metric_boxplots,primary_metric,options.top_results,sig_cutoff,jupyterRun)
             else:
                 submitLocalJob(full_path,encodedAlgos,options.plot_ROC,options.plot_PRC,options.plot_FI_box,class_label,instance_label,cv_partitions,options.plot_metric_boxplots,primary_metric,options.top_results,sig_cutoff,jupyterRun)
@@ -125,7 +126,9 @@ def main(argv):
             print("All Phase 6 Jobs Completed")
         else:
             print("Above Phase 6 Jobs Not Completed")
-        print()
+
+    if not options.do_check:
+        print(str(job_counter)+ " jobs submitted in Phase 6")
 
 def submitLocalJob(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun):
     """ Runs StatsJob.py locally, once for each of the original target datasets (all CV datasets analyzed at once). These runs will be completed serially rather than in parallel. """

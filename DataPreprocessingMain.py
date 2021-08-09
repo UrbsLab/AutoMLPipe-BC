@@ -43,6 +43,7 @@ def main(argv):
     parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')
 
     options = parser.parse_args(argv[1:])
+    job_counter = 0
 
     # Argument checks-------------------------------------------------------------
     if not os.path.exists(options.output_path):
@@ -68,6 +69,7 @@ def main(argv):
         for dataset_directory_path in dataset_paths:
             full_path = options.output_path+"/"+options.experiment_name+"/"+dataset_directory_path
             for cv_train_path in glob.glob(full_path+"/CVDatasets/*Train.csv"):
+                job_counter += 1
                 cv_test_path = cv_train_path.replace("Train.csv","Test.csv")
                 if eval(options.run_parallel):
                     submitClusterJob(cv_train_path,cv_test_path,options.output_path+'/'+options.experiment_name,options.scale_data,options.impute_data,options.overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,options.reserved_memory,options.maximum_memory,options.queue)
@@ -106,7 +108,9 @@ def main(argv):
             print("All Phase 2 Jobs Completed")
         else:
             print("Above Phase 2 Jobs Not Completed")
-        print()
+            
+    if not options.do_check:
+        print(str(job_counter)+ " jobs submitted in Phase 2")
 
 def submitLocalJob(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state):
     """ Runs DataPreprocessingJob.py locally on a single CV dataset. These runs will be completed serially rather than in parallel. """

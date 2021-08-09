@@ -37,15 +37,19 @@ def main(argv):
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
 
     options = parser.parse_args(argv[1:])
+    job_counter = 0
 
     #Load variables specified earlier in the pipeline from metadata file
     metadata = pd.read_csv(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv').values
     sig_cutoff = metadata[5,1]
 
     if eval(options.run_parallel):
+        job_counter += 1
         submitClusterJob(options.output_path+'/'+options.experiment_name,options.reserved_memory,options.maximum_memory,options.queue,sig_cutoff)
     else:
         submitLocalJob(options.output_path+'/'+options.experiment_name,sig_cutoff)
+
+    print(str(job_counter)+ " jobs submitted in Phase 7")
 
 def submitLocalJob(experiment_path,sig_cutoff):
     """ Runs DataCompareJob.py locally, once. """

@@ -46,6 +46,7 @@ def main(argv):
     parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')
 
     options = parser.parse_args(argv[1:])
+    job_counter = 0
     
     #Load variables specified earlier in the pipeline from metadata file
     metadata = pd.read_csv(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv').values
@@ -71,6 +72,7 @@ def main(argv):
         for dataset_directory_path in dataset_paths:
             full_path = options.output_path + "/" + options.experiment_name + "/" + dataset_directory_path
             if eval(options.run_parallel):
+                job_counter += 1
                 submitClusterJob(full_path,options.output_path+'/'+options.experiment_name,do_mutual_info,do_multisurf,options.max_features_to_keep,options.filter_poor_features,options.top_results,options.export_scores,class_label,instance_label,cv_partitions,options.overwrite_cv,options.reserved_memory,options.maximum_memory,options.queue,jupyterRun)
             else:
                 submitLocalJob(full_path,do_mutual_info,do_multisurf,options.max_features_to_keep,options.filter_poor_features,options.top_results,options.export_scores,class_label,instance_label,cv_partitions,options.overwrite_cv,jupyterRun)
@@ -106,7 +108,9 @@ def main(argv):
             print("All Phase 4 Jobs Completed")
         else:
             print("Above Phase 4 Jobs Not Completed")
-        print()
+
+    if not options.do_check:
+        print(str(job_counter)+ " jobs submitted in Phase 4")
 
 def submitLocalJob(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,jupyterRun):
     """ Runs FeatureSelectionJob.py locally, once for each of the original target datasets (all CV datasets analyzed at once). These runs will be completed serially rather than in parallel. """

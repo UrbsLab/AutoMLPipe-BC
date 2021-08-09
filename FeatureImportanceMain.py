@@ -45,6 +45,7 @@ def main(argv):
     parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')
 
     options = parser.parse_args(argv[1:])
+    job_counter = 0
 
     # Argument checks
     if not os.path.exists(options.output_path):
@@ -77,6 +78,7 @@ def main(argv):
                 for cv_train_path in glob.glob(full_path+"/CVDatasets/*_CV_*Train.csv"):
                     command_text = '/FeatureImportanceJob.py ' + cv_train_path+" "+experiment_path+" "+str(random_state)+" "+class_label+" "+instance_label+" " +str(options.instance_subset)+" mi "+str(options.n_jobs)+' '+str(options.use_TURF)+' '+str(options.TURF_pct)
                     if eval(options.run_parallel):
+                        job_counter += 1
                         submitClusterJob(command_text, experiment_path,options.reserved_memory,options.maximum_memory,options.queue)
                     else:
                         submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,options.instance_subset,'mi',options.n_jobs,options.use_TURF,options.TURF_pct)
@@ -87,6 +89,7 @@ def main(argv):
                 for cv_train_path in glob.glob(full_path+"/CVDatasets/*_CV_*Train.csv"):
                     command_text = '/FeatureImportanceJob.py ' + cv_train_path+" "+experiment_path+" "+str(random_state)+" "+class_label+" "+instance_label+" " +str(options.instance_subset)+" ms "+str(options.n_jobs)+' '+str(options.use_TURF)+' '+str(options.TURF_pct)
                     if eval(options.run_parallel):
+                        job_counter += 1
                         submitClusterJob(command_text, experiment_path,options.reserved_memory,options.maximum_memory,options.queue)
                     else:
                         submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,options.instance_subset,'ms',options.n_jobs,options.use_TURF,options.TURF_pct)
@@ -129,7 +132,9 @@ def main(argv):
             print("All Phase 3 Jobs Completed")
         else:
             print("Above Phase 3 Jobs Not Completed")
-        print()
+
+    if not options.do_check:
+        print(str(job_counter)+ " jobs submitted in Phase 3")
 
 def submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,instance_subset,algorithm,n_jobs,use_TURF,TURF_pct):
     """ Runs FeatureImportanceJob.py locally on a single CV dataset applying one of the implemented feature importance algorithms. These runs will be completed serially rather than in parallel. """

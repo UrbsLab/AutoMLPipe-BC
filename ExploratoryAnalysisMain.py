@@ -65,6 +65,7 @@ def main(argv):
 
     options = parser.parse_args(argv[1:])
     jupyterRun = 'False' #controls whether plots are shown or closed depending on whether jupyter notebook is used to run code or not
+    job_counter = 0
 
     # Job submission ----------------------------------------------------------------------------------------------------------------------------------
     if not options.do_check: #Run job file
@@ -78,6 +79,7 @@ def main(argv):
             if file_extension == 'txt' or file_extension == 'csv':
                 if data_name not in unique_datanames:
                     unique_datanames.append(data_name)
+                    job_counter += 1
                     if eval(options.run_parallel): #Run as job in parallel on linux computing cluster
                         submitClusterJob(dataset_path,options.output_path +'/'+options.experiment_name,options.cv_partitions,options.partition_method,options.categorical_cutoff,options.export_exploratory_analysis,options.export_feature_correlations,options.export_univariate_plots,options.class_label,options.instance_label,options.match_label,options.random_state,options.reserved_memory,options.maximum_memory,options.queue,options.ignore_features_path,options.categorical_feature_path,options.sig_cutoff,jupyterRun)
                     else: #Run job locally, serially
@@ -123,7 +125,9 @@ def main(argv):
             print("All Phase 1 Jobs Completed")
         else:
             print("Above Phase 1 Jobs Not Completed")
-        print()
+            
+    if not options.do_check:
+        print(str(job_counter)+ " jobs submitted in Phase 1")
 
 def makeDirTree(data_path,output_path,experiment_name,jupyterRun):
     """ Checks existence of data folder path. Checks that experiment output folder does not already exist as well as validity of experiment_name parameter.

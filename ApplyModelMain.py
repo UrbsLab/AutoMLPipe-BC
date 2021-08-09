@@ -48,6 +48,7 @@ def main(argv):
 
     options = parser.parse_args(argv[1:])
     jupyterRun = 'False'
+    job_counter = 0
 
     #Load variables specified earlier in the pipeline from metadata file
     metadata = pd.read_csv(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv').values
@@ -99,6 +100,7 @@ def main(argv):
             if apply_name not in unique_datanames:
                 unique_datanames.append(apply_name)
                 if eval(options.run_parallel):
+                    job_counter += 1
                     submitClusterJob(options.reserved_memory,options.maximum_memory,options.queue,experiment_path,datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,options.data_path,options.match_label,options.plot_ROC,options.plot_PRC,options.plot_metric_boxplots,options.export_feature_correlations,jupyterRun)
                 else:
                     submitLocalJob(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,options.data_path,options.match_label,options.plot_ROC,options.plot_PRC,options.plot_metric_boxplots,options.export_feature_correlations,jupyterRun)
@@ -106,6 +108,8 @@ def main(argv):
 
     if file_count == 0: #Check that there was at least 1 dataset
         raise Exception("There must be at least one .txt or .csv dataset in rep_data_path directory")
+
+    print(str(job_counter)+ " jobs submitted in Phase 10")
 
 def submitLocalJob(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots,export_feature_correlations,jupyterRun):
     """ Runs ApplyModelJob.py on each dataset in dataset_path locally. These runs will be completed serially rather than in parallel. """

@@ -1,3 +1,22 @@
+"""
+File: KeyFileCopyMain.py
+Authors: Ryan J. Urbanowicz, Robert Zhang
+Institution: University of Pensylvania, Philadelphia PA
+Creation Date: 6/1/2021
+License: GPL 3.0
+Description: Phase 8 of AutoMLPipe-BC (Optional)- This 'Main' script manages Phase 8 run parameters, and submits job to run locally (to run serially) or on a linux computing
+             cluster (parallelized). This script runs KeyFileCopyJob.py which gathers key results files and copies them into a new folder that can be more easily transfered
+             and takes up less storage space. Includes metadata file, Dataset comparisons, along with results and basic exploratory analysis files for each dataset analyzed.
+             All 'Main' scripts in this pipeline have the potential to be extended by users to submit jobs to other parallel computing frameworks (e.g. cloud computing).
+Warnings: Designed to be run following the completion of either AutoMLPipe-BC Phase 6 (StatsMain.py) or Phase 7 (DataCompareMain.py). This script is not necessary to run, but
+          serves as a convenience to reduce output file cluster and space consumption. Note that the new Key file folder excludes pickled model files and results that would be
+          necessary to apply models in the future.
+Sample Run Command (Linux cluster parallelized with all default run parameters):
+    python KeyFileCopyMain.py --data-path /Users/robert/Desktop/Datasets --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1
+Sample Run Command (Local/serial with with all default run parameters):
+    python DataCompareMain.py --data-path /Users/robert/Desktop/Datasets --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1 --run-parallel False
+"""
+#Import required packages  ---------------------------------------------------------------------------------------------------------------------------
 import argparse
 import sys
 import os
@@ -17,27 +36,21 @@ def main(argv):
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
 
     options = parser.parse_args(argv[1:])
-    data_path = options.data_path
-    output_path = options.output_path
-    experiment_name = options.experiment_name
 
-    run_parallel = options.run_parallel == 'True'
-    queue = options.queue
-    reserved_memory = options.reserved_memory
-    maximum_memory = options.maximum_memory
-
-    if not os.path.exists(data_path):
+    if not os.path.exists(options.data_path):
         raise Exception("Provided data_path does not exist")
 
-    if run_parallel:
-        submitClusterJob(output_path+'/'+experiment_name,data_path,reserved_memory,maximum_memory,queue)
+    if eval(options.run_parallel):
+        submitClusterJob(options.output_path+'/'+options.experiment_name,options.data_path,options.reserved_memory,options.maximum_memory,options.queue)
     else:
-        submitLocalJob(output_path+'/'+experiment_name,data_path)
+        submitLocalJob(options.output_path+'/'+options.experiment_name,options.data_path)
 
 def submitLocalJob(experiment_path,data_path):
+    """ Runs KeyFileCopyJob.py locally, once. """
     KeyFileCopyJob.job(experiment_path,data_path)
 
 def submitClusterJob(experiment_path,data_path,reserved_memory,maximum_memory,queue):
+    """ Runs KeyFileCopyJob.py once. Runs on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
     job_name = experiment_path + '/jobs/Key_' + job_ref + '_run.sh'
     sh_file = open(job_name,'w')

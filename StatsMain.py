@@ -1,4 +1,22 @@
-
+"""
+File: StatsMain.py
+Authors: Ryan J. Urbanowicz, Robert Zhang
+Institution: University of Pensylvania, Philadelphia PA
+Creation Date: 6/1/2021
+License: GPL 3.0
+Description: Phase 6 of AutoMLPipe-BC - This 'Main' script manages Phase 6 run parameters, and submits job to run locally (to run serially) or on a linux computing cluster (parallelized).
+             This script runs StatsJob.py which (for a single orginal target dataset) creates summaries of ML classification evaluation statistics (means and standard deviations),
+             ROC and PRC plots (comparing CV performance in the same ML algorithm and comparing average performance between ML algorithms), model feature importance averages over CV runs,
+             boxplots comparing ML algorithms for each metric, Kruskal Wallis and Mann Whitney statistical comparsions between ML algorithms, model feature importance boxplots for each
+             algorithm, and composite feature importance plots summarizing model feature importance across all ML algorithms. This script is run on all cv results for a given original
+             target dataset from Phase 1. All 'Main' scripts in this pipeline have the potential to be extended by users to submit jobs to other parallel computing frameworks (e.g. cloud computing).
+Warnings: Designed to be run following the completion of AutoMLPipe-BC Phase 5 (ModelMain.py).
+Sample Run Command (Linux cluster parallelized with all default run parameters):
+    python StatsMain.py --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1
+Sample Run Command (Local/serial with with all default run parameters):
+    python StatsMain.py --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1 --run-parallel False
+"""
+#Import required packages  ---------------------------------------------------------------------------------------------------------------------------
 import argparse
 import os
 import sys
@@ -6,14 +24,6 @@ import time
 import pandas as pd
 import StatsJob
 import glob
-
-'''Phase 6 of Machine Learning Analysis Pipeline:
-Sample Run Command:
-python StatsMain.py --output-path /Users/robert/Desktop/outputs --experiment-name test1
-
-Local Command:
-python StatsMain.py --output-path /Users/robert/Desktop/outputs --experiment-name randomtest2 --run-parallel False
-'''
 
 def main(argv):
     #Parse arguments
@@ -35,30 +45,16 @@ def main(argv):
     parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')
 
     options = parser.parse_args(argv[1:])
-    output_path = options.output_path
-    experiment_name = options.experiment_name
-    plot_ROC = options.plot_ROC
-    plot_PRC = options.plot_PRC
-    plot_metric_boxplots = options.plot_metric_boxplots
-    plot_FI_box = options.plot_FI_box
-    top_results = options.top_results
-
-    run_parallel = options.run_parallel
-    queue = options.queue
-    reserved_memory = options.reserved_memory
-    maximum_memory = options.maximum_memory
-    do_check = options.do_check
+    jupyterRun = 'False'
 
     # Argument checks
-    if not os.path.exists(output_path):
+    if not os.path.exists(options.output_path):
         raise Exception("Output path must exist (from phase 1) before phase 6 can begin")
-
-    if not os.path.exists(output_path + '/' + experiment_name):
+    if not os.path.exists(options.output_path + '/' + options.experiment_name):
         raise Exception("Experiment must exist (from phase 1) before phase 6 can begin")
 
-    jupyterRun = 'False'
-    metadata = pd.read_csv(output_path + '/' + experiment_name + '/' + 'metadata.csv').values
-
+    #Load variables specified earlier in the pipeline from metadata file
+    metadata = pd.read_csv(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv').values
     class_label = metadata[0, 1]
     instance_label = metadata[1, 1]
     sig_cutoff = metadata[5,1]
@@ -93,21 +89,21 @@ def main(argv):
     encodedAlgos = encode(do_XCS, encodedAlgos)
     encodedAlgos = encode(do_ExSTraCS, encodedAlgos)
 
-    if not do_check:
+    if not options.do_check: #Run job submission
         # Iterate through datasets
-        dataset_paths = os.listdir(output_path + "/" + experiment_name)
+        dataset_paths = os.listdir(options.output_path + "/" + options.experiment_name)
         dataset_paths.remove('logs')
         dataset_paths.remove('jobs')
         dataset_paths.remove('jobsCompleted')
         dataset_paths.remove('metadata.csv')
         for dataset_directory_path in dataset_paths:
-            full_path = output_path + "/" + experiment_name + "/" + dataset_directory_path
-            if eval(run_parallel):
-                submitClusterJob(full_path,encodedAlgos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,output_path+'/'+experiment_name,cv_partitions,reserved_memory,maximum_memory,queue,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun)
+            full_path = options.output_path + "/" + options.experiment_name + "/" + dataset_directory_path
+            if eval(options.run_parallel):
+                submitClusterJob(full_path,encodedAlgos,options.plot_ROC,options.plot_PRC,options.plot_FI_box,class_label,instance_label,options.output_path+'/'+options.experiment_name,cv_partitions,options.reserved_memory,options.maximum_memory,options.queue,options.plot_metric_boxplots,primary_metric,options.top_results,sig_cutoff,jupyterRun)
             else:
-                submitLocalJob(full_path,encodedAlgos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun)
-    else:
-        datasets = os.listdir(output_path + "/" + experiment_name)
+                submitLocalJob(full_path,encodedAlgos,options.plot_ROC,options.plot_PRC,options.plot_FI_box,class_label,instance_label,cv_partitions,options.plot_metric_boxplots,primary_metric,options.top_results,sig_cutoff,jupyterRun)
+    else: #run job completion checks
+        datasets = os.listdir(options.output_path + "/" + options.experiment_name)
         datasets.remove('logs')
         datasets.remove('jobs')
         datasets.remove('jobsCompleted')
@@ -120,7 +116,7 @@ def main(argv):
         for dataset in datasets:
             phase6Jobs.append('job_stats_'+dataset+'.txt')
 
-        for filename in glob.glob(output_path + "/" + experiment_name+'/jobsCompleted/job_stats*'):
+        for filename in glob.glob(options.output_path + "/" + options.experiment_name+'/jobsCompleted/job_stats*'):
             ref = filename.split('/')[-1]
             phase6Jobs.remove(ref)
         for job in phase6Jobs:
@@ -132,9 +128,11 @@ def main(argv):
         print()
 
 def submitLocalJob(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun):
+    """ Runs StatsJob.py locally, once for each of the original target datasets (all CV datasets analyzed at once). These runs will be completed serially rather than in parallel. """
     StatsJob.job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun)
 
 def submitClusterJob(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,experiment_path,cv_partitions,reserved_memory,maximum_memory,queue,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun):
+    """ Runs StatsJob.py once for each of the original target datasets (all CV datasets analyzed at once). Runs in parallel on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
     job_name = experiment_path + '/jobs/P6_' + job_ref + '_run.sh'
     sh_file = open(job_name,'w')
@@ -153,6 +151,7 @@ def submitClusterJob(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class
     pass
 
 def encode(do_algo,encodedAlgos):
+    """ Encodes boolean values identifying which ML algorithms were run and should be included in the stats analysis. """
     if eval(do_algo):
         encodedAlgos += '1'
     else:

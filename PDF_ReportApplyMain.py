@@ -1,10 +1,20 @@
-#######################################
-## Richard Zhang, Wilson Zhang, & Ryan Urbanowicz    ##
-## March 30, 2021                    ##
-## ML Pipeline Report Generator V. 1 ##
-## Requirements: pip install fpdf
-#######################################
-
+"""
+File: PDF_ReportApplyMain.py
+Authors: Ryan J. Urbanowicz, Richard Zhang, Wilson Zhang
+Institution: University of Pensylvania, Philadelphia PA
+Creation Date: 6/1/2021
+License: GPL 3.0
+Description: Phase 11 of AutoMLPipe-BC (Optional)- This 'Main' script manages Phase 10 run parameters, and submits job to run locally (to run serially) or on a linux computing
+             cluster (parallelized). This script runs PDF_ReportApplyJob.py which generates a formatted PDF summary report of key pipeline results (applying trained models to
+             hold out replication data). All 'Main' scripts in this pipeline have the potential to be extended by users to submit jobs to other parallel computing frameworks
+             (e.g. cloud computing).
+Warnings: Designed to be run following the completion of either AutoMLPipe-BC Phase 6 (StatsMain.py), Phase 7 (DataCompareMain.py), and or Phase 8 (KeyFileCopyMain.py).
+Sample Run Command (Linux cluster parallelized with all default run parameters):
+    python PDF_ReportApplyMain.py --rep-path /Users/robert/Desktop/RepDatasets --dataset /Users/robert/Desktop/Datasets/targetData1.csv --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1
+Sample Run Command (Local/serial with with all default run parameters):
+    python PDF_ReportApplyMain.py --rep-path /Users/robert/Desktop/RepDatasets --dataset /Users/robert/Desktop/Datasets/targetData1.csv --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1 --run-parallel False
+"""
+#Import required packages  ---------------------------------------------------------------------------------------------------------------------------
 import os
 import re
 import sys
@@ -26,27 +36,20 @@ def main(argv):
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
 
     options = parser.parse_args(argv[1:])
-    output_path = options.output_path
-    experiment_name = options.experiment_name
-    rep_data_path = options.rep_data_path
-    data_path = options.data_path
 
-    run_parallel = options.run_parallel
-    queue = options.queue
-    reserved_memory = options.reserved_memory
-    maximum_memory = options.maximum_memory
+    experiment_path = options.output_path+'/'+options.experiment_name
 
-    experiment_path = output_path+'/'+experiment_name
-
-    if eval(run_parallel):
-        submitClusterJob(experiment_path,rep_data_path,data_path,reserved_memory,maximum_memory,queue)
+    if eval(options.run_parallel):
+        submitClusterJob(experiment_path,options.rep_data_path,options.data_path,options.reserved_memory,options.maximum_memory,options.queue)
     else:
-        submitLocalJob(experiment_path,rep_data_path,data_path)
+        submitLocalJob(experiment_path,options.rep_data_path,options.data_path)
 
 def submitLocalJob(experiment_path):
+    """ Runs PDF_ReportApplyJob.py locally, once. """
     KeyFileCopyJob.job(experiment_path,rep_data_path,data_path)
 
 def submitClusterJob(experiment_path,rep_data_path,data_path,reserved_memory,maximum_memory,queue):
+    """ Runs PDF_ReportApplyJob.py once. Runs on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
     job_name = experiment_path + '/jobs/PDF_Apply_' + job_ref + '_run.sh'
     sh_file = open(job_name,'w')

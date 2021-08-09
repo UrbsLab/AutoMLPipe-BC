@@ -1,4 +1,21 @@
-
+"""
+File: DataPreprocessingMain.py
+Authors: Ryan J. Urbanowicz, Robert Zhang
+Institution: University of Pensylvania, Philadelphia PA
+Creation Date: 6/1/2021
+License: GPL 3.0
+Description: Phase 2 of AutoMLPipe-BC - This 'Main' script manages Phase 2 run parameters, updates the metadata file (with user specified run parameters across pipeline run)
+             and submits job to run locally (to run serially) or on a linux computing cluster (parallelized).  This script runs DataPreprocessingJob.py which conducts the
+             data preproccesing (i.e. scaling and imputation). All 'Main' scripts in this pipeline have the potential to be extended by users to submit jobs to other parallel
+             computing frameworks (e.g. cloud computing).
+Warnings: Designed to be run following the completion of AutoMLPipe-BC Phase 1 (ExploratoryAnalysisMain.py). This script should be run as part of the pipeline regardless
+              of whether either scaling or imputation is applied so that the metadata file is updated appropriately for downstream phases.
+Sample Run Command (Linux cluster parallelized with all default run parameters):
+    python DataPreprocessingMain.py --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1
+Sample Run Command (Local/serial with with all default run parameters):
+    python DataPreprocessingMain.py --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1 --run-parallel False
+"""
+#Import required packages  ---------------------------------------------------------------------------------------------------------------------------
 import sys
 import os
 import argparse
@@ -7,14 +24,6 @@ import pandas as pd
 import DataPreprocessingJob
 import time
 import csv
-
-'''Phase 2 of Machine Learning Analysis Pipeline:
-Sample Run Command:
-python DataPreprocessingMain.py --output-path /Users/robert/Desktop/outputs --experiment-name test1
-
-Local Command:
-python DataPreprocessingMain.py --output-path /Users/robert/Desktop/outputs --experiment-name randomtest2 --run-parallel False
-'''
 
 def main(argv):
     #Parse arguments
@@ -34,58 +43,47 @@ def main(argv):
     parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')
 
     options = parser.parse_args(argv[1:])
-    output_path = options.output_path
-    experiment_name = options.experiment_name
-    scale_data = options.scale_data
-    impute_data = options.impute_data
-    overwrite_cv = options.overwrite_cv
-    run_parallel = options.run_parallel
-    queue = options.queue
-    reserved_memory = options.reserved_memory
-    maximum_memory = options.maximum_memory
-    do_check = options.do_check
 
-    # Argument checks
-    if not os.path.exists(output_path):
+    # Argument checks-------------------------------------------------------------
+    if not os.path.exists(options.output_path):
         raise Exception("Output path must exist (from phase 1) before phase 2 can begin")
-
-    if not os.path.exists(output_path + '/' + experiment_name):
+    if not os.path.exists(options.output_path + '/' + options.experiment_name):
         raise Exception("Experiment must exist (from phase 1) before phase 2 can begin")
 
-    metadata = pd.read_csv(output_path+'/'+experiment_name + '/' + 'metadata.csv').values
+    #Load variables specified earlier in the pipeline from metadata file
+    metadata = pd.read_csv(options.output_path+'/'+options.experiment_name + '/' + 'metadata.csv').values
     class_label = metadata[0, 1]
     instance_label = metadata[1,1]
     random_state = int(metadata[3, 1])
     categorical_cutoff = int(metadata[4,1])
     cv_partitions = int(metadata[6,1])
-    categorical_feature_path = metadata[9,1]
 
-    if not do_check:
+    if not options.do_check: #Run job file
         #Iterate through datasets, ignoring common folders
-        dataset_paths = os.listdir(output_path+"/"+experiment_name)
+        dataset_paths = os.listdir(options.output_path+"/"+options.experiment_name)
         dataset_paths.remove('logs')
         dataset_paths.remove('jobs')
         dataset_paths.remove('jobsCompleted')
         dataset_paths.remove('metadata.csv')
         for dataset_directory_path in dataset_paths:
-            full_path = output_path+"/"+experiment_name+"/"+dataset_directory_path
+            full_path = options.output_path+"/"+options.experiment_name+"/"+dataset_directory_path
             for cv_train_path in glob.glob(full_path+"/CVDatasets/*Train.csv"):
                 cv_test_path = cv_train_path.replace("Train.csv","Test.csv")
-                if eval(run_parallel):
-                    submitClusterJob(cv_train_path,cv_test_path,output_path+'/'+experiment_name,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,reserved_memory,maximum_memory,queue,categorical_feature_path)
+                if eval(options.run_parallel):
+                    submitClusterJob(cv_train_path,cv_test_path,options.output_path+'/'+options.experiment_name,options.scale_data,options.impute_data,options.overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,options.reserved_memory,options.maximum_memory,options.queue)
                 else:
-                    submitLocalJob(cv_train_path,cv_test_path,output_path+'/'+experiment_name,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,categorical_feature_path)
+                    submitLocalJob(cv_train_path,cv_test_path,options.output_path+'/'+options.experiment_name,options.scale_data,options.impute_data,options.overwrite_cv,categorical_cutoff,class_label,instance_label,random_state)
 
         #Update metadata
         if metadata.shape[0] == 10: #Only update if metadata below hasn't been added before (i.e. in a previous phase 2 run)
-            with open(output_path + '/' + experiment_name + '/' + 'metadata.csv',mode='a', newline="") as file:
+            with open(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv',mode='a', newline="") as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow(["data scaling",scale_data])
-                writer.writerow(["data imputation",impute_data])
+                writer.writerow(["data scaling",options.scale_data])
+                writer.writerow(["data imputation",options.impute_data])
             file.close()
 
-    else: #run job checks
-        datasets = os.listdir(output_path + "/" + experiment_name)
+    else: #Instead of running job, checks whether previously run jobs were successfully completed
+        datasets = os.listdir(options.output_path + "/" + options.experiment_name)
         datasets.remove('logs')
         datasets.remove('jobs')
         datasets.remove('jobsCompleted')
@@ -99,7 +97,7 @@ def main(argv):
             for cv in range(cv_partitions):
                 phase2Jobs.append('job_preprocessing_' + dataset + '_' + str(cv) + '.txt')
 
-        for filename in glob.glob(output_path + "/" + experiment_name + '/jobsCompleted/job_preprocessing*'):
+        for filename in glob.glob(options.output_path + "/" + options.experiment_name + '/jobsCompleted/job_preprocessing*'):
             ref = filename.split('/')[-1]
             phase2Jobs.remove(ref)
         for job in phase2Jobs:
@@ -110,10 +108,12 @@ def main(argv):
             print("Above Phase 2 Jobs Not Completed")
         print()
 
-def submitLocalJob(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,categorical_feature_path):
-    DataPreprocessingJob.job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,categorical_feature_path)
+def submitLocalJob(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state):
+    """ Runs DataPreprocessingJob.py locally on a single CV dataset. These runs will be completed serially rather than in parallel. """
+    DataPreprocessingJob.job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state)
 
-def submitClusterJob(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,reserved_memory,maximum_memory,queue,categorical_feature_path):
+def submitClusterJob(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,reserved_memory,maximum_memory,queue):
+    """ Runs DataPreprocessingJob.py on a single CV dataset based on each dataset in phase 1 target data folder. Runs in parallel on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
     job_name = experiment_path+'/jobs/P2_'+job_ref+'_run.sh'
     sh_file = open(job_name,'w')
@@ -127,7 +127,7 @@ def submitClusterJob(cv_train_path,cv_test_path,experiment_path,scale_data,imput
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
     sh_file.write('python '+this_file_path+'/DataPreprocessingJob.py '+cv_train_path+" "+cv_test_path+" "+experiment_path+" "+scale_data+
-                  " "+impute_data+" "+overwrite_cv+" "+str(categorical_cutoff)+" "+class_label+" "+instance_label+" "+str(random_state)+" "+str(categorical_feature_path)+'\n')
+                  " "+impute_data+" "+overwrite_cv+" "+str(categorical_cutoff)+" "+class_label+" "+instance_label+" "+str(random_state)+'\n')
     sh_file.close()
     os.system('bsub < '+job_name)
 

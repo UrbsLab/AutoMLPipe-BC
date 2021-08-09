@@ -1,4 +1,28 @@
-
+"""
+File: ModelMain.py
+Authors: Ryan J. Urbanowicz, Robert Zhang
+Institution: University of Pensylvania, Philadelphia PA
+Creation Date: 6/1/2021
+License: GPL 3.0
+Description: Phase 5 of AutoMLPipe-BC - This 'Main' script manages Phase 5 run parameters, updates the metadata file (with user specified run parameters across pipeline run)
+             and submits job to run locally (to run serially) or on a linux computing cluster (parallelized).  This script runs ModelJob.py which conducts machine learning
+             modeling using respective training datasets. This pipeline currently includes the following 13 ML modeling algorithms for binary classification:
+             * Naive Bayes, Logistic Regression, Decision Tree, Random Forest, Gradient Boosting, XGBoost, LGBoost, Support Vector Machine (SVM), Artificial Neural Network (ANN),
+             * k Nearest Neighbors (k-NN), Educational Learning Classifier System (eLCS), X Classifier System (XCS), and the Extended Supervised Tracking and Classifying System (ExSTraCS)
+             This phase includes hyperparameter optimization of all algorithms (other than naive bayes), model training, model feature importance estimation (using internal algorithm
+             estimations, if available, or via permutation feature importance), and performance evaluation on hold out testing data. This script creates a single job for each
+             combination of cv dataset (for each original target dataset) and ML modeling algorithm. In addition to an option to check the completion of all jobs, this script also has a
+             'resubmit' option that will run any jobs that may have failed from a previous run. All 'Main' scripts in this pipeline have the potential to be extended by users to
+             submit jobs to other parallel computing frameworks (e.g. cloud computing).
+Warnings: Designed to be run following the completion of AutoMLPipe-BC Phase 4 (FeatureSelectionMain.py). SVM modeling should only be applied when data scaling is applied by the pipeline
+            Logistic Regression' baseline model feature importance estimation is determined by the exponential of the feature's coefficient. This should only be used if data scaling is
+            applied by the pipeline. Otherwise 'use_uniform_FI' should be True.
+Sample Run Command (Linux cluster parallelized with all default run parameters):
+    python ModelMain.py --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1
+Sample Run Command (Local/serial with with all default run parameters):
+    python ModelMain.py --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1 --run-parallel False
+"""
+#Import required packages  ---------------------------------------------------------------------------------------------------------------------------
 import argparse
 import os
 import sys
@@ -8,14 +32,6 @@ import ModelJob
 import time
 import csv
 import random
-
-'''Phase 5 of Machine Learning Analysis Pipeline:
-Sample Run Command:
-python ModelMain.py --output-path /Users/robert/Desktop/outputs --experiment-name test1
-
-Local Command:
-python ModelMain.py --output-path /Users/robert/Desktop/outputs --experiment-name randomtest2 --run-parallel False --do-ExSTraCS True --do-NB True --do-LR True --do-KN True --subsample 1000
-'''
 
 def main(argv):
     #Parse arguments
@@ -62,11 +78,8 @@ def main(argv):
     parser.add_argument('-r','--do-resubmit',dest='do_resubmit', help='Boolean: Rerun any jobs that did not complete (or failed) in an earlier run.', action='store_true')
 
     options = parser.parse_args(argv[1:])
-    output_path = options.output_path
-    experiment_name = options.experiment_name
-    do_all = options.do_all
-
-    if eval(do_all):
+    #Code to allow more flexible specification of which ML algorithms to run (i.e. all minus specific algorithms or none plus specific algorithms)
+    if eval(options.do_all):
         do_NB = True
         do_LR = True
         do_DT = True
@@ -80,7 +93,6 @@ def main(argv):
         do_eLCS = True
         do_XCS = True
         do_ExSTraCS = True
-
         algorithms = ['naive_bayes','logistic_regression','decision_tree','random_forest','gradient_boosting','XGB','LGB','SVM','ANN','k_neighbors','eLCS','XCS','ExSTraCS']
         if options.do_NB == 'False':
             do_NB = False
@@ -135,7 +147,6 @@ def main(argv):
         do_eLCS = False
         do_XCS = False
         do_ExSTraCS = False
-
         algorithms = []
         if options.do_NB == 'True':
             do_NB = True
@@ -177,71 +188,47 @@ def main(argv):
             do_ExSTraCS = True
             algorithms.append('ExSTraCS')
 
-    primary_metric = options.primary_metric
-    training_subsample = options.training_subsample
-    use_uniform_FI = options.use_uniform_FI
-
-    n_trials = options.n_trials
-    timeout = options.timeout
-    export_hyper_sweep_plots = options.export_hyper_sweep_plots
-
-    lcs_timeout = options.lcs_timeout
-    do_lcs_sweep = options.do_lcs_sweep
-    nu = options.nu
-    iterations = options.iterations
-    N = options.N
-
-    run_parallel = options.run_parallel == 'True'
-    queue = options.queue
-    reserved_memory = options.reserved_memory
-    maximum_memory = options.maximum_memory
-    do_check = options.do_check
-    do_resubmit = options.do_resubmit
-
     # Argument checks
-    if not os.path.exists(output_path):
+    if not os.path.exists(options.output_path):
         raise Exception("Output path must exist (from phase 1) before phase 5 can begin")
-
-    if not os.path.exists(output_path + '/' + experiment_name):
+    if not os.path.exists(options.output_path + '/' + options.experiment_name):
         raise Exception("Experiment must exist (from phase 1) before phase 5 can begin")
 
-    metadata = pd.read_csv(output_path + '/' + experiment_name + '/' + 'metadata.csv').values
-
+    #Load variables specified earlier in the pipeline from metadata file
+    metadata = pd.read_csv(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv').values
     class_label = metadata[0, 1]
     instance_label = metadata[1, 1]
     random_state = int(metadata[3,1])
     cv_partitions = int(metadata[6,1])
     filter_poor_features = metadata[15,1]
 
-    if do_resubmit: #Attempts to resolve optuna hyperparameter optimization hangup (i.e. when it runs indefinitely for a given random seed attempt)
+    if options.do_resubmit: #Attempts to resolve optuna hyperparameter optimization hangup (i.e. when it runs indefinitely for a given random seed attempt)
         random_state = random.randint(1,1000)
 
-    if not do_check and not do_resubmit:
-        dataset_paths = os.listdir(output_path + "/" + experiment_name)
+    if not options.do_check and not options.do_resubmit: #Run job submission
+        dataset_paths = os.listdir(options.output_path + "/" + options.experiment_name)
         dataset_paths.remove('logs')
         dataset_paths.remove('jobs')
         dataset_paths.remove('jobsCompleted')
         dataset_paths.remove('metadata.csv')
         for dataset_directory_path in dataset_paths:
-            full_path = output_path + "/" + experiment_name + "/" + dataset_directory_path
+            full_path = options.output_path + "/" + options.experiment_name + "/" + dataset_directory_path
             if not os.path.exists(full_path+'/training'):
                 os.mkdir(full_path+'/training')
             if not os.path.exists(full_path+'/training/pickledModels'):
                 os.mkdir(full_path+'/training/pickledModels')
-
             for cvCount in range(cv_partitions):
                 train_file_path = full_path+'/CVDatasets/'+dataset_directory_path+"_CV_"+str(cvCount)+"_Train.csv"
                 test_file_path = full_path + '/CVDatasets/' + dataset_directory_path + "_CV_" + str(cvCount) + "_Test.csv"
-
                 for algorithm in algorithms:
-                    if run_parallel:
-                        submitClusterJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,output_path+'/'+experiment_name,cvCount,filter_poor_features,reserved_memory,maximum_memory,do_lcs_sweep,nu,iterations,N,training_subsample,queue,use_uniform_FI,primary_metric)
+                    if eval(options.run_parallel):
+                        submitClusterJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,options.output_path+'/'+options.experiment_name,cvCount,filter_poor_features,options.reserved_memory,options.maximum_memory,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.queue,options.use_uniform_FI,options.primary_metric)
                     else:
-                        submitLocalJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric)
+                        submitLocalJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.use_uniform_FI,options.primary_metric)
 
         # Update metadata
         if metadata.shape[0] == 19: #Only update if metadata below hasn't been added before
-            with open(output_path + '/' + experiment_name + '/' + 'metadata.csv', mode='a', newline="") as file:
+            with open(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv', mode='a', newline="") as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(["NB", str(do_NB)])
                 writer.writerow(["LR", str(do_LR)])
@@ -256,22 +243,22 @@ def main(argv):
                 writer.writerow(["eLCS", str(do_eLCS)])
                 writer.writerow(["XCS",str(do_XCS)])
                 writer.writerow(["ExSTraCS",str(do_ExSTraCS)])
-                writer.writerow(["primary metric",primary_metric])
-                writer.writerow(["training subsample for KN,ANN,SVM,and XGB",training_subsample])
-                writer.writerow(["uniform feature importance estimation (models)",use_uniform_FI])
-                writer.writerow(["hypersweep number of trials",n_trials])
-                writer.writerow(["hypersweep timeout",timeout])
+                writer.writerow(["primary metric",options.primary_metric])
+                writer.writerow(["training subsample for KN,ANN,SVM,and XGB",options.training_subsample])
+                writer.writerow(["uniform feature importance estimation (models)",options.use_uniform_FI])
+                writer.writerow(["hypersweep number of trials",options.n_trials])
+                writer.writerow(["hypersweep timeout",options.timeout])
                 writer.writerow(['do LCS sweep',options.do_lcs_sweep])
                 writer.writerow(['nu', options.nu])
                 writer.writerow(['training iterations', options.iterations])
                 writer.writerow(['N (rule population size)', options.N])
-                writer.writerow(["LCS hypersweep timeout",lcs_timeout])
+                writer.writerow(["LCS hypersweep timeout",options.lcs_timeout])
             file.close()
 
-    elif do_check and not do_resubmit: #run job checks
+    elif options.do_check and not options.do_resubmit: #run job completion checks
         abbrev = {'naive_bayes':'NB','logistic_regression':'LR','decision_tree':'DT','random_forest':'RF','gradient_boosting':'GB','XGB':'XGB','LGB':'LGB','ANN':'ANN','SVM':'SVM','k_neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
 
-        datasets = os.listdir(output_path + "/" + experiment_name)
+        datasets = os.listdir(options.output_path + "/" + options.experiment_name)
         datasets.remove('logs')
         datasets.remove('jobs')
         datasets.remove('jobsCompleted')
@@ -286,7 +273,7 @@ def main(argv):
                 for algorithm in algorithms:
                     phase5Jobs.append('job_model_' + dataset + '_' + str(cv) +'_' +abbrev[algorithm]+'.txt')
 
-        for filename in glob.glob(output_path + "/" + experiment_name + '/jobsCompleted/job_model*'):
+        for filename in glob.glob(options.output_path + "/" + options.experiment_name + '/jobsCompleted/job_model*'):
             ref = filename.split('/')[-1]
             phase5Jobs.remove(ref)
         for job in phase5Jobs:
@@ -297,10 +284,10 @@ def main(argv):
             print("Above Phase 5 Jobs Not Completed")
         print()
 
-    elif do_resubmit and not do_check: #resubmit any jobs that didn't finish in previous run
+    elif options.do_resubmit and not options.do_check: #resubmit any jobs that didn't finish in previous run (mix of job check and job submit)
         abbrev = {'naive_bayes':'NB','logistic_regression':'LR','decision_tree':'DT','random_forest':'RF','gradient_boosting':'GB','XGB':'XGB','LGB':'LGB','ANN':'ANN','SVM':'SVM','k_neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
 
-        datasets = os.listdir(output_path + "/" + experiment_name)
+        datasets = os.listdir(options.output_path + "/" + options.experiment_name)
         datasets.remove('logs')
         datasets.remove('jobs')
         datasets.remove('jobsCompleted')
@@ -311,7 +298,7 @@ def main(argv):
 
         #start by making list of finished jobs instead of all jobs then step through loop
         phase5completed = []
-        for filename in glob.glob(output_path + "/" + experiment_name + '/jobsCompleted/job_model*'):
+        for filename in glob.glob(options.output_path + "/" + options.experiment_name + '/jobsCompleted/job_model*'):
             ref = filename.split('/')[-1]
             phase5completed.append(ref)
 
@@ -320,20 +307,22 @@ def main(argv):
                 for algorithm in algorithms:
                     targetFile = 'job_model_' + dataset + '_' + str(cv) +'_' +abbrev[algorithm]+'.txt'
                     if targetFile not in phase5completed: #target for a re-submit
-                        full_path = output_path + "/" + experiment_name + "/" + dataset
+                        full_path = options.output_path + "/" + options.experiment_name + "/" + dataset
                         train_file_path = full_path+'/CVDatasets/'+dataset+"_CV_"+str(cv)+"_Train.csv"
                         test_file_path = full_path + '/CVDatasets/' + dataset + "_CV_" + str(cv) + "_Test.csv"
-                        if run_parallel:
-                            submitClusterJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,output_path+'/'+experiment_name,cv,filter_poor_features,reserved_memory,maximum_memory,do_lcs_sweep,nu,iterations,N,training_subsample,queue,use_uniform_FI,primary_metric)
+                        if eval(options.run_parallel):
+                            submitClusterJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,options.output_path+'/'+options.experiment_name,cv,filter_poor_features,options.reserved_memory,options.maximum_memory,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.queue,options.use_uniform_FI,options.primary_metric)
                         else:
-                            submitLocalJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cv,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric)
+                            submitLocalJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,cv,filter_poor_features,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.use_uniform_FI,options.primary_metric)
     else:
         print("Run options in conflict. Do not request to run check and resubmit at the same time.")
 
 def submitLocalJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric):
+    """ Runs ModelJob.py locally, once for each combination of cv dataset (for each original target dataset) and ML modeling algorithm. These runs will be completed serially rather than in parallel. """
     ModelJob.job(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric)
 
 def submitClusterJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,experiment_path,cvCount,filter_poor_features,reserved_memory,maximum_memory,do_lcs_sweep,nu,iterations,N,training_subsample,queue,use_uniform_FI,primary_metric):
+    """ Runs ModelJob.py once for each combination of cv dataset (for each original target dataset) and ML modeling algorithm. Runs in parallel on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
     job_name = experiment_path+'/jobs/P5_'+str(algorithm)+'_'+str(cvCount)+'_'+job_ref+'_run.sh'
     sh_file = open(job_name,'w')

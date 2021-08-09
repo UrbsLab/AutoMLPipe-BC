@@ -1,4 +1,19 @@
-
+"""
+File: ApplyModelMain.py
+Authors: Ryan J. Urbanowicz, Richard Zhang, Wilson Zhang
+Institution: University of Pensylvania, Philadelphia PA
+Creation Date: 6/1/2021
+License: GPL 3.0
+Description: Phase 10 of AutoMLPipe-BC (Optional)- This 'Main' script manages Phase 10 run parameters, and submits job to run locally (to run serially) or on a linux computing
+             cluster (parallelized). This script runs ApplyModelJob.py which applies and evaluates all trained models on one or more previously unseen hold-out or replication study dataset(s).
+             All 'Main' scripts in this pipeline have the potential to be extended by users to submit jobs to other parallel computing frameworks (e.g. cloud computing).
+Warnings: Designed to be run following the completion anytime after AutoMLPipe-BC Phase 6 (StatsMain.py).
+Sample Run Command (Linux cluster parallelized with all default run parameters):
+    python ApplyModelMain.py --rep-path /Users/robert/Desktop/RepDatasets --dataset /Users/robert/Desktop/Datasets/targetData1.csv --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1
+Sample Run Command (Local/serial with with all default run parameters):
+    python ApplyModelMain.py --rep-path /Users/robert/Desktop/RepDatasets --dataset /Users/robert/Desktop/Datasets/targetData1.csv --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1 --run-parallel False
+"""
+#Import required packages  ---------------------------------------------------------------------------------------------------------------------------
 import argparse
 import os
 import sys
@@ -7,14 +22,6 @@ import FeatureSelectionJob
 import time
 import csv
 import glob
-
-'''Phase 4 of Machine Learning Analysis Pipeline:
-Sample Run Command:
-python FeatureSelectionMain.py --output-path /Users/robert/Desktop/outputs --experiment-name test1
-
-Local Command:
-python FeatureSelectionMain.py --output-path /Users/robert/Desktop/outputs --experiment-name randomtest2 --run-parallel False
-'''
 
 def main(argv):
     #Parse arguments
@@ -40,29 +47,12 @@ def main(argv):
     parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')
 
     options = parser.parse_args(argv[1:])
-    rep_data_path = options.rep_data_path
-    data_path = options.data_path
-    output_path = options.output_path
-    experiment_name = options.experiment_name
-
-    export_feature_correlations = options.export_feature_correlations
-    plot_ROC = options.plot_ROC
-    plot_PRC = options.plot_PRC
-    plot_metric_boxplots = options.plot_metric_boxplots
-    top_results = options.top_results
-    match_label = options.match_label
-
-    run_parallel = options.run_parallel
-    queue = options.queue
-    reserved_memory = options.reserved_memory
-    maximum_memory = options.maximum_memory
-    do_check = options.do_check
-
     jupyterRun = 'False'
-    metadata = pd.read_csv(output_path + '/' + experiment_name + '/' + 'metadata.csv').values
-    experiment_path = output_path+'/'+experiment_name
-    data_name = data_path.split('/')[-1].split('.')[0] #Save unique dataset names so that analysis is run only once if there is both a .txt and .csv version of dataset with same name.
 
+    #Load variables specified earlier in the pipeline from metadata file
+    metadata = pd.read_csv(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv').values
+    experiment_path = options.output_path+'/'+options.experiment_name
+    data_name = options.data_path.split('/')[-1].split('.')[0] #Save unique dataset names so that analysis is run only once if there is both a .txt and .csv version of dataset with same name.
     class_label = metadata[0, 1]
     instance_label = metadata[1, 1]
     categorical_cutoff = metadata[4, 1]
@@ -70,7 +60,6 @@ def main(argv):
     cv_partitions = metadata[6,1]
     scale_data = metadata[10,1]
     impute_data = metadata[11,1]
-
     do_NB = metadata[19,1]
     do_LR = metadata[20,1]
     do_DT = metadata[21,1]
@@ -87,13 +76,12 @@ def main(argv):
     primary_metric = metadata[32,1]
 
     # Argument checks
-    if not os.path.exists(output_path):
+    if not os.path.exists(options.output_path):
         raise Exception("Output path must exist (from phase 1-5) before model application can begin")
-
-    if not os.path.exists(output_path + '/' + experiment_name):
+    if not os.path.exists(options.output_path + '/' + options.experiment_name):
         raise Exception("Experiment must exist (from phase 1-5) before model application can begin")
 
-    full_path = output_path + "/" + experiment_name + "/" + data_name #location of folder containing models respective training dataset
+    full_path = options.output_path + "/" + options.experiment_name + "/" + data_name #location of folder containing models respective training dataset
 
     if not os.path.exists(full_path+"/applymodel"):
         os.mkdir(full_path+"/applymodel")
@@ -101,7 +89,7 @@ def main(argv):
     #Determine file extension of datasets in target folder:
     file_count = 0
     unique_datanames = []
-    for datasetFilename in glob.glob(rep_data_path+'/*'):
+    for datasetFilename in glob.glob(options.rep_data_path+'/*'):
         file_extension = datasetFilename.split('/')[-1].split('.')[-1]
         apply_name = datasetFilename.split('/')[-1].split('.')[0] #Save unique dataset names so that analysis is run only once if there is both a .txt and .csv version of dataset with same name.
         if not os.path.exists(full_path+"/applymodel/"+apply_name):
@@ -110,19 +98,21 @@ def main(argv):
         if file_extension == 'txt' or file_extension == 'csv':
             if apply_name not in unique_datanames:
                 unique_datanames.append(apply_name)
-                if eval(run_parallel):
-                    submitClusterJob(reserved_memory,maximum_memory,queue,experiment_path,datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots,export_feature_correlations,jupyterRun)
+                if eval(options.run_parallel):
+                    submitClusterJob(options.reserved_memory,options.maximum_memory,options.queue,experiment_path,datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,options.data_path,options.match_label,options.plot_ROC,options.plot_PRC,options.plot_metric_boxplots,options.export_feature_correlations,jupyterRun)
                 else:
-                    submitLocalJob(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots,export_feature_correlations,jupyterRun)
+                    submitLocalJob(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,options.data_path,options.match_label,options.plot_ROC,options.plot_PRC,options.plot_metric_boxplots,options.export_feature_correlations,jupyterRun)
                 file_count += 1
 
     if file_count == 0: #Check that there was at least 1 dataset
         raise Exception("There must be at least one .txt or .csv dataset in rep_data_path directory")
 
 def submitLocalJob(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots,export_feature_correlations,jupyterRun):
-    FeatureSelectionJob.job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots,export_feature_correlations,jupyterRun)
+    """ Runs ApplyModelJob.py on each dataset in dataset_path locally. These runs will be completed serially rather than in parallel. """
+    ApplyModelJob.job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots,export_feature_correlations,jupyterRun)
 
 def submitClusterJob(reserved_memory,maximum_memory,queue,experiment_path,datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots,export_feature_correlations,jupyterRun):
+    """ Runs ApplyModelJob.py on each dataset in rep_data_path. Runs in parallel on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     train_name = full_path.split('/')[-1] #original training data name
     apply_name = datasetFilename.split('/')[-1].split('.')[0]
 

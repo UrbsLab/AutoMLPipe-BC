@@ -1,10 +1,13 @@
-#######################################
-## Richard Zhang, Wilson Zhang, & Ryan Urbanowicz    ##
-## March 30, 2021                    ##
-## ML Pipeline Report Generator V. 1 ##
-## Requirements: pip install fpdf
-#######################################
-
+"""
+File: PDF_ReportApplyJob.py
+Authors: Ryan J. Urbanowicz, Richard Zhang, Wilson Zhang
+Institution: University of Pensylvania, Philadelphia PA
+Creation Date: 6/1/2021
+License: GPL 3.0
+Description: Phase 11 of AutoMLPipe-BC - This 'Job' script is called by PDF_ReportApplyMain.py which generates a formatted PDF summary report of key
+pipeline results (applying trained models to hold out replication data). It is run once.
+"""
+#Import required packages  ---------------------------------------------------------------------------------------------------------------------------
 import pandas as pd
 from fpdf import FPDF
 from datetime import datetime

@@ -39,11 +39,11 @@ This multi-phase pipeline has been set up in a way that it can be easily run in 
 ## Assumptions For Use (data and run preparation)
 * 'Target' datasets for analysis are in comma-separated format (.txt or .csv)
 * Missing data values should be empty or indicated with an 'NA'.
-* Dataset includes a header with column names.
+* Dataset(s) include a header giving column labels.
 * Data columns include features, class label, and optionally instance (i.e. row) labels, or match labels (if matched cross validation will be used)
 * Binary class values are encoded as 0 (e.g. negative), and 1 (positive) with respect to true positive, true negative, false positive, false negative metrics. PRC plots focus on classification of 'positives'.
 * All feature values (both categorical and quantitative) are numerically encoded. Scikit-learn does not accept text-based values. However both instance_label and match_label values may be either numeric or text.
-* One or more target datasets for analysis are put in the same folder. The path to this folder is a critical pipeline run parameter. If multiple datasets are being analyzed they must have the same class_label, and (if present) the same instance_label and match_label.
+* One or more target datasets for analysis should be included in the same data_path folder. The path to this folder is a critical pipeline run parameter. No spaces are allowed in filenames (this will lead to 'invalid literal' by export_exploratory_analysis. If multiple datasets are being analyzed they must have the same class_label, and (if present) the same instance_label and match_label.
 * SVM modeling should only be applied when data scaling is applied by the pipeline
 * Logistic Regression' baseline model feature importance estimation is determined by the exponential of the feature's coefficient. This should only be used if data scaling is applied by the pipeline.  Otherwise 'use_uniform_FI' should be True.
 

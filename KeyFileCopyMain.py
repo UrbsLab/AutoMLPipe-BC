@@ -36,14 +36,17 @@ def main(argv):
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
 
     options = parser.parse_args(argv[1:])
-
+    job_counter = 0
     if not os.path.exists(options.data_path):
         raise Exception("Provided data_path does not exist")
 
     if eval(options.run_parallel):
+        job_counter += 1
         submitClusterJob(options.output_path+'/'+options.experiment_name,options.data_path,options.reserved_memory,options.maximum_memory,options.queue)
     else:
         submitLocalJob(options.output_path+'/'+options.experiment_name,options.data_path)
+
+    print(str(job_counter)+ " job submitted in Phase 8")
 
 def submitLocalJob(experiment_path,data_path):
     """ Runs KeyFileCopyJob.py locally, once. """

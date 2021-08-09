@@ -49,7 +49,7 @@ def main(argv):
     else:
         submitLocalJob(options.output_path+'/'+options.experiment_name,sig_cutoff)
 
-    print(str(job_counter)+ " jobs submitted in Phase 7")
+    print(str(job_counter)+ " job submitted in Phase 7")
 
 def submitLocalJob(experiment_path,sig_cutoff):
     """ Runs DataCompareJob.py locally, once. """

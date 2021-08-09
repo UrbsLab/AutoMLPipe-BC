@@ -36,13 +36,16 @@ def main(argv):
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
 
     options = parser.parse_args(argv[1:])
-
+    job_counter = 0
     experiment_path = options.output_path+'/'+options.experiment_name
 
     if eval(options.run_parallel):
+        job_counter += 1
         submitClusterJob(experiment_path,options.rep_data_path,options.data_path,options.reserved_memory,options.maximum_memory,options.queue)
     else:
         submitLocalJob(experiment_path,options.rep_data_path,options.data_path)
+
+    print(str(job_counter)+ " job submitted in Phase 11")
 
 def submitLocalJob(experiment_path):
     """ Runs PDF_ReportApplyJob.py locally, once. """

@@ -59,7 +59,7 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
         mannWhitneyU(full_path,metrics,algorithms,metric_dict,kruskal_summary,sig_cutoff)
     #Visualize FI - Currently set up to only use Balanced Accuracy for composite FI plot visualization
     #Prepare for feature importance visualizations
-    fi_df_list,fi_ave_list,fi_ave_norm_list,ave_metric_list,all_feature_list,non_zero_union_features,non_zero_union_indexes = prepFI(algorithms,full_path,abbrev,metric_dict,'Balanced Accuracy',top_results)
+    fi_df_list,fi_ave_norm_list,ave_metric_list,all_feature_list,non_zero_union_features,non_zero_union_indexes = prepFI(algorithms,full_path,abbrev,metric_dict,'Balanced Accuracy')
     #Select 'top' features for composite vizualization
     featuresToViz = selectForViz(top_results,non_zero_union_features,non_zero_union_indexes,algorithms,ave_metric_list,fi_ave_norm_list)
     #Generate FI boxplots for each modeling algorithm if specified by user
@@ -525,7 +525,7 @@ def mannWhitneyU(full_path,metrics,algorithms,metric_dict,kruskal_summary,sig_cu
             mann_stats_df.to_csv(full_path + '/training/results/KWMW/MannWhitneyU_'+metric+'.csv', index=False)
 
 
-def prepFI(algorithms,full_path,abbrev,metric_dict,primary_metric,top_results):
+def prepFI(algorithms,full_path,abbrev,metric_dict,primary_metric):
     """ Organizes and prepares model feature importance data for boxplot and composite feature importance figure generation."""
     #Initialize required lists
     fi_df_list = []         # algorithm feature importance dataframe list (used to generate FI boxplots for each algorithm)
@@ -568,39 +568,39 @@ def prepFI(algorithms,full_path,abbrev,metric_dict,primary_metric,top_results):
     non_zero_union_indexes = []
     for i in non_zero_union_features:
         non_zero_union_indexes.append(all_feature_list.index(i))
-    return fi_df_list,fi_ave_list,fi_ave_norm_list,ave_metric_list,all_feature_list,non_zero_union_features,non_zero_union_indexes
+    return fi_df_list,fi_ave_norm_list,ave_metric_list,all_feature_list,non_zero_union_features,non_zero_union_indexes
 
 def selectForViz(top_results,non_zero_union_features,non_zero_union_indexes,algorithms,ave_metric_list,fi_ave_norm_list):
     """ Identify list of top features over all algorithms to visualize (note that best features to vizualize are chosen using algorithm performance weighting and normalization:
     frac plays no useful role here only for viz). All features included if there are fewer than 'top_results'. Top features are determined by the sum of performance
     (i.e. balanced accuracy) weighted feature importances over all algorithms."""
     featuresToViz = None
+    #Create performance weighted score sum dictionary for all features
+    scoreSumDict = {}
+    i = 0
+    for each in non_zero_union_features:  # for each non-zero feature
+        for j in range(len(algorithms)):  # for each algorithm
+            # grab target score from each algorithm
+            score = fi_ave_norm_list[j][non_zero_union_indexes[i]]
+            # multiply score by algorithm performance weight
+            weight = ave_metric_list[j]
+            if weight <= .5:
+                weight = 0
+            if not weight == 0:
+                weight = (weight - 0.5) / 0.5
+            score = score * weight
+            #score = score * ave_metric_list[j]
+            if not each in scoreSumDict:
+                scoreSumDict[each] = score
+            else:
+                scoreSumDict[each] += score
+        i += 1
+    # Sort features by decreasing score
+    scoreSumDict_features = sorted(scoreSumDict, key=lambda x: scoreSumDict[x], reverse=True)
     if len(non_zero_union_features) > top_results: #Keep all features if there are fewer than specified top results
-        #Create performance weighted score sum dictionary for all features
-        scoreSumDict = {}
-        i = 0
-        for each in non_zero_union_features:  # for each non-zero feature
-            for j in range(len(algorithms)):  # for each algorithm
-                # grab target score from each algorithm
-                score = fi_ave_norm_list[j][non_zero_union_indexes[i]]
-                # multiply score by algorithm performance weight
-                weight = ave_metric_list[j]
-                if weight <= .5:
-                    weight = 0
-                if not weight == 0:
-                    weight = (weight - 0.5) / 0.5
-                score = score * weight
-                #score = score * ave_metric_list[j]
-                if not each in scoreSumDict:
-                    scoreSumDict[each] = score
-                else:
-                    scoreSumDict[each] += score
-            i += 1
-        # Sort features by decreasing score
-        scoreSumDict_features = sorted(scoreSumDict, key=lambda x: scoreSumDict[x], reverse=True)
         featuresToViz = scoreSumDict_features[0:top_results]
     else:
-        featuresToViz = non_zero_union_features  # Ranked feature name order
+        featuresToViz = scoreSumDict_features
     return featuresToViz #list of feature names to vizualize in composite FI plots.
 
 def doFIBoxplots(full_path,fi_df_list,algorithms,original_headers,jupyterRun):
@@ -621,7 +621,7 @@ def doFIBoxplots(full_path,fi_df_list,algorithms,original_headers,jupyterRun):
         counter += 1
 
 def getFI_To_Viz(featuresToViz,all_feature_list,algorithms,fi_ave_norm_list):
-    """ Takes a list of top features names for vizualization, gets their indexes"""
+    """ Currently Not Used: Takes a list of top features names for vizualization, gets their indexes"""
     #Get original feature indexs for selected feature names
     feature_indexToViz = [] #indexes of top features
     for i in featuresToViz:
@@ -650,13 +650,12 @@ def getFI_To_Viz_Sorted(featuresToViz,all_feature_list,algorithms,fi_ave_norm_li
     for i in featuresToViz:
         feature_indexToViz.append(all_feature_list.index(i))
     # Create list of top feature importance values in original dataset feature order
-    top_fi_ave_norm_list = [] #feature importance values of top featuers for each algorithm (list of lists)
+    top_fi_ave_norm_list = [] #feature importance values of top features for each algorithm (list of lists)
     for i in range(len(algorithms)):
         tempList = []
         for j in feature_indexToViz: #each top feature index
             tempList.append(fi_ave_norm_list[i][j]) #add corresponding FI value
         top_fi_ave_norm_list.append(tempList)
-    # Create feature name list in propper original dataset order (was in descending order)
     all_feature_listToViz = featuresToViz
     return top_fi_ave_norm_list,all_feature_listToViz
 
@@ -694,7 +693,8 @@ def composite_FI_plot(fi_list, algorithms, algColors, all_feature_listToViz, fig
     plt.xticks(np.arange(len(all_feature_listToViz)), all_feature_listToViz, rotation='vertical')
     plt.xlabel("Feature", fontsize=20)
     plt.ylabel(yLabelText, fontsize=20)
-    plt.legend(lines[::-1], algorithms[::-1],loc="upper left", bbox_to_anchor=(1.01,1))
+    #plt.legend(lines[::-1], algorithms[::-1],loc="upper left", bbox_to_anchor=(1.01,1)) #legend outside plot
+    plt.legend(lines[::-1], algorithms[::-1],loc="upper right")
     #Export and/or show plot
     plt.savefig(full_path+'/training/results/FI/Compare_FI_' + figName + '.png', bbox_inches='tight')
     if eval(jupyterRun):

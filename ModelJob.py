@@ -100,7 +100,7 @@ def runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout
     #Save runtime of ml algorithm training and evaluation
     saveRuntime(full_path,job_start_time,abbrev,algorithm,cvCount)
     # Print phase completion
-    print(full_path.split('/')[-1] + " CV" + str(cvCount) + " phase 5 "+abbrev[algorithm]+" training complete")
+    print(full_path.split('/')[-1] + " CV" + str(cvCount) + " "+abbrev[algorithm]+" training complete")
     experiment_path = '/'.join(full_path.split('/')[:-1])
     job_file = open(experiment_path + '/jobsCompleted/job_model_' + full_path.split('/')[-1] + '_' + str(cvCount) +'_' +abbrev[algorithm]+'.txt', 'w')
     job_file.write('complete')
@@ -163,7 +163,7 @@ def run_NB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     #Feature Importance Estimates
     results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
     fi = results.importances_mean
-    return [metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, fi]
+    return [metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, fi, probas_]
 
 #Logistic Regression ###################################################################################################################
 def objective_LR(trial, est, x_train, y_train, randSeed, hype_cv, param_grid, scoring_metric):
@@ -195,7 +195,9 @@ def run_LR_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
+            print('viz')
             fig.write_image(full_path+'/training/LR_ParamOptimization_'+str(i)+'.png')
+        print('4th')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial

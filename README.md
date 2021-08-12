@@ -87,67 +87,55 @@ To use AutoMLPipe-BC, download this GitHub repository to your local working dire
 ## Prerequisites
 To be able to run AutoMLPipe-BC you will need Python 3, Anaconda (recommended rather than individually installing all individual packages), and a handful of other Python packages that are not included within Anaconda. Anaconda is a distribution of Python and R programming languages for scientific computing, that aims to simplify package management and deployment. The distribution includes data-science packages suitable for Windows, Linux, and macOS. We recommend installing the most recent stable version of Anaconda (https://docs.anaconda.com/anaconda/install/) within your computing environment (make sure to install a version appropriate for your operating system). Anaconda also includes jupyter notebook.
 
-As an alternative to installing Anaconda, you will need to install Python 3, as well as all python packages used by AutoMLPipe-BC, e.g. pandas, and numpy (not listed in detail here). At the time of development we had installed 'Anaconda3-2020.07-Linux-x86_64.sh', using Python 3.8.3.
+As an alternative to installing Anaconda, you will need to install Python 3, as well as all python packages used by AutoMLPipe-BC, e.g. pandas, and numpy (not listed in detail here). At the time of development we had installed 'Anaconda3-2020.07-Linux-x86_64.sh' on our Linux computing cluster, which used Python 3.8.3. We also tested this in windows using 'Anaconda3-2021.05-Windows-x86_64', which used Python 3.8.8.
 
-In addition to the above you will also need to install the following packages in your computing environment: skrebate, xgboost, lightgbm, scikit-eLCS, scikit-XCS, scikit-ExSTraCS, optuna, plotly, orca, and kaleido.  Installation commands are given below (along with the version used at time of posting):
+In addition to the above you will also need to install the following packages in your computing environment: skrebate, xgboost, lightgbm, scikit-eLCS, scikit-XCS, scikit-ExSTraCS, optuna, plotly, and kaleido.  Installation commands are given below (along with the version used at time of posting):
 
 ### Feature Selection Packages
-* scikit-learn compatible version of ReBATE, a suite of Relief-based feature selection algorithms (v.0.7). There is currently a PyPi issue requiring that the newest version (i.e. 0.7) be explicitly installed.
+* scikit-learn compatible version of ReBATE, a suite of Relief-based feature selection algorithms (0.7). There is currently a PyPi issue requiring that the newest version (i.e. 0.7) be explicitly installed.
 ```
 pip install skrebate==0.7
 ```
 
 ### ML Modeling Packages
-* XGboost (v.1.2.0)
+* XGboost (1.2.0)
 ```
 pip install xgboost
 ```
-* LightGBM (v.3.0.0)
+* LightGBM (3.0.0)
 ```
 pip install lightgbm
 ```
-* scikit-learn compatible version of eLCS, an educational learning classifier system (v.1.2.2)
+* scikit-learn compatible version of eLCS, an educational learning classifier system (1.2.2)
 ```
 pip install scikit-eLCS
 ```
-* scikit-learn compatible version of the learning classifier system XCS designed exclusively for supervised learning (v.1.0.6)
+* scikit-learn compatible version of the learning classifier system XCS designed exclusively for supervised learning (1.0.6)
 ```
 pip install scikit-XCS
 ```
-* scikit-learn compatible version of the learning classifier system ExSTraCS (v.1.0.7)
+* scikit-learn compatible version of the learning classifier system ExSTraCS (1.0.7)
 ```
 pip install scikit-ExSTraCS
 ```
 
 ### Other Required Packages
-* FPDF, a simple PDF generation for Python (v.1.7.2)
-```
-pip install fpdf
-```
-* Optuna, a hyperparameter optimization framework (v.2.0.0)
+* Optuna, a hyperparameter optimization framework (2.9.1)
 ```
 pip install optuna
 ```
-Plotly, an open-source, interactive data visualization library. Used by optuna to generate hyperparameter sweep visualizations (v.4.9.0)
+Plotly, an open-source, interactive data visualization library. Used by optuna to generate hyperparameter sweep visualizations (5.1.0)
 ```
 pip install plotly
 ```
-Kaleido a package for static image export for web-based visualization (v.0.0.3.post1)
+Kaleido a package for static image export for web-based visualization. This again is needed to generate hyperparameter sweep visualizations in optuna. We found that getting this package to work properly can be tricky and so far noted that it only works with version 0.03.post1. If the pipeline is getting hung up in modeling, try setting 'export_hyper_sweep_plots' to False to avoid the issue. These plots are nice to have but not necessary for the overall pipeline. (0.0.3.post1)
 ```
-pip install kaleido
+pip install kaleido==0.0.3.post1
 ```
-
-### Possibly needed package
-Orca, a python library for task organization was previously needed by plotly, however Kaleido should be sufficient. If Kaleido alone is not working try installing the following:
+* FPDF, a simple PDF generation for Python (1.7.2)
 ```
-pip install orca
+pip install fpdf
 ```
-If the above installation does not work, try:
-```
-conda install -c plotly plotly-orca
-```
-See https://pypi.org/project/plotly/ for details or updates for installing these plotly dependencies.
-
 # Usage
 Here we give an overview of the codebase and how to run AutoMLPipe-BC in different contexts.
 ***

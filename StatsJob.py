@@ -476,9 +476,7 @@ def wilcoxonRank(full_path,metrics,algorithms,metric_dict,kruskal_summary,sig_cu
                         set1 = metric_dict[algorithm1][metric]
                         set2 = metric_dict[algorithm2][metric]
                         #handle error when metric values are equal for both algorithms
-                        combined = copy.deepcopy(set1)
-                        combined.extend(set2)
-                        if all(x==combined[0] for x in combined): #Check if all nums are equal in sets
+                        if set1 == set2:  # Check if all nums are equal in sets
                             report = ['NA',1]
                         else: # Apply Wilcoxon Rank Sum test
                             report = stats.wilcoxon(set1,set2)
@@ -506,10 +504,7 @@ def mannWhitneyU(full_path,metrics,algorithms,metric_dict,kruskal_summary,sig_cu
                     if not [algorithm1,algorithm2] in done and not [algorithm2,algorithm1] in done and algorithm1 != algorithm2:
                         set1 = metric_dict[algorithm1][metric]
                         set2 = metric_dict[algorithm2][metric]
-                        #handle error when metric values are equal for both algorithms
-                        combined = copy.deepcopy(set1)
-                        combined.extend(set2)
-                        if all(x==combined[0] for x in combined): #Check if all nums are equal in sets
+                        if set1 == set2:  # Check if all nums are equal in sets
                             report = ['NA',1]
                         else: #Apply Mann Whitney U test
                             report = stats.mannwhitneyu(set1,set2)

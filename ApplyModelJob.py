@@ -32,7 +32,7 @@ from sklearn import metrics
 from scipy import interp,stats
 from statistics import mean,stdev
 
-def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots,export_feature_correlations,jupyterRun):
+def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots,export_feature_correlations,jupyterRun,multi_impute):
     train_name = full_path.split('/')[-1] #original training data name
     apply_name = datasetFilename.split('/')[-1].split('.')[0]
     #Load Replication Dataset
@@ -103,7 +103,7 @@ def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,
         cvRepData = repData.copy()
         #Impute dataframe based on training imputation
         if eval(impute_data):
-            cvRepData = imputeRepData(full_path,cvCount,instance_label,class_label,cvRepData,all_train_feature_list)
+            cvRepData = imputeRepData(full_path,cvCount,instance_label,class_label,cvRepData,all_train_feature_list,multi_impute)
         #Scale dataframe based on training scaling
         if eval(scale_data):
             cvRepData = scaleRepData(full_path,cvCount,instance_label,class_label,cvRepData,all_train_feature_list)
@@ -209,33 +209,42 @@ def scaleRepData(full_path,cvCount,instance_label,class_label,cvRepData,all_trai
         scale_rep_df = pd.concat([pd.DataFrame(y_rep, columns=[class_label]), pd.DataFrame(inst_rep, columns=[instance_label]),pd.DataFrame(x_rep_scaled, columns=all_train_feature_list)], axis=1, sort=False)
     return scale_rep_df
 
-def imputeRepData(full_path,cvCount,instance_label,class_label,cvRepData,all_train_feature_list):
-    imputeOridinalInfo = full_path+'/exploratory/scale_impute/ordinal_imputer_cv'+str(cvCount) #Corresponding pickle file name with scalingInfo
-    infile = open(imputeOridinalInfo,'rb')
-    imputer = pickle.load(infile)
-    infile.close()
+def imputeRepData(full_path,cvCount,instance_label,class_label,cvRepData,all_train_feature_list,multi_impute):
+    cvRepData.shape
+    #Impute categorical features (i.e. those included in the mode_dict)
     imputeCatInfo = full_path+'/exploratory/scale_impute/categorical_imputer_cv'+str(cvCount) #Corresponding pickle file name with scalingInfo
     infile = open(imputeCatInfo,'rb')
     mode_dict = pickle.load(infile)
     infile.close()
-    cvRepData.shape
-    #Impute categorical features (i.e. those included in the mode_dict)
     for c in cvRepData.columns:
         if c in mode_dict: #was the given feature identified as and treated as categorical during training?
             cvRepData[c].fillna(mode_dict[c], inplace=True)
-    #Preprare data for scikit imputation
-    if instance_label == None or instance_label == 'None':
-        x_rep = cvRepData.drop([class_label], axis=1).values
-    else:
-        x_rep = cvRepData.drop([class_label, instance_label], axis=1).values
-        inst_rep = cvRepData[instance_label].values  # pull out instance labels in case they include text
-    y_rep = cvRepData[class_label].values
-    x_rep_impute = imputer.transform(x_rep)
-    # Recombine x and y
-    if instance_label == None or instance_label == 'None':
-        impute_rep_df = pd.concat([pd.DataFrame(y_rep, columns=[class_label]), pd.DataFrame(x_rep_impute, columns=all_train_feature_list)],axis=1, sort=False)
-    else:
-        impute_rep_df = pd.concat([pd.DataFrame(y_rep, columns=[class_label]), pd.DataFrame(inst_rep, columns=[instance_label]),pd.DataFrame(x_rep_impute, columns=all_train_feature_list)], axis=1, sort=False)
+
+    imputeOridinalInfo = full_path+'/exploratory/scale_impute/ordinal_imputer_cv'+str(cvCount) #Corresponding pickle file name with scalingInfo
+    if eval(multi_impute): #multiple imputation of quantitative features
+        infile = open(imputeOridinalInfo,'rb')
+        imputer = pickle.load(infile)
+        infile.close()
+        #Preprare data for scikit imputation
+        if instance_label == None or instance_label == 'None':
+            x_rep = cvRepData.drop([class_label], axis=1).values
+        else:
+            x_rep = cvRepData.drop([class_label, instance_label], axis=1).values
+            inst_rep = cvRepData[instance_label].values  # pull out instance labels in case they include text
+        y_rep = cvRepData[class_label].values
+        x_rep_impute = imputer.transform(x_rep)
+        # Recombine x and y
+        if instance_label == None or instance_label == 'None':
+            impute_rep_df = pd.concat([pd.DataFrame(y_rep, columns=[class_label]), pd.DataFrame(x_rep_impute, columns=all_train_feature_list)],axis=1, sort=False)
+        else:
+            impute_rep_df = pd.concat([pd.DataFrame(y_rep, columns=[class_label]), pd.DataFrame(inst_rep, columns=[instance_label]),pd.DataFrame(x_rep_impute, columns=all_train_feature_list)], axis=1, sort=False)
+    else: #simple (median) imputation of quantitative features
+        infile = open(imputeOridinalInfo,'rb')
+        median_dict = pickle.load(infile)
+        infile.close()
+        for c in cvRepData.columns:
+            if c in median_dict: #was the given feature identified as and treated as categorical during training?
+                cvRepData[c].fillna(median_dict[c], inplace=True)
     return impute_rep_df
 
 def evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount):
@@ -414,4 +423,4 @@ def doPlotPRC(result_table,colors,full_path,apply_name,instance_label,class_labe
         plt.close('all')
 
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],int(sys.argv[5]),float(sys.argv[6]),int(sys.argv[7]),sys.argv[8],sys.argv[9],sys.argv[10],sys.argv[11],sys.argv[12],sys.argv[13],sys.argv[14],sys.argv[15],sys.argv[16],sys.argv[17],sys.argv[18],sys.argv[19],sys.argv[20],sys.argv[21],sys.argv[22],sys.argv[23],sys.argv[24],sys.argv[25],sys.argv[26],sys.argv[27],sys.argv[28],sys.argv[29],sys.argv[30])
+    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],int(sys.argv[5]),float(sys.argv[6]),int(sys.argv[7]),sys.argv[8],sys.argv[9],sys.argv[10],sys.argv[11],sys.argv[12],sys.argv[13],sys.argv[14],sys.argv[15],sys.argv[16],sys.argv[17],sys.argv[18],sys.argv[19],sys.argv[20],sys.argv[21],sys.argv[22],sys.argv[23],sys.argv[24],sys.argv[25],sys.argv[26],sys.argv[27],sys.argv[28],sys.argv[29],sys.argv[30],sys.argv[31])

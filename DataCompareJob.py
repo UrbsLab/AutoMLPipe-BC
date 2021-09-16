@@ -15,6 +15,7 @@ import glob
 import pandas as pd
 from scipy import stats
 import copy
+import matplotlib.pyplot as plt
 
 def job(experiment_path,sig_cutoff):
     """ Run all elements of data comparison once for the entire analysis pipeline: runs non-parametric statistical analysis
@@ -50,7 +51,7 @@ def job(experiment_path,sig_cutoff):
         algo_name = abbrev_to_name[filepath.split('/')[-1].split('_')[0]]
         if not algo_name in algorithms:
             algorithms.append(algo_name)
-    # Get all mean evaluation metric data for all algorithms.
+    # Get list of metric names
     data = pd.read_csv(dataset_directory_paths[0] + '/training/results/Summary_performance_mean.csv', sep=',')
     metrics = data.columns.values.tolist()[1:]
     # Create directory to store dataset statistical comparisons
@@ -68,7 +69,44 @@ def job(experiment_path,sig_cutoff):
     bestMannWhitneyU(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff,global_data)
     #Run Wilcoxon Rank sum test for each metric comparing pairs of datsets using the best performing algorithm (based on given metric).
     bestWilcoxonRank(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff,global_data)
+
+    #Generate boxplot comparing average algorithm performance (for a given metric) across all DatasetComparisons
+
     print("Phase 7 complete")
+
+def boxplotCompareDataAllModels(experiment_path,metrics,dataset_directory_paths):
+    """ Generate a boxplot comparing algorithm performance (CV average of each target metric) across all target datasets to be compared."""
+    for metric in metrics:
+        #load average values for target metric for each dataset and put together in a DataFrame
+        df = pd.DataFrame()
+        for d in dataset_directory_paths: #each target dataset folder
+            data = pd.read_csv(d + '/training/results/Summary_performance_mean.csv', sep=',')
+            col = data[metric]
+            #Grab data in metric column
+            pd.concat([df, col], axis=1)
+
+        #grab algorithm names from one of the files
+        #generate boxplot (with legend for each box)
+        if not os.path.exists(full_path + '/training/results/performanceBoxplots'):
+            os.mkdir(full_path + '/training/results/performanceBoxplots')
+        for metric in metrics:
+            tempList = []
+            for algorithm in algorithms:
+                tempList.append(metric_dict[algorithm][metric])
+            td = pd.DataFrame(tempList)
+            td = td.transpose()
+            td.columns = algorithms
+            #Generate boxplot
+            boxplot = td.boxplot(column=algorithms,rot=90)
+            #Specify plot labels
+            plt.ylabel(str(metric))
+            plt.xlabel('ML Algorithm')
+            #Export and/or show plot
+            plt.savefig(experiment_path+'/DatasetComparisons/     Compare_'+metric+'.png', bbox_inches="tight")
+            if eval(jupyterRun):
+                plt.show()
+            else:
+                plt.close('all')
 
 def kruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff):
     """ For each algorithm apply non-parametric Kruskal Wallis one-way ANOVA on ranks. Determines if there is a statistically significant difference in performance between original target datasets across CV runs.

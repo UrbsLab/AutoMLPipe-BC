@@ -95,7 +95,7 @@ def main(argv):
                         submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,options.instance_subset,'ms',options.n_jobs,options.use_TURF,options.TURF_pct)
 
         #Update metadata
-        if metadata.shape[0] == 12: #Only update if metadata below hasn't been added before (i.e. in a previous phase 2 run)
+        if metadata.shape[0] == 13: #Only update if metadata below hasn't been added before (i.e. in a previous phase 2 run)
             with open(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv',mode='a', newline="") as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(["mutual information",options.do_mutual_info])

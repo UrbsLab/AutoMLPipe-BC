@@ -134,9 +134,7 @@ def wilcoxonRank(experiment_path,datasets,algorithms,metrics,dataset_directory_p
                     ave2 = td2[metric].mean()
                     sd2 = td2[metric].std()
                     #handle error when metric values are equal for both algorithms
-                    combined = list(copy.deepcopy(set1))
-                    combined.extend(list(set2))
-                    if all(x == combined[0] for x in combined):  # Check if all nums are equal in sets
+                    if set1.equals(set2):  # Check if all nums are equal in sets
                         result = ['NA', 1]
                     else:
                         result = stats.wilcoxon(set1, set2)
@@ -144,7 +142,10 @@ def wilcoxonRank(experiment_path,datasets,algorithms,metrics,dataset_directory_p
                     tempList.append(str(metric))
                     tempList.append('D'+str(x+1))
                     tempList.append('D'+str(y+1))
-                    tempList.append(str(round(result[0], 6)))
+                    if set1.equals(set2):
+                        tempList.append(result[0])
+                    else:
+                        tempList.append(str(round(result[0], 6)))
                     tempList.append(str(round(result[1], 6)))
                     if result[1] < sig_cutoff:
                         tempList.append(str('*'))
@@ -187,9 +188,7 @@ def mannWhitneyU(experiment_path,datasets,algorithms,metrics,dataset_directory_p
                     ave2 = td2[metric].mean()
                     sd2 = td2[metric].std()
                     #handle error when metric values are equal for both algorithms
-                    combined = list(copy.deepcopy(set1))
-                    combined.extend(list(set2))
-                    if all(x == combined[0] for x in combined):  # Check if all nums are equal in sets
+                    if set1.equals(set2):  # Check if all nums are equal in sets
                         result = ['NA', 1]
                     else:
                         result = stats.mannwhitneyu(set1, set2)
@@ -197,7 +196,10 @@ def mannWhitneyU(experiment_path,datasets,algorithms,metrics,dataset_directory_p
                     tempList.append(str(metric))
                     tempList.append('D'+str(x+1))
                     tempList.append('D'+str(y+1))
-                    tempList.append(str(round(result[0], 6)))
+                    if set1.equals(set2):
+                        tempList.append(result[0])
+                    else:
+                        tempList.append(str(round(result[0], 6)))
                     tempList.append(str(round(result[1], 6)))
                     if result[1] < sig_cutoff:
                         tempList.append(str('*'))
@@ -289,17 +291,18 @@ def bestMannWhitneyU(experiment_path,datasets,algorithms,metrics,dataset_directo
                 ave2 = global_data[j][1][y][1]
                 sd2 = global_data[j][1][y][2]
                 #handle error when metric values are equal for both algorithms
-                combined = list(copy.deepcopy(set1))
-                combined.extend(list(set2))
-                if all(x == combined[0] for x in combined):  # Check if all nums are equal in sets
-                    result = [combined[0], 1]
+                if set1.equals(set2):  # Check if all nums are equal in sets
+                    result = ['NA', 1]
                 else:
                     result = stats.mannwhitneyu(set1, set2)
                 #Summarize test information in list
                 tempList.append(str(metric))
                 tempList.append('D'+str(x+1))
                 tempList.append('D'+str(y+1))
-                tempList.append(str(round(result[0], 6)))
+                if set1.equals(set2):
+                    tempList.append(result[0])
+                else:
+                    tempList.append(str(round(result[0], 6)))
                 tempList.append(str(round(result[1], 6)))
                 if result[1] < sig_cutoff:
                     tempList.append(str('*'))
@@ -341,17 +344,18 @@ def bestWilcoxonRank(experiment_path,datasets,algorithms,metrics,dataset_directo
                 ave2 = global_data[j][1][y][1]
                 sd2 = global_data[j][1][y][2]
                 #handle error when metric values are equal for both algorithms
-                combined = list(copy.deepcopy(set1))
-                combined.extend(list(set2))
-                if all(x == combined[0] for x in combined):  # Check if all nums are equal in sets
-                    result = [combined[0], 1]
+                if set1.equals(set2):  # Check if all nums are equal in sets
+                    result = ['NA', 1]
                 else:
                     result = stats.wilcoxon(set1, set2)
                 #Summarize test information in list
                 tempList.append(str(metric))
                 tempList.append('D'+str(x+1))
                 tempList.append('D'+str(y+1))
-                tempList.append(str(round(result[0], 6)))
+                if set1.equals(set2):
+                    tempList.append(result[0])
+                else:
+                    tempList.append(str(round(result[0], 6)))
                 tempList.append(str(round(result[1], 6)))
                 if result[1] < sig_cutoff:
                     tempList.append(str('*'))

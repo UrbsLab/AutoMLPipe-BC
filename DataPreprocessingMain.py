@@ -34,6 +34,7 @@ def main(argv):
     #Defaults available
     parser.add_argument('--scale',dest='scale_data',type=str,help='perform data scaling (required for SVM, and to use Logistic regression with non-uniform feature importance estimation)',default="True")
     parser.add_argument('--impute', dest='impute_data',type=str,help='perform missing value data imputation (required for most ML algorithms if missing data is present)',default="True")
+    parser.add_argument('--multi-impute', dest='multi_impute',type=str,help='applies multivariate imputation to quantitative features, otherwise uses median imputation',default="True")
     parser.add_argument('--over-cv', dest='overwrite_cv',type=str,help='overwrites earlier cv datasets with new scaled/imputed ones',default="True")
     #Lostistical arguments
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")
@@ -72,9 +73,9 @@ def main(argv):
                 job_counter += 1
                 cv_test_path = cv_train_path.replace("Train.csv","Test.csv")
                 if eval(options.run_parallel):
-                    submitClusterJob(cv_train_path,cv_test_path,options.output_path+'/'+options.experiment_name,options.scale_data,options.impute_data,options.overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,options.reserved_memory,options.maximum_memory,options.queue)
+                    submitClusterJob(cv_train_path,cv_test_path,options.output_path+'/'+options.experiment_name,options.scale_data,options.impute_data,options.overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,options.reserved_memory,options.maximum_memory,options.queue,options.multi_impute)
                 else:
-                    submitLocalJob(cv_train_path,cv_test_path,options.output_path+'/'+options.experiment_name,options.scale_data,options.impute_data,options.overwrite_cv,categorical_cutoff,class_label,instance_label,random_state)
+                    submitLocalJob(cv_train_path,cv_test_path,options.output_path+'/'+options.experiment_name,options.scale_data,options.impute_data,options.overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,options.multi_impute)
 
         #Update metadata
         if metadata.shape[0] == 10: #Only update if metadata below hasn't been added before (i.e. in a previous phase 2 run)
@@ -82,6 +83,7 @@ def main(argv):
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(["data scaling",options.scale_data])
                 writer.writerow(["data imputation",options.impute_data])
+                writer.writerow(["multivariate imputation",options.multi_impute])
             file.close()
 
     else: #Instead of running job, checks whether previously run jobs were successfully completed
@@ -108,15 +110,15 @@ def main(argv):
             print("All Phase 2 Jobs Completed")
         else:
             print("Above Phase 2 Jobs Not Completed")
-            
+
     if not options.do_check:
         print(str(job_counter)+ " jobs submitted in Phase 2")
 
-def submitLocalJob(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state):
+def submitLocalJob(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,multi_impute):
     """ Runs DataPreprocessingJob.py locally on a single CV dataset. These runs will be completed serially rather than in parallel. """
-    DataPreprocessingJob.job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state)
+    DataPreprocessingJob.job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,multi_impute)
 
-def submitClusterJob(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,reserved_memory,maximum_memory,queue):
+def submitClusterJob(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,reserved_memory,maximum_memory,queue,multi_impute):
     """ Runs DataPreprocessingJob.py on a single CV dataset based on each dataset in phase 1 target data folder. Runs in parallel on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
     job_name = experiment_path+'/jobs/P2_'+job_ref+'_run.sh'
@@ -131,7 +133,7 @@ def submitClusterJob(cv_train_path,cv_test_path,experiment_path,scale_data,imput
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
     sh_file.write('python '+this_file_path+'/DataPreprocessingJob.py '+cv_train_path+" "+cv_test_path+" "+experiment_path+" "+scale_data+
-                  " "+impute_data+" "+overwrite_cv+" "+str(categorical_cutoff)+" "+class_label+" "+instance_label+" "+str(random_state)+'\n')
+                  " "+impute_data+" "+overwrite_cv+" "+str(categorical_cutoff)+" "+class_label+" "+instance_label+" "+str(random_state)+" "+str(multi_impute)+'\n')
     sh_file.close()
     os.system('bsub < '+job_name)
 

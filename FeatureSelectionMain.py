@@ -47,14 +47,14 @@ def main(argv):
 
     options = parser.parse_args(argv[1:])
     job_counter = 0
-    
+
     #Load variables specified earlier in the pipeline from metadata file
     metadata = pd.read_csv(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv').values
     class_label = metadata[0, 1]
     instance_label = metadata[1, 1]
     cv_partitions = int(metadata[6,1])
-    do_mutual_info = metadata[12,1]
-    do_multisurf = metadata[13,1]
+    do_mutual_info = metadata[13,1]
+    do_multisurf = metadata[14,1]
     jupyterRun = 'False'
 
     # Argument checks
@@ -78,7 +78,7 @@ def main(argv):
                 submitLocalJob(full_path,do_mutual_info,do_multisurf,options.max_features_to_keep,options.filter_poor_features,options.top_results,options.export_scores,class_label,instance_label,cv_partitions,options.overwrite_cv,jupyterRun)
 
         #Update metadata
-        if metadata.shape[0] == 17: #Only update if metadata below hasn't been added before
+        if metadata.shape[0] == 18: #Only update if metadata below hasn't been added before
             with open(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv',mode='a', newline="") as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(["max features to keep",options.max_features_to_keep])

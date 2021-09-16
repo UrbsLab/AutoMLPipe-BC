@@ -23,7 +23,7 @@ import csv
 import time
 import pickle
 
-def job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state):
+def job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,multi_impute):
     """ Run all elements of the data preprocessing: data scaling and missing value imputation (mode imputation for categorical features and MICE-based iterative imputing for quantitative features)"""
     job_start_time = time.time() #for tracking phase runtime
     #Set random seeds for replicatability
@@ -52,7 +52,7 @@ def job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwr
     categorical_variables = pickle.load(file)
     #Impute Missing Values in training and testing data if specified by user
     if eval(impute_data):
-        x_train,x_test = imputeCVData(categorical_variables,x_train,x_test,random_state,experiment_path,dataset_name,cvCount)
+        x_train,x_test = imputeCVData(categorical_variables,x_train,x_test,random_state,experiment_path,dataset_name,cvCount,multi_impute)
         x_train = pd.DataFrame(x_train, columns=header)
         x_test = pd.DataFrame(x_test, columns=header)
     #Scale training and testing datasets if specified by user
@@ -98,7 +98,7 @@ def loadData(cv_train_path,cv_test_path,experiment_path,class_label,instance_lab
         header.remove(instance_label)
     return data_train,data_test,header,dataset_name,cvCount
 
-def imputeCVData(categorical_variables,x_train,x_test,random_state,experiment_path,dataset_name,cvCount):
+def imputeCVData(categorical_variables,x_train,x_test,random_state,experiment_path,dataset_name,cvCount,multi_impute):
     # Begin by imputing categorical variables with simple 'mode' imputation
     mode_dict = {}
     for c in x_train.columns:
@@ -109,17 +109,35 @@ def imputeCVData(categorical_variables,x_train,x_test,random_state,experiment_pa
     for c in x_test.columns:
         if c in categorical_variables:
             x_test[c].fillna(mode_dict[c], inplace=True)
-    # Impute quantitative features (x) using iterative imputer
-    imputer = IterativeImputer(random_state=random_state,max_iter=30).fit(x_train)
-    x_train = imputer.transform(x_train)
-    x_test = imputer.transform(x_test)
-    #Save impute map for testing data
-    outfile = open(experiment_path + '/' + dataset_name + '/exploratory/scale_impute/ordinal_imputer_cv' + str(cvCount),'wb')
-    pickle.dump(imputer, outfile)
-    outfile.close()
+    #Save impute map for downstream use.
     outfile = open(experiment_path + '/' + dataset_name + '/exploratory/scale_impute/categorical_imputer_cv' + str(cvCount),'wb')
     pickle.dump(mode_dict, outfile)
     outfile.close()
+
+    if eval(multi_impute):
+        # Impute quantitative features (x) using iterative imputer (multiple imputation)
+        imputer = IterativeImputer(random_state=random_state,max_iter=30).fit(x_train)
+        x_train = imputer.transform(x_train)
+        x_test = imputer.transform(x_test)
+        #Save impute map for downstream use.
+        outfile = open(experiment_path + '/' + dataset_name + '/exploratory/scale_impute/ordinal_imputer_cv' + str(cvCount),'wb')
+        pickle.dump(imputer, outfile)
+        outfile.close()
+    else: #Impute quantitative features (x) with simple mean imputation
+        median_dict = {}
+        for c in x_train.columns:
+            if not c in categorical_variables:
+                train_median = x_train[c].median()
+                x_train[c].fillna(train_median, inplace=True)
+                median_dict[c] = train_median
+        for c in x_test.columns:
+            if not c in categorical_variables:
+                x_test[c].fillna(median_dict[c], inplace=True)
+        #Save impute map for downstream use.
+        outfile = open(experiment_path + '/' + dataset_name + '/exploratory/scale_impute/ordinal_imputer_cv' + str(cvCount),'wb')
+        pickle.dump(median_dict, outfile)
+        outfile.close()
+
     return x_train,x_test
 
 def dataScaling(x_train,x_test,experiment_path,dataset_name,cvCount):
@@ -171,4 +189,4 @@ def saveRuntime(experiment_path,dataset_name,job_start_time):
     runtime_file.close()
 
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],int(sys.argv[7]),sys.argv[8],sys.argv[9],int(sys.argv[10]))
+    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],int(sys.argv[7]),sys.argv[8],sys.argv[9],int(sys.argv[10]),sys.argv[11])

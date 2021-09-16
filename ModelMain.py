@@ -201,7 +201,7 @@ def main(argv):
     instance_label = metadata[1, 1]
     random_state = int(metadata[3,1])
     cv_partitions = int(metadata[6,1])
-    filter_poor_features = metadata[15,1]
+    filter_poor_features = metadata[16,1]
 
     if options.do_resubmit: #Attempts to resolve optuna hyperparameter optimization hangup (i.e. when it runs indefinitely for a given random seed attempt)
         random_state = random.randint(1,1000)
@@ -229,7 +229,7 @@ def main(argv):
                         submitLocalJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.use_uniform_FI,options.primary_metric)
 
         # Update metadata
-        if metadata.shape[0] == 19: #Only update if metadata below hasn't been added before
+        if metadata.shape[0] == 20: #Only update if metadata below hasn't been added before
             with open(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv', mode='a', newline="") as file:
                 writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(["NB", str(do_NB)])

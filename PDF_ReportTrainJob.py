@@ -51,10 +51,10 @@ def job(experiment_path):
 
     #ML Pipeline Analysis Report-------------------------------------------------------------------------------------------------------
     print("Starting Report")
-    ls1 = ars_dic[0:55]
-    ls2 = ars_dic[56:95]  #ML modeling algorithms
-    ls3 = ars_dic[94:111]
-    ls4 = ars_dic[110:125]  #LCS parameters
+    ls1 = ars_dic[0:59] # Class - filter poor [0:55] 59
+    ls2 = ars_dic[59:98]  #ML modeling algorithms (NaiveB - ExSTraCS) [56:95] 60
+    ls3 = ars_dic[98:114] #primary metric - hypersweep timeout [94:111] 97
+    ls4 = ars_dic[114:129]  #LCS parameters (do LCS sweep - LCS hypersweep timeout) [110:125]
     analy_report.set_font('Times', 'B', 12)
     analy_report.cell(w=180, h=8, txt='AutoMLPipe-BC Training Summary Report: '+time, ln=2, border=1, align='L')
     analy_report.y += 3
@@ -66,7 +66,7 @@ def job(experiment_path):
     analy_report.x += 90
     analy_report.y += 4
     analy_report.multi_cell(w = 90,h = 4,txt='LCS Settings (ExSTraCS,eLCS,XCS):'+'\n'+listToString(ls4), border=1, align='L')
-    analy_report.y +=10
+    analy_report.y +=15 #10
 
     listDatasets = ''
     i = 1

@@ -16,12 +16,12 @@ import pandas as pd
 from scipy import stats
 import copy
 import matplotlib.pyplot as plt
+import numpy as np
 
-def job(experiment_path,sig_cutoff):
+def job(experiment_path,sig_cutoff,jupyterRun):
     """ Run all elements of data comparison once for the entire analysis pipeline: runs non-parametric statistical analysis
     comparing ML algorithm performance between all target datasets included in the original Phase 1 data folder, for each
-    evaluation metric. Also compares the best overall model for each target dataset, for each evaluation metric.
-"""
+    evaluation metric. Also compares the best overall model for each target dataset, for each evaluation metric."""
     # Get dataset paths for all completed dataset analyses in experiment folder
     datasets = os.listdir(experiment_path)
     datasets.remove('metadata.csv')
@@ -69,44 +69,11 @@ def job(experiment_path,sig_cutoff):
     bestMannWhitneyU(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff,global_data)
     #Run Wilcoxon Rank sum test for each metric comparing pairs of datsets using the best performing algorithm (based on given metric).
     bestWilcoxonRank(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff,global_data)
-
-    #Generate boxplot comparing average algorithm performance (for a given metric) across all DatasetComparisons
-
+    #Generate boxplots comparing average algorithm performance (for a given metric) across all dataset comparisons
+    dataCompareBPAll(experiment_path,metrics,dataset_directory_paths,algorithms,jupyterRun)
+    #Generate boxplots comparing a specific algorithm's CV performance (for AUC_ROC or AUC_PRC) across all dataset comparisons
+    dataCompareBP(experiment_path,metrics,dataset_directory_paths,algorithms,name_to_abbrev,jupyterRun)
     print("Phase 7 complete")
-
-def boxplotCompareDataAllModels(experiment_path,metrics,dataset_directory_paths):
-    """ Generate a boxplot comparing algorithm performance (CV average of each target metric) across all target datasets to be compared."""
-    for metric in metrics:
-        #load average values for target metric for each dataset and put together in a DataFrame
-        df = pd.DataFrame()
-        for d in dataset_directory_paths: #each target dataset folder
-            data = pd.read_csv(d + '/training/results/Summary_performance_mean.csv', sep=',')
-            col = data[metric]
-            #Grab data in metric column
-            pd.concat([df, col], axis=1)
-
-        #grab algorithm names from one of the files
-        #generate boxplot (with legend for each box)
-        if not os.path.exists(full_path + '/training/results/performanceBoxplots'):
-            os.mkdir(full_path + '/training/results/performanceBoxplots')
-        for metric in metrics:
-            tempList = []
-            for algorithm in algorithms:
-                tempList.append(metric_dict[algorithm][metric])
-            td = pd.DataFrame(tempList)
-            td = td.transpose()
-            td.columns = algorithms
-            #Generate boxplot
-            boxplot = td.boxplot(column=algorithms,rot=90)
-            #Specify plot labels
-            plt.ylabel(str(metric))
-            plt.xlabel('ML Algorithm')
-            #Export and/or show plot
-            plt.savefig(experiment_path+'/DatasetComparisons/     Compare_'+metric+'.png', bbox_inches="tight")
-            if eval(jupyterRun):
-                plt.show()
-            else:
-                plt.close('all')
 
 def kruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff):
     """ For each algorithm apply non-parametric Kruskal Wallis one-way ANOVA on ranks. Determines if there is a statistically significant difference in performance between original target datasets across CV runs.
@@ -412,5 +379,70 @@ def bestWilcoxonRank(experiment_path,datasets,algorithms,metrics,dataset_directo
     df.columns = label
     df.to_csv(experiment_path + '/DatasetComparisons/BestCompare_WilcoxonRank.csv',index=False)
 
+def dataCompareBPAll(experiment_path,metrics,dataset_directory_paths,algorithms,jupyterRun):
+    """ Generate a boxplot comparing algorithm performance (CV average of each target metric) across all target datasets to be compared."""
+    colors = ['grey','black','yellow','orange','bisque','purple','aqua','blue','red','firebrick','deepskyblue','seagreen','lightcoral']
+    if not os.path.exists(experiment_path+'/DatasetComparisons/dataCompBoxplots'):
+        os.mkdir(experiment_path+'/DatasetComparisons/dataCompBoxplots')
+    for metric in metrics:
+        df = pd.DataFrame()
+        data_name_list = []
+        alg_values_dict = {}
+        for algorithm in algorithms:
+            alg_values_dict[algorithm] = []
+        for each in dataset_directory_paths:
+            data_name_list.append(each.split('/')[-1])
+            data = pd.read_csv(each + '/training/results/Summary_performance_mean.csv', sep=',')
+            #Grab data in metric column
+            col = data[metric]
+            colList = data[metric].tolist()
+            for j in range(len(colList)):
+                alg_values_dict[algorithms[j]].append(colList[j])
+            df = pd.concat([df, col], axis=1)
+        df.columns = data_name_list
+        # Generate boxplot (with legend for each box)
+        boxplot = df.boxplot(column=data_name_list,rot=90)
+        for i in range(len(algorithms)):
+            plt.plot(np.arange(len(dataset_directory_paths))+1,alg_values_dict[algorithms[i]], color = colors[i], label=algorithms[i])
+        #Specify plot labels
+        plt.ylabel(str(metric))
+        plt.xlabel('Dataset')
+        plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
+        #Export and/or show plot
+        plt.savefig(experiment_path+'/DatasetComparisons/dataCompBoxplots/DataCompareAllModels_'+metric+'.png', bbox_inches="tight")
+        if eval(jupyterRun):
+            plt.show()
+        else:
+            plt.close('all')
+
+def dataCompareBP(experiment_path,metrics,dataset_directory_paths,algorithms,name_to_abbrev,jupyterRun):
+    """ Generate a boxplot comparing average algorithm performance (for a given target metric) across all target datasets to be compared."""
+    metricList = ['ROC_AUC','PRC_AUC'] #Hard coded
+    if not os.path.exists(experiment_path+'/DatasetComparisons/dataCompBoxplots'):
+        os.mkdir(experiment_path+'/DatasetComparisons/dataCompBoxplots')
+    for algorithm in algorithms:
+        for metric in metricList:
+            df = pd.DataFrame()
+            data_name_list = []
+            for each in dataset_directory_paths:
+                data_name_list.append(each.split('/')[-1])
+                data = pd.read_csv(each + '/training/results/'+name_to_abbrev[algorithm]+'_performance.csv', sep=',')
+                #Grab data in metric column
+                col = data[metric]
+                df = pd.concat([df, col], axis=1)
+            df.columns = data_name_list
+            # Generate boxplot (with legend for each box)
+            boxplot = df.boxplot(column=data_name_list,rot=90)
+            #Specify plot labels
+            plt.ylabel(str(metric))
+            plt.xlabel('Dataset')
+            #Export and/or show plot
+            plt.savefig(experiment_path+'/DatasetComparisons/dataCompBoxplots/DataCompare_'+name_to_abbrev[algorithm]+'_'+metric+'.png', bbox_inches="tight")
+            if eval(jupyterRun):
+                print(algorithm)
+                plt.show()
+            else:
+                plt.close('all')
+
 if __name__ == '__main__':
-    job(sys.argv[1],float(sys.argv[2]))
+    job(sys.argv[1],float(sys.argv[2]),sys.argv[3])

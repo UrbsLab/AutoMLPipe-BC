@@ -46,9 +46,9 @@ def main(argv):
 
     if eval(options.run_parallel):
         job_counter += 1
-        submitClusterJob(options.output_path+'/'+options.experiment_name,options.reserved_memory,options.maximum_memory,options.queue,sig_cutoff)
+        submitClusterJob(options.output_path+'/'+options.experiment_name,options.reserved_memory,options.maximum_memory,options.queue,sig_cutoff,jupyterRun)
     else:
-        submitLocalJob(options.output_path+'/'+options.experiment_name,sig_cutoff)
+        submitLocalJob(options.output_path+'/'+options.experiment_name,sig_cutoff,jupyterRun)
 
     print(str(job_counter)+ " job submitted in Phase 7")
 

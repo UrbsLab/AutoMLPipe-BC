@@ -121,55 +121,81 @@ def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,
         if eval(do_LR):
             algorithm = 'LR'
             algorithms.append('Logistic Regression')
-            evalDict[algorithm] = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/training/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_DT):
             algorithm = 'DT'
             algorithms.append('Decision Tree')
-            evalDict[algorithm] = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/training/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_RF):
             algorithm = 'RF'
             algorithms.append('Random Forest')
-            evalDict[algorithm] = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/training/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_NB):
             algorithm = 'NB'
             algorithms.append('Naive Bayes')
-            evalDict[algorithm] = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/training/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_XGB):
             algorithm = 'XGB'
             algorithms.append('XGB')
-            evalDict[algorithm] = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/training/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_LGB):
             algorithm = 'LGB'
             algorithms.append('LGB')
-            evalDict[algorithm] = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/training/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_ANN):
             algorithm = 'ANN'
             algorithms.append('ANN')
-            evalDict[algorithm] = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/training/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_SVM):
             algorithm = 'SVM'
             algorithms.append('SVM')
-            evalDict[algorithm] = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/training/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_eLCS):
             algorithm = 'eLCS'
             algorithms.append('eLCS')
-            evalDict[algorithm] = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/training/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_XCS):
             algorithm = 'XCS'
             algorithms.append('XCS')
-            evalDict[algorithm] = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/training/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_ExSTraCS):
             algorithm = 'ExSTraCS'
             algorithms.append('ExSTraCS')
-            evalDict[algorithm] = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/training/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_GB):
             algorithm = 'GB'
             algorithms.append('Gradient Boosting')
-            evalDict[algorithm] = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/training/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_KN):
             algorithm = 'KN'
             algorithms.append('K Neighbors')
-            evalDict[algorithm] = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/training/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         masterList.append(evalDict) #update master list with evalDict for this CV model
     #Summarize top_results
     abbrev = {'Logistic Regression':'LR','Decision Tree':'DT','Random Forest':'RF','Naive Bayes':'NB','XGB':'XGB','LGB':'LGB','ANN':'ANN','SVM':'SVM','ExSTraCS':'ExSTraCS','eLCS':'eLCS','XCS':'XCS','Gradient Boosting':'GB','K Neighbors':'KN'}

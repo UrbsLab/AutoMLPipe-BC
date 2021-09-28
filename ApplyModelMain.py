@@ -88,6 +88,12 @@ def main(argv):
     if not os.path.exists(full_path+"/applymodel"):
         os.mkdir(full_path+"/applymodel")
 
+    if not eval(jupyterRun):
+        if not os.path.exists(options.output_path + "/" + options.experiment_name +'/jobs'):
+            os.mkdir(options.output_path + "/" + options.experiment_name +'/jobs')
+        if not os.path.exists(options.output_path + "/" + options.experiment_name +'/logs'):
+            os.mkdir(options.output_path + "/" + options.experiment_name +'/logs')
+
     #Determine file extension of datasets in target folder:
     file_count = 0
     unique_datanames = []
@@ -134,7 +140,7 @@ def submitClusterJob(reserved_memory,maximum_memory,queue,experiment_path,datase
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
     sh_file.write('python '+this_file_path+'/ApplyModelJob.py '+datasetFilename+" "+full_path+" "+class_label+" "+instance_label+" "+categorical_cutoff+" "+sig_cutoff+" "+cv_partitions+" "+scale_data+" "+impute_data+" "+do_LR+" "+do_DT+" "+do_RF+" "+do_NB+" "+do_XGB+" "+
-                  do_LGB+" "+do_SVM+" "+do_ANN+" "+do_ExSTraCS+" "+do_eLCS+" "+do_XCS+" "+do_GB+" "+do_KN+" "+primary_metric+" "+data_path+" "+match_label+" "+plot_ROC+" "+plot_PRC+" "+plot_metric_boxplots+" "+export_feature_correlations+" "+jupyterRun+" "+multi_impute+'\n')     
+                  do_LGB+" "+do_SVM+" "+do_ANN+" "+do_ExSTraCS+" "+do_eLCS+" "+do_XCS+" "+do_GB+" "+do_KN+" "+primary_metric+" "+data_path+" "+match_label+" "+plot_ROC+" "+plot_PRC+" "+plot_metric_boxplots+" "+export_feature_correlations+" "+jupyterRun+" "+multi_impute+'\n')
     sh_file.close()
     os.system('bsub < ' + job_name)
     pass

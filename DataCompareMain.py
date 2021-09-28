@@ -37,6 +37,7 @@ def main(argv):
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
 
     options = parser.parse_args(argv[1:])
+    jupyterRun = 'False'
     job_counter = 0
 
     #Load variables specified earlier in the pipeline from metadata file
@@ -45,17 +46,17 @@ def main(argv):
 
     if eval(options.run_parallel):
         job_counter += 1
-        submitClusterJob(options.output_path+'/'+options.experiment_name,options.reserved_memory,options.maximum_memory,options.queue,sig_cutoff)
+        submitClusterJob(options.output_path+'/'+options.experiment_name,options.reserved_memory,options.maximum_memory,options.queue,sig_cutoff,jupyterRun)
     else:
-        submitLocalJob(options.output_path+'/'+options.experiment_name,sig_cutoff)
+        submitLocalJob(options.output_path+'/'+options.experiment_name,sig_cutoff,jupyterRun)
 
     print(str(job_counter)+ " job submitted in Phase 7")
 
-def submitLocalJob(experiment_path,sig_cutoff):
+def submitLocalJob(experiment_path,sig_cutoff,jupyterRun):
     """ Runs DataCompareJob.py locally, once. """
-    WrapperComparisonJob.job(experiment_path)
+    WrapperComparisonJob.job(experiment_path,jupyterRun)
 
-def submitClusterJob(experiment_path,reserved_memory,maximum_memory,queue,sig_cutoff):
+def submitClusterJob(experiment_path,reserved_memory,maximum_memory,queue,sig_cutoff,jupyterRun):
     """ Runs DataCompareJob.py once. Runs on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
     job_name = experiment_path + '/jobs/P7_' + job_ref + '_run.sh'
@@ -69,7 +70,7 @@ def submitClusterJob(experiment_path,reserved_memory,maximum_memory,queue,sig_cu
     sh_file.write('#BSUB -e ' + experiment_path+'/logs/P7_'+job_ref+'.e\n')
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
-    sh_file.write('python ' + this_file_path + '/DataCompareJob.py ' + experiment_path +" "+ str(sig_cutoff)+ '\n')
+    sh_file.write('python ' + this_file_path + '/DataCompareJob.py ' + experiment_path +" "+ str(sig_cutoff)+" "+ str(jupyterRun)+ '\n')
     sh_file.close()
     os.system('bsub < ' + job_name)
     pass

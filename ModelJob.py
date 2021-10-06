@@ -500,7 +500,7 @@ def objective_XGB(trial, est, x_train, y_train, randSeed, hype_cv, param_grid, s
                 'random_state' : trial.suggest_categorical('random_state',param_grid['random_state'])}
     return hyper_eval(est, x_train, y_train, randSeed, hype_cv, params, scoring_metric)
 
-def run_XGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,timeout,do_plot,full_path,models_subsample,use_uniform_FI,primary_metric):
+def run_XGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,timeout,do_plot,full_path,training_subsample,use_uniform_FI,primary_metric):
     """ Run XGBoost hyperparameter optimization, model training, evaluation, and model feature importance estimation. """
     #Check whether hyperparameters are fixed (i.e. no hyperparameter sweep required) or whether a set/range of values were specified for any hyperparameter (conduct hyperparameter sweep)
     isSingle = True

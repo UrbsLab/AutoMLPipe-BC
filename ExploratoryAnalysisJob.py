@@ -175,7 +175,7 @@ def countsSummary(data,class_label,experiment_path,dataset_name,instance_label,m
     class_counts.plot(kind='bar')
     plt.ylabel('Count')
     plt.title('Class Counts')
-    plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'ClassCounts.png',bbox_inches='tight')
+    plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'ClassCountsBarPlot.png',bbox_inches='tight')
     if eval(jupyterRun):
         plt.show()
     else:
@@ -216,7 +216,7 @@ def reportHeaders(x_data,experiment_path,dataset_name):
     """ Exports dataset header labels for use as a reference later in the pipeline. """
     #Get and Export Original Headers
     headers = x_data.columns.values.tolist()
-    with open(experiment_path + '/' + dataset_name + '/exploratory/OriginalHeaders.csv',mode='w', newline="") as file:
+    with open(experiment_path + '/' + dataset_name + '/exploratory/OriginalFeatureNames.csv',mode='w', newline="") as file:
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(headers)
     file.close()
@@ -225,8 +225,8 @@ def univariateAnalysis(data,experiment_path,dataset_name,class_label,instance_la
     """ Calculates univariate association significance between each individual feature and class outcome. Assumes categorical outcome using Chi-square test for
         categorical features and Mann-Whitney Test for quantitative features. """
     #Create folder for univariate analysis results
-    if not os.path.exists(experiment_path + '/' + dataset_name + '/exploratory/univariate'):
-        os.mkdir(experiment_path + '/' + dataset_name + '/exploratory/univariate')
+    if not os.path.exists(experiment_path + '/' + dataset_name + '/exploratory/univariate_analyses'):
+        os.mkdir(experiment_path + '/' + dataset_name + '/exploratory/univariate_analyses')
     #Generate dictionary of p-values for each feature using appropriate test (via test_selector)
     p_value_dict = {}
     for column in data:
@@ -235,7 +235,7 @@ def univariateAnalysis(data,experiment_path,dataset_name,class_label,instance_la
     sorted_p_list = sorted(p_value_dict.items(),key = lambda item:item[1])
     #Save p-values to file
     pval_df = pd.DataFrame.from_dict(p_value_dict, orient='index')
-    pval_df.to_csv(experiment_path + '/' + dataset_name + '/exploratory/univariate/Significance.csv',index_label='Feature',header=['p-value'])
+    pval_df.to_csv(experiment_path + '/' + dataset_name + '/exploratory/univariate_analyses/Univariate_Significance.csv',index_label='Feature',header=['p-value'])
     #Print results for top features across univariate analyses
     if eval(jupyterRun):
         fCount = data.shape[1]-1
@@ -288,7 +288,7 @@ def graph_selector(featureName, class_label, data, categorical_variables,experim
         new_feature_name = featureName.replace(" ","")       # Deal with the dataset specific characters causing problems in this dataset.
         new_feature_name = new_feature_name.replace("*","")  # Deal with the dataset specific characters causing problems in this dataset.
         new_feature_name = new_feature_name.replace("/","")  # Deal with the dataset specific characters causing problems in this dataset.
-        plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/univariate/'+'Barplot_'+str(new_feature_name)+".png",bbox_inches="tight", format='png')
+        plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/univariate_analyses/'+'Barplot_'+str(new_feature_name)+".png",bbox_inches="tight", format='png')
         plt.close('all')
     else: # Feature is continuous and Outcome is discrete/categorical/binary
         # Generate boxplot-----------------------------------------------------------------------------------------------------
@@ -298,7 +298,7 @@ def graph_selector(featureName, class_label, data, categorical_variables,experim
         new_feature_name = featureName.replace(" ","")       # Deal with the dataset specific characters causing problems in this dataset.
         new_feature_name = new_feature_name.replace("*","")  # Deal with the dataset specific characters causing problems in this dataset.
         new_feature_name = new_feature_name.replace("/","")  # Deal with the dataset specific characters causing problems in this dataset.
-        plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/univariate/'+'Boxplot_'+str(new_feature_name)+".png",bbox_inches="tight", format='png')
+        plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/univariate_analyses/'+'Boxplot_'+str(new_feature_name)+".png",bbox_inches="tight", format='png')
         plt.close('all')
 
 def cv_partitioner(data, cv_partitions, partition_method, class_label, match_label, randomSeed):

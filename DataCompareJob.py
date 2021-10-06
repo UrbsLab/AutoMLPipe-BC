@@ -46,13 +46,13 @@ def job(experiment_path,sig_cutoff,jupyterRun):
                       'XGB': 'XGB', 'LGB': 'LGB', 'SVM': 'SVM', 'ANN': 'ANN','k_neighbors':'KN', 'eLCS': 'eLCS',
                       'XCS': 'XCS', 'ExSTraCS': 'ExSTraCS'}
     abbrev_to_name = dict([(value, key) for key, value in name_to_abbrev.items()])
-    for filepath in glob.glob(dataset_directory_paths[0] + '/training/pickledModels/*'):
+    for filepath in glob.glob(dataset_directory_paths[0] + '/models/pickledModels/*'):
         filepath = str(filepath).replace('\\','/')
         algo_name = abbrev_to_name[filepath.split('/')[-1].split('_')[0]]
         if not algo_name in algorithms:
             algorithms.append(algo_name)
     # Get list of metric names
-    data = pd.read_csv(dataset_directory_paths[0] + '/training/results/Summary_performance_mean.csv', sep=',')
+    data = pd.read_csv(dataset_directory_paths[0] + '/model_evaluation/Summary_performance_mean.csv', sep=',')
     metrics = data.columns.values.tolist()[1:]
     # Create directory to store dataset statistical comparisons
     if not os.path.exists(experiment_path+'/DatasetComparisons'):
@@ -91,7 +91,7 @@ def kruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_directory
             aveList = []
             sdList = []
             for dataset_path in dataset_directory_paths:
-                filename = dataset_path+'/training/results/'+name_to_abbrev[algorithm]+'_performance.csv'
+                filename = dataset_path+'/model_evaluation/'+name_to_abbrev[algorithm]+'_performance.csv'
                 td = pd.read_csv(filename)
                 tempArray.append(td[metric])
                 aveList.append(td[metric].mean())
@@ -127,13 +127,13 @@ def wilcoxonRank(experiment_path,datasets,algorithms,metrics,dataset_directory_p
                 for y in range(x+1,len(dataset_directory_paths)):
                     tempList = []
                     #Grab info on first dataset
-                    file1 = dataset_directory_paths[x]+'/training/results/'+name_to_abbrev[algorithm]+'_performance.csv'
+                    file1 = dataset_directory_paths[x]+'/model_evaluation/'+name_to_abbrev[algorithm]+'_performance.csv'
                     td1 = pd.read_csv(file1)
                     set1 = td1[metric]
                     ave1 = td1[metric].mean()
                     sd1 = td1[metric].std()
                     #Grab info on second dataset
-                    file2 = dataset_directory_paths[y] + '/training/results/' + name_to_abbrev[algorithm] + '_performance.csv'
+                    file2 = dataset_directory_paths[y] + '/model_evaluation/' + name_to_abbrev[algorithm] + '_performance.csv'
                     td2 = pd.read_csv(file2)
                     set2 = td2[metric]
                     ave2 = td2[metric].mean()
@@ -181,13 +181,13 @@ def mannWhitneyU(experiment_path,datasets,algorithms,metrics,dataset_directory_p
                 for y in range(x+1,len(dataset_directory_paths)):
                     tempList = []
                     #Grab info on first dataset
-                    file1 = dataset_directory_paths[x]+'/training/results/'+name_to_abbrev[algorithm]+'_performance.csv'
+                    file1 = dataset_directory_paths[x]+'/model_evaluation/'+name_to_abbrev[algorithm]+'_performance.csv'
                     td1 = pd.read_csv(file1)
                     set1 = td1[metric]
                     ave1 = td1[metric].mean()
                     sd1 = td1[metric].std()
                     #Grab info on second dataset
-                    file2 = dataset_directory_paths[y] + '/training/results/' + name_to_abbrev[algorithm] + '_performance.csv'
+                    file2 = dataset_directory_paths[y] + '/model_evaluation/' + name_to_abbrev[algorithm] + '_performance.csv'
                     td2 = pd.read_csv(file2)
                     set2 = td2[metric]
                     ave2 = td2[metric].mean()
@@ -241,7 +241,7 @@ def bestKruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_direc
             alg_st = []
             alg_data = []
             for algorithm in algorithms:
-                filename = dataset_path+'/training/results/'+name_to_abbrev[algorithm]+'_performance.csv'
+                filename = dataset_path+'/model_evaluation/'+name_to_abbrev[algorithm]+'_performance.csv'
                 td = pd.read_csv(filename)
                 alg_ave.append(td[metric].mean())
                 alg_st.append(td[metric].std())
@@ -392,7 +392,7 @@ def dataCompareBPAll(experiment_path,metrics,dataset_directory_paths,algorithms,
             alg_values_dict[algorithm] = []
         for each in dataset_directory_paths:
             data_name_list.append(each.split('/')[-1])
-            data = pd.read_csv(each + '/training/results/Summary_performance_mean.csv', sep=',')
+            data = pd.read_csv(each + '/model_evaluation/Summary_performance_mean.csv', sep=',')
             #Grab data in metric column
             col = data[metric]
             colList = data[metric].tolist()
@@ -426,7 +426,7 @@ def dataCompareBP(experiment_path,metrics,dataset_directory_paths,algorithms,nam
             data_name_list = []
             for each in dataset_directory_paths:
                 data_name_list.append(each.split('/')[-1])
-                data = pd.read_csv(each + '/training/results/'+name_to_abbrev[algorithm]+'_performance.csv', sep=',')
+                data = pd.read_csv(each + '/model_evaluation/'+name_to_abbrev[algorithm]+'_performance.csv', sep=',')
                 #Grab data in metric column
                 col = data[metric]
                 df = pd.concat([df, col], axis=1)

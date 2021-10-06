@@ -86,8 +86,8 @@ def loadData(cv_train_path,cv_test_path,experiment_path,class_label,instance_lab
     dataset_name = cv_train_path.split('/')[-3]
     cvCount = cv_train_path.split('/')[-1].split("_")[-2]
     #Create folder to store scaling and imputing files
-    if not os.path.exists(experiment_path + '/' + dataset_name + '/exploratory/scale_impute'):
-        os.mkdir(experiment_path + '/' + dataset_name + '/exploratory/scale_impute')
+    if not os.path.exists(experiment_path + '/' + dataset_name + '/scale_impute'):
+        os.mkdir(experiment_path + '/' + dataset_name + '/scale_impute')
     #Load training and testing datasets
     data_train = pd.read_csv(cv_train_path,na_values='NA',sep=',')
     data_test = pd.read_csv(cv_test_path,na_values='NA',sep=',')
@@ -110,7 +110,7 @@ def imputeCVData(categorical_variables,x_train,x_test,random_state,experiment_pa
         if c in categorical_variables:
             x_test[c].fillna(mode_dict[c], inplace=True)
     #Save impute map for downstream use.
-    outfile = open(experiment_path + '/' + dataset_name + '/exploratory/scale_impute/categorical_imputer_cv' + str(cvCount),'wb')
+    outfile = open(experiment_path + '/' + dataset_name + '/scale_impute/categorical_imputer_cv' + str(cvCount),'wb')
     pickle.dump(mode_dict, outfile)
     outfile.close()
 
@@ -120,7 +120,7 @@ def imputeCVData(categorical_variables,x_train,x_test,random_state,experiment_pa
         x_train = imputer.transform(x_train)
         x_test = imputer.transform(x_test)
         #Save impute map for downstream use.
-        outfile = open(experiment_path + '/' + dataset_name + '/exploratory/scale_impute/ordinal_imputer_cv' + str(cvCount),'wb')
+        outfile = open(experiment_path + '/' + dataset_name + '/scale_impute/ordinal_imputer_cv' + str(cvCount),'wb')
         pickle.dump(imputer, outfile)
         outfile.close()
     else: #Impute quantitative features (x) with simple mean imputation
@@ -134,7 +134,7 @@ def imputeCVData(categorical_variables,x_train,x_test,random_state,experiment_pa
             if not c in categorical_variables:
                 x_test[c].fillna(median_dict[c], inplace=True)
         #Save impute map for downstream use.
-        outfile = open(experiment_path + '/' + dataset_name + '/exploratory/scale_impute/ordinal_imputer_cv' + str(cvCount),'wb')
+        outfile = open(experiment_path + '/' + dataset_name + '/scale_impute/ordinal_imputer_cv' + str(cvCount),'wb')
         pickle.dump(median_dict, outfile)
         outfile.close()
 
@@ -153,7 +153,7 @@ def dataScaling(x_train,x_test,experiment_path,dataset_name,cvCount):
     # Scale features (x) using fit scalar in corresponding testing dataset
     x_test = pd.DataFrame(scaler.transform(x_test), columns=x_test.columns)
     #Save scalar for future use
-    outfile = open(experiment_path + '/' + dataset_name + '/exploratory/scale_impute/scaler_cv'+str(cvCount), 'wb')
+    outfile = open(experiment_path + '/' + dataset_name + '/scale_impute/scaler_cv'+str(cvCount), 'wb')
     pickle.dump(scaler, outfile)
     outfile.close()
     return x_train, x_test

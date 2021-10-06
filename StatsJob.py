@@ -98,8 +98,8 @@ def preparation(full_path,encoded_algos):
     and color to use for each algorithm in plots, and loads original ordered feature name list to use as a reference to facilitate combining feature
     importance results across cv runs where different features may have been dropped during the feature selection phase."""
     #Create Directory
-    if not os.path.exists(full_path+'/training/results'):
-        os.mkdir(full_path+'/training/results')
+    if not os.path.exists(full_path+'/model_evaluation'):
+        os.mkdir(full_path+'/model_evaluation')
     #Decode algos
     algorithms = []
     possible_algos = ['Naive Bayes','Logistic Regression','Decision Tree','Random Forest','Gradient Boosting','XGB','LGB','SVM','ANN','K Neighbors','eLCS','XCS','ExSTraCS']
@@ -118,7 +118,7 @@ def preparation(full_path,encoded_algos):
     algorithms = decode(algorithms, encoded_algos, possible_algos, 12)
     abbrev = {'Naive Bayes':'NB','Logistic Regression':'LR','Decision Tree':'DT','Random Forest':'RF','Gradient Boosting':'GB','XGB':'XGB','LGB':'LGB','SVM':'SVM','ANN':'ANN','K Neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
     colors = {'Naive Bayes':'grey','Logistic Regression':'black','Decision Tree':'yellow','Random Forest':'orange','Gradient Boosting':'bisque','XGB':'purple','LGB':'aqua','SVM':'blue','ANN':'red','eLCS':'firebrick','XCS':'deepskyblue','K Neighbors':'seagreen','ExSTraCS':'lightcoral'}
-    original_headers = pd.read_csv(full_path+"/exploratory/OriginalHeaders.csv",sep=',').columns.values.tolist() #Get Original Headers
+    original_headers = pd.read_csv(full_path+"/exploratory/OriginalFeatureNames.csv",sep=',').columns.values.tolist() #Get Original Headers
     return algorithms,abbrev,colors,original_headers
 
 def decode(algorithms,encoded_algos,possible_algos,index):
@@ -163,7 +163,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
         #Gather statistics over all CV partitions
         for cvCount in range(0,cv_partitions):
             #Unpickle saved metrics from previous phase
-            result_file = full_path+'/training/'+abbrev[algorithm]+"_CV_"+str(cvCount)+"_metrics"
+            result_file = full_path+'/model_evaluation/pickled_metrics/'+abbrev[algorithm]+"_CV_"+str(cvCount)+"_metrics"
             file = open(result_file, 'rb')
             results = pickle.load(file)
             file.close()
@@ -249,7 +249,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             plt.ylabel('True Positive Rate')
             plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
             #Export and/or show plot
-            plt.savefig(full_path+'/training/results/'+abbrev[algorithm]+"_ROC.png", bbox_inches="tight")
+            plt.savefig(full_path+'/model_evaluation/'+abbrev[algorithm]+"_ROC.png", bbox_inches="tight")
             if eval(jupyterRun):
                 plt.show()
             else:
@@ -286,7 +286,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             plt.ylabel('Precision (PPV)')
             plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
             #Export and/or show plot
-            plt.savefig(full_path+'/training/results/'+abbrev[algorithm]+"_PRC.png", bbox_inches="tight")
+            plt.savefig(full_path+'/model_evaluation/'+abbrev[algorithm]+"_PRC.png", bbox_inches="tight")
             if eval(jupyterRun):
                 plt.show()
             else:
@@ -295,7 +295,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
         #Export and save all CV metric stats for each individual algorithm  -----------------------------------------------------------------------------
         results = {'Balanced Accuracy': s_bac, 'Accuracy': s_ac, 'F1_Score': s_f1, 'Sensitivity (Recall)': s_re, 'Specificity': s_sp,'Precision (PPV)': s_pr, 'TP': s_tp, 'TN': s_tn, 'FP': s_fp, 'FN': s_fn, 'NPV': s_npv, 'LR+': s_lrp, 'LR-': s_lrm, 'ROC_AUC': aucs,'PRC_AUC': praucs, 'PRC_APS': aveprecs}
         dr = pd.DataFrame(results)
-        filepath = full_path+'/training/results/'+abbrev[algorithm]+"_performance.csv"
+        filepath = full_path+'/model_evaluation/'+abbrev[algorithm]+"_performance.csv"
         dr.to_csv(filepath, header=True, index=False)
         metric_dict[algorithm] = results
 
@@ -317,9 +317,9 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
 def save_FI(FI_all,algorithm,globalFeatureList,full_path):
     """ Creates directory to store model feature importance results and, for each algorithm, exports a file of feature importance scores from each CV. """
     dr = pd.DataFrame(FI_all)
-    if not os.path.exists(full_path+'/training/results/FI/'):
-        os.mkdir(full_path+'/training/results/FI/')
-    filepath = full_path+'/training/results/FI/'+algorithm+"_FI.csv"
+    if not os.path.exists(full_path+'/model_evaluation/feature_importance/'):
+        os.mkdir(full_path+'/model_evaluation/feature_importance/')
+    filepath = full_path+'/model_evaluation/feature_importance/'+algorithm+"_FI.csv"
     dr.to_csv(filepath, header=globalFeatureList, index=False)
 
 def doPlotROC(result_table,colors,full_path,jupyterRun):
@@ -340,7 +340,7 @@ def doPlotROC(result_table,colors,full_path,jupyterRun):
     plt.ylabel("True Positive Rate", fontsize=15)
     plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
     #Export and/or show plot
-    plt.savefig(full_path+'/training/results/Summary_ROC.png', bbox_inches="tight")
+    plt.savefig(full_path+'/model_evaluation/Summary_ROC.png', bbox_inches="tight")
     if eval(jupyterRun):
         plt.show()
     else:
@@ -368,7 +368,7 @@ def doPlotPRC(result_table,colors,full_path,data_name,instance_label,class_label
     plt.ylabel("Precision (PPV)", fontsize=15)
     plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
     #Export and/or show plot
-    plt.savefig(full_path+'/training/results/Summary_PRC.png', bbox_inches="tight")
+    plt.savefig(full_path+'/model_evaluation/Summary_PRC.png', bbox_inches="tight")
     if eval(jupyterRun):
         plt.show()
     else:
@@ -376,7 +376,7 @@ def doPlotPRC(result_table,colors,full_path,data_name,instance_label,class_label
 
 def saveMetricMeans(full_path,metrics,metric_dict):
     """ Exports csv file with average metric values (over all CVs) for each ML modeling algorithm"""
-    with open(full_path+'/training/results/Summary_performance_mean.csv',mode='w', newline="") as file:
+    with open(full_path+'/model_evaluation/Summary_performance_mean.csv',mode='w', newline="") as file:
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         e = ['']
         e.extend(metrics)
@@ -395,7 +395,7 @@ def saveMetricMeans(full_path,metrics,metric_dict):
 
 def saveMetricStd(full_path,metrics,metric_dict):
     """ Exports csv file with metric value standard deviations (over all CVs) for each ML modeling algorithm"""
-    with open(full_path + '/training/results/Summary_performance_std.csv', mode='w', newline="") as file:
+    with open(full_path + '/model_evaluation/Summary_performance_std.csv', mode='w', newline="") as file:
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         e = ['']
         e.extend(metrics)
@@ -413,8 +413,8 @@ def saveMetricStd(full_path,metrics,metric_dict):
 
 def metricBoxplots(full_path,metrics,algorithms,metric_dict,jupyterRun):
     """ Export boxplots comparing algorithm performance for each standard metric"""
-    if not os.path.exists(full_path + '/training/results/performanceBoxplots'):
-        os.mkdir(full_path + '/training/results/performanceBoxplots')
+    if not os.path.exists(full_path + '/model_evaluation/metricBoxplots'):
+        os.mkdir(full_path + '/model_evaluation/metricBoxplots')
     for metric in metrics:
         tempList = []
         for algorithm in algorithms:
@@ -428,7 +428,7 @@ def metricBoxplots(full_path,metrics,algorithms,metric_dict,jupyterRun):
         plt.ylabel(str(metric))
         plt.xlabel('ML Algorithm')
         #Export and/or show plot
-        plt.savefig(full_path + '/training/results/performanceBoxplots/Compare_'+metric+'.png', bbox_inches="tight")
+        plt.savefig(full_path + '/model_evaluation/metricBoxplots/Compare_'+metric+'.png', bbox_inches="tight")
         if eval(jupyterRun):
             plt.show()
         else:
@@ -438,8 +438,8 @@ def kruskalWallis(full_path,metrics,algorithms,metric_dict,sig_cutoff):
     """ Apply non-parametric Kruskal Wallis one-way ANOVA on ranks. Determines if there is a statistically significant difference in algorithm performance across CV runs.
     Completed for each standard metric separately."""
     # Create directory to store significance testing results (used for both Kruskal Wallis and MannWhitney U-test)
-    if not os.path.exists(full_path + '/training/results/KWMW'):
-        os.mkdir(full_path + '/training/results/KWMW')
+    if not os.path.exists(full_path + '/model_evaluation/statistical_comparisons'):
+        os.mkdir(full_path + '/model_evaluation/statistical_comparisons')
     #Create dataframe to store analysis results for each metric
     label = ['Statistic', 'P-Value', 'Sig(*)']
     kruskal_summary = pd.DataFrame(index=metrics, columns=label)
@@ -459,7 +459,7 @@ def kruskalWallis(full_path,metrics,algorithms,metric_dict,sig_cutoff):
         else:
             kruskal_summary.at[metric, 'Sig(*)'] = str('')
     #Export analysis summary to .csv file
-    kruskal_summary.to_csv(full_path + '/training/results/KWMW/KruskalWallis.csv')
+    kruskal_summary.to_csv(full_path + '/model_evaluation/statistical_comparisons/KruskalWallis.csv')
     return kruskal_summary
 
 def wilcoxonRank(full_path,metrics,algorithms,metric_dict,kruskal_summary,sig_cutoff):
@@ -489,7 +489,7 @@ def wilcoxonRank(full_path,metrics,algorithms,metric_dict,kruskal_summary,sig_cu
             #Export test results
             wilcoxon_stats_df = pd.DataFrame(wilcoxon_stats)
             wilcoxon_stats_df.columns = ['Algorithm 1', 'Algorithm 2', 'Statistic', 'P-Value', 'Sig(*)']
-            wilcoxon_stats_df.to_csv(full_path + '/training/results/KWMW/WilcoxonRank_'+metric+'.csv', index=False)
+            wilcoxon_stats_df.to_csv(full_path + '/model_evaluation/statistical_comparisons/WilcoxonRank_'+metric+'.csv', index=False)
 
 def mannWhitneyU(full_path,metrics,algorithms,metric_dict,kruskal_summary,sig_cutoff):
     """ Apply non-parametric Mann Whitney U-test (pairwise comparisons). If a significant Kruskal Wallis algorithm difference was found for a given metric, Mann Whitney tests individual algorithm pairs
@@ -517,7 +517,7 @@ def mannWhitneyU(full_path,metrics,algorithms,metric_dict,kruskal_summary,sig_cu
             #Export test results
             mann_stats_df = pd.DataFrame(mann_stats)
             mann_stats_df.columns = ['Algorithm 1', 'Algorithm 2', 'Statistic', 'P-Value', 'Sig(*)']
-            mann_stats_df.to_csv(full_path + '/training/results/KWMW/MannWhitneyU_'+metric+'.csv', index=False)
+            mann_stats_df.to_csv(full_path + '/model_evaluation/statistical_comparisons/MannWhitneyU_'+metric+'.csv', index=False)
 
 
 def prepFI(algorithms,full_path,abbrev,metric_dict,primary_metric):
@@ -530,7 +530,7 @@ def prepFI(algorithms,full_path,abbrev,metric_dict,primary_metric):
     #Get necessary feature importance data and primary metric data (currenly only 'balanced accuracy' can be used for this)
     for algorithm in algorithms:
         # Get relevant feature importance info
-        temp_df = pd.read_csv(full_path+'/training/results/FI/'+abbrev[algorithm]+"_FI.csv") #CV FI scores for all original features in dataset.
+        temp_df = pd.read_csv(full_path+'/model_evaluation/feature_importance/'+abbrev[algorithm]+"_FI.csv") #CV FI scores for all original features in dataset.
         if algorithm == algorithms[0]:  # Should be same for all algorithm files (i.e. all original features in standard CV dataset order)
             all_feature_list = temp_df.columns.tolist()
         fi_df_list.append(temp_df)
@@ -608,7 +608,7 @@ def doFIBoxplots(full_path,fi_df_list,algorithms,original_headers,jupyterRun):
         plt.ylabel('Feature Importance Score')
         plt.xlabel('Features')
         plt.xticks(np.arange(1, len(original_headers) + 1), original_headers, rotation='vertical')
-        plt.savefig(full_path+'/training/results/FI/' + algorithms[counter] + '_boxplot',bbox_inches="tight")
+        plt.savefig(full_path+'/model_evaluation/feature_importance/' + algorithms[counter] + '_boxplot',bbox_inches="tight")
         if eval(jupyterRun):
             plt.show()
         else:
@@ -691,7 +691,7 @@ def composite_FI_plot(fi_list, algorithms, algColors, all_feature_listToViz, fig
     #plt.legend(lines[::-1], algorithms[::-1],loc="upper left", bbox_to_anchor=(1.01,1)) #legend outside plot
     plt.legend(lines[::-1], algorithms[::-1],loc="upper right")
     #Export and/or show plot
-    plt.savefig(full_path+'/training/results/FI/Compare_FI_' + figName + '.png', bbox_inches='tight')
+    plt.savefig(full_path+'/model_evaluation/feature_importance/Compare_FI_' + figName + '.png', bbox_inches='tight')
     if eval(jupyterRun):
         plt.show()
     else:

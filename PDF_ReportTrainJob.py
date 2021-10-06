@@ -88,7 +88,7 @@ def job(experiment_path):
         if n > 4: #more than 5 datasets
             break
         analy_report.y += 1
-        sig_df = pd.read_csv(experiment_path+'/'+ds[n]+'/exploratory/univariate/Significance.csv')
+        sig_df = pd.read_csv(experiment_path+'/'+ds[n]+'/exploratory/univariate_analyses/Univariate_Significance.csv')
         sig_ls = []
         sig_df = sig_df.nsmallest(10, ['p-value'])
         for i in range(len(sig_df)):
@@ -109,7 +109,7 @@ def job(experiment_path):
             if n > 9:
                 break
             analy_report.y += 1
-            sig_df = pd.read_csv(experiment_path+'/'+ds[n]+'/exploratory/univariate/Significance.csv')
+            sig_df = pd.read_csv(experiment_path+'/'+ds[n]+'/exploratory/univariate_analyses/Univariate_Significance.csv')
             sig_ls = []
             sig_df = sig_df.nsmallest(10, ['p-value'])
             for i in range(len(sig_df)):
@@ -130,7 +130,7 @@ def job(experiment_path):
             if n > 14:
                 break
             analy_report.y += 1
-            sig_df = pd.read_csv(experiment_path+'/'+ds[n]+'/exploratory/univariate/Significance.csv')
+            sig_df = pd.read_csv(experiment_path+'/'+ds[n]+'/exploratory/univariate_analyses/Univariate_Significance.csv')
             sig_ls = []
             sig_df = sig_df.nsmallest(10, ['p-value'])
             for i in range(len(sig_df)):
@@ -151,7 +151,7 @@ def job(experiment_path):
             if n > 19:
                 break
             analy_report.y += 1
-            sig_df = pd.read_csv(experiment_path+'/'+ds[n]+'/exploratory/univariate/Significance.csv')
+            sig_df = pd.read_csv(experiment_path+'/'+ds[n]+'/exploratory/univariate_analyses/Univariate_Significance.csv')
             sig_ls = []
             sig_df = sig_df.nsmallest(10, ['p-value'])
             for i in range(len(sig_df)):
@@ -173,7 +173,7 @@ def job(experiment_path):
         analy_report.set_font(family='times', size=9)
 
         #Exploratory Analysis ----------------------------
-        analy_report.image(experiment_path+'/'+ds[n]+'/exploratory/ClassCounts.png', 5, 12, 70,48) #10, 30, 82)
+        analy_report.image(experiment_path+'/'+ds[n]+'/exploratory/ClassCountsBarPlot.png', 5, 12, 70,48) #10, 30, 82)
 
         analy_report.x = 125
         analy_report.y = 55
@@ -195,7 +195,7 @@ def job(experiment_path):
         analy_report.multi_cell(w=40, h=4, txt='Variable:  Count'+'\n'+listToString(info_ls), border=1, align='L')
 
         #Report Best Algorithms by metric
-        summary_performance = pd.read_csv(experiment_path+'/'+ds[n]+"/training/results/Summary_performance_mean.csv")
+        summary_performance = pd.read_csv(experiment_path+'/'+ds[n]+"/model_evaluation/Summary_performance_mean.csv")
         summary_performance['ROC_AUC'] = summary_performance['ROC_AUC'].astype(float)
         highest_ROC = summary_performance['ROC_AUC'].max()
         algorithm = summary_performance[summary_performance['ROC_AUC'] == highest_ROC].index.values
@@ -233,15 +233,15 @@ def job(experiment_path):
         analy_report.x = 5
         analy_report.y = 112
         analy_report.cell(10, 4, 'ROC', 1, align="L")
-        analy_report.image(experiment_path+'/'+ds[n]+'/training/results/Summary_ROC.png', 4, 118, 120)
-        analy_report.image(experiment_path+'/'+ds[n]+'/training/results/performanceBoxplots/Compare_ROC_AUC.png', 124, 118, 82,85)
+        analy_report.image(experiment_path+'/'+ds[n]+'/model_evaluation/Summary_ROC.png', 4, 118, 120)
+        analy_report.image(experiment_path+'/'+ds[n]+'/model_evaluation/metricBoxplots/Compare_ROC_AUC.png', 124, 118, 82,85)
 
         #PRC-------------------------------
         analy_report.x = 5
         analy_report.y = 200
         analy_report.cell(10, 4, 'PRC', 1, align="L")
-        analy_report.image(experiment_path+'/'+ds[n]+'/training/results/Summary_PRC.png', 4, 206, 133) #wider to account for more text
-        analy_report.image(experiment_path+'/'+ds[n]+'/training/results/performanceBoxplots/Compare_PRC_AUC.png', 138, 205, 68,80)
+        analy_report.image(experiment_path+'/'+ds[n]+'/model_evaluation/Summary_PRC.png', 4, 206, 133) #wider to account for more text
+        analy_report.image(experiment_path+'/'+ds[n]+'/model_evaluation/metricBoxplots/Compare_PRC_AUC.png', 138, 205, 68,80)
 
         footer(analy_report)
 
@@ -255,7 +255,7 @@ def job(experiment_path):
         analy_report.cell(w=0, h = 8, txt="Average Model Prediction Statistics:  D"+str(n+1)+" = "+ds[n], border=1, align="L", ln=2)
         analy_report.set_font(family='times', size=7)
 
-        stats_ds = pd.read_csv(experiment_path+'/'+str(ds[n])+'/training/results/Summary_performance_mean.csv',sep=',',index_col=0)
+        stats_ds = pd.read_csv(experiment_path+'/'+str(ds[n])+'/model_evaluation/Summary_performance_mean.csv',sep=',',index_col=0)
         stats_ds = stats_ds.round(4)
 
         #Format
@@ -288,22 +288,36 @@ def job(experiment_path):
         footer(analy_report)
 
     #ML Dataset Feature Importance Summary----------------------------------------------------------------
+    print("Publishing Feature Importance Summaries")
     for k in range(len(ds)):
         analy_report.add_page()
         analy_report.set_font('Times', 'B', 12)
         analy_report.cell(w=0, h = 8, txt="ML Feature Importance Summary:  D"+str(k+1) +' = '+ ds[k], border=1, align="L", ln=2)
         analy_report.set_font(family='times', size=9)
 
-        analy_report.image(experiment_path+'/'+ds[k]+'/mutualinformation/TopAverageScores.png', 5, 12, 100,135) #Images adjusted to fit a width of 100 and length of 135
-        analy_report.image(experiment_path+'/'+ds[k]+'/multisurf/TopAverageScores.png', 105, 12, 100,135)
+        analy_report.image(experiment_path+'/'+ds[k]+'/feature_selection/mutualinformation/TopAverageScores.png', 5, 12, 100,135) #Images adjusted to fit a width of 100 and length of 135
+        analy_report.image(experiment_path+'/'+ds[k]+'/feature_selection/multisurf/TopAverageScores.png', 105, 12, 100,135)
 
         analy_report.x = 0
         analy_report.y = 150
         analy_report.cell(0, 8, "Composite Feature Importance Plot", 1, align="L")
             #Images
 
-        analy_report.image(experiment_path+'/'+ds[k]+'/training/results/FI/Compare_FI_Norm_Weight.png', 5, 159, 200)
+        analy_report.image(experiment_path+'/'+ds[k]+'/model_evaluation/feature_importance/Compare_FI_Norm_Weight.png', 5, 159, 200)
         footer(analy_report)
+
+    #Create Dataset Boxplot Comparison Page---------------------------------------
+    print("Publishing Dataset Comparison Boxplots")
+    analy_report.add_page()
+    analy_report.set_font('Times', 'B', 12)
+    analy_report.cell(w=0, h = 8, txt="Compare ML Performance Across Datasets", border=1, align="L", ln=2)
+    analy_report.set_font(family='times', size=9)
+
+    analy_report.image(experiment_path+'/DatasetComparisons/dataCompBoxplots/'+'DataCompareAllModels_ROC_AUC.png',  5, 12, 170, 130) #Images adjusted to fit a width of 100 and length of 135
+    #analy_report.x = 0
+    #analy_report.y = 150
+    analy_report.image(experiment_path+'/DatasetComparisons/dataCompBoxplots/'+'DataCompareAllModels_PRC_AUC.png',  5, 150, 170, 130) #Images adjusted to fit a width of 100 and length of 135
+    footer(analy_report)
 
     #Create Best Kruskall Wallis Dataset Comparison Page---------------------------------------
     print("Publishing Statistical Analysis")

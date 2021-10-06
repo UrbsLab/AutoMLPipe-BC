@@ -29,10 +29,10 @@ def job(experiment_path,data_path):
         dataset_name = datasetFilename.split('/')[-1].split('.')[0]
         if not os.path.exists(experiment_path+'/KeyFileCopy'+ '/' + dataset_name):
             os.mkdir(experiment_path+'/KeyFileCopy'+ '/' + dataset_name)
-            os.mkdir(experiment_path+'/KeyFileCopy'+ '/' + dataset_name+'/results')
+            os.mkdir(experiment_path+'/KeyFileCopy'+ '/' + dataset_name+'/model_evaluation')
             #copy respective results folder
-            copy_tree(experiment_path+ '/' + dataset_name+'/training'+'/results/', experiment_path+'/KeyFileCopy'+ '/' + dataset_name+'/results/')
-            shutil.copy(experiment_path+ '/' + dataset_name+'/exploratory/'+'ClassCounts.png', experiment_path+'/KeyFileCopy'+ '/' + dataset_name +'/' +'ClassCounts.png')
+            copy_tree(experiment_path+ '/' + dataset_name+'/model_evaluation/', experiment_path+'/KeyFileCopy'+ '/' + dataset_name+'/model_evaluation/')
+            shutil.copy(experiment_path+ '/' + dataset_name+'/exploratory/'+'ClassCountsBarPlot.png', experiment_path+'/KeyFileCopy'+ '/' + dataset_name +'/' +'ClassCountsBarPlot.png')
             shutil.copy(experiment_path+ '/' + dataset_name+'/exploratory/'+'ClassCounts.csv', experiment_path+'/KeyFileCopy'+ '/' + dataset_name +'/' +'ClassCounts.csv')
             shutil.copy(experiment_path+ '/' + dataset_name+'/exploratory/'+'DataCounts.csv', experiment_path+'/KeyFileCopy'+ '/' + dataset_name +'/' +'DataCounts.csv')
             shutil.copy(experiment_path+ '/' + dataset_name+'/exploratory/'+'DataMissingness.csv', experiment_path+'/KeyFileCopy'+ '/' + dataset_name +'/' +'DataMissingness.csv')

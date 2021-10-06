@@ -214,10 +214,12 @@ def main(argv):
         dataset_paths.remove('metadata.csv')
         for dataset_directory_path in dataset_paths:
             full_path = options.output_path + "/" + options.experiment_name + "/" + dataset_directory_path
-            if not os.path.exists(full_path+'/training'):
-                os.mkdir(full_path+'/training')
-            if not os.path.exists(full_path+'/training/pickledModels'):
-                os.mkdir(full_path+'/training/pickledModels')
+            if not os.path.exists(full_path+'/models'):
+                os.mkdir(full_path+'/models')
+            if not os.path.exists(full_path+'/model_evaluation'):
+                os.mkdir(full_path+'/model_evaluation')
+            if not os.path.exists(full_path+'/models/pickledModels'):
+                os.mkdir(full_path+'/models/pickledModels')
             for cvCount in range(cv_partitions):
                 train_file_path = full_path+'/CVDatasets/'+dataset_directory_path+"_CV_"+str(cvCount)+"_Train.csv"
                 test_file_path = full_path + '/CVDatasets/' + dataset_directory_path + "_CV_" + str(cvCount) + "_Test.csv"

@@ -150,7 +150,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
         s_lrm = [] # likelihood ratio negative values
         # Define feature importance lists
         FI_all = [] # used to save model feature importances individually for each cv within single summary file (all original features in dataset prior to feature selection included)
-        FI_ave = [0] * len(original_headers)  # used to save average FI scores over all cvs. (all original features in dataset prior to feature selection included)
+        #FI_ave = [0] * len(original_headers)  # used to save average FI scores over all cvs. (all original features in dataset prior to feature selection included)
         # Define ROC plot variable lists
         tprs = [] # true postitive rates
         aucs = [] #areas under ROC curve
@@ -212,7 +212,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
                 if each in headers:  # Check if current feature from original dataset was in the partition
                     # Deal with features not being in original order (find index of current feature list.index()
                     f_index = headers.index(each)
-                    FI_ave[j] += fi[f_index]
+                    #FI_ave[j] += fi[f_index]
                     tempList.append(fi[f_index])
                 else:
                     tempList.append(0)
@@ -300,8 +300,9 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
         metric_dict[algorithm] = results
 
         #Turn FI sums into averages
-        for i in range(0, len(FI_ave)):
-            FI_ave[i] = FI_ave[i] / float(cv_partitions)
+        #for i in range(0, len(FI_ave)):
+        #    FI_ave[i] = FI_ave[i] / float(cv_partitions)
+
         #Save Average FI Stats
         save_FI(FI_all, abbrev[algorithm], original_headers, full_path)
 

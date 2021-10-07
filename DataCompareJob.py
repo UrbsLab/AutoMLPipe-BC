@@ -113,7 +113,7 @@ def kruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_directory
         kruskal_summary.to_csv(experiment_path+'/DatasetComparisons/KruskalWallis_'+algorithm+'.csv')
 
 def wilcoxonRank(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff):
-    """ For each algorithm, apply non-parametric Mann Whitney U-test (pairwise comparisons). Mann Whitney tests individual algorithm pairs of original target datasets (for each metric)
+    """ For each algorithm, apply non-parametric Wilcoxon Rank Sum (pairwise comparisons). This tests individual algorithm pairs of original target datasets (for each metric)
     to determine if there is a statistically significant difference in performance across CV runs. Test statistic will be zero if all scores from one set are
     larger than the other."""
     label = ['Metric', 'Data1', 'Data2', 'Statistic', 'P-Value', 'Sig(*)']

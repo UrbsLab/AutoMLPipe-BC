@@ -62,7 +62,7 @@ def reportAveFS(algorithm,algorithmlabel,cv_partitions,top_results,full_path,sel
     cv_keep_list = []
     feature_name_ranks = [] #stores sorded feature importance dictionaries for all CVs
     for i in range(0,cv_partitions):
-        scoreInfo = full_path+"/"+algorithmlabel+"/pickledForPhase4/"+str(i)
+        scoreInfo = full_path+"/feature_selection/"+algorithmlabel+"/pickledForPhase4/"+str(i)
         file = open(scoreInfo, 'rb')
         rawData = pickle.load(file)
         file.close()
@@ -105,7 +105,7 @@ def reportAveFS(algorithm,algorithmlabel,cv_partitions,top_results,full_path,sel
         plt.xlabel(str(algorithm) + ' Score')
         plt.yticks(np.arange(len(ns['Names'])), ns['Names'])
         plt.title('Sorted ' + str(algorithm) + ' Scores')
-        plt.savefig((full_path+"/"+algorithmlabel+"/TopAverageScores.png"), bbox_inches="tight")
+        plt.savefig((full_path+"/feature_selection/"+algorithmlabel+"/TopAverageScores.png"), bbox_inches="tight")
         if eval(jupyterRun):
             plt.show()
         else:

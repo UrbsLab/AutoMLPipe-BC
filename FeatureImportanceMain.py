@@ -72,9 +72,13 @@ def main(argv):
             full_path = options.output_path+"/"+options.experiment_name+"/"+dataset_directory_path
             experiment_path = options.output_path+'/'+options.experiment_name
 
+            if eval(options.do_mutual_info) or eval(options.do_multisurf):
+                if not os.path.exists(full_path+"/feature_selection"):
+                    os.mkdir(full_path+"/feature_selection")
+
             if eval(options.do_mutual_info):
-                if not os.path.exists(full_path+"/mutualinformation"):
-                    os.mkdir(full_path+"/mutualinformation")
+                if not os.path.exists(full_path+"/feature_selection/mutualinformation"):
+                    os.mkdir(full_path+"/feature_selection/mutualinformation")
                 for cv_train_path in glob.glob(full_path+"/CVDatasets/*_CV_*Train.csv"):
                     command_text = '/FeatureImportanceJob.py ' + cv_train_path+" "+experiment_path+" "+str(random_state)+" "+class_label+" "+instance_label+" " +str(options.instance_subset)+" mi "+str(options.n_jobs)+' '+str(options.use_TURF)+' '+str(options.TURF_pct)
                     if eval(options.run_parallel):
@@ -84,8 +88,8 @@ def main(argv):
                         submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,options.instance_subset,'mi',options.n_jobs,options.use_TURF,options.TURF_pct)
 
             if eval(options.do_multisurf):
-                if not os.path.exists(full_path+"/multisurf"):
-                    os.mkdir(full_path+"/multisurf")
+                if not os.path.exists(full_path+"/feature_selection/multisurf"):
+                    os.mkdir(full_path+"/feature_selection/multisurf")
                 for cv_train_path in glob.glob(full_path+"/CVDatasets/*_CV_*Train.csv"):
                     command_text = '/FeatureImportanceJob.py ' + cv_train_path+" "+experiment_path+" "+str(random_state)+" "+class_label+" "+instance_label+" " +str(options.instance_subset)+" ms "+str(options.n_jobs)+' '+str(options.use_TURF)+' '+str(options.TURF_pct)
                     if eval(options.run_parallel):

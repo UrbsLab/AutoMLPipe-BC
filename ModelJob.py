@@ -96,7 +96,9 @@ def runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout
     elif algorithm == 'ExSTraCS':
         ret = run_ExSTraCS_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, lcs_timeout,export_hyper_sweep_plots, full_path,filter_poor_features,instance_label,class_label,use_uniform_FI,primary_metric)
     #Pickle all evaluation metrics for ML model training and evaluation
-    pickle.dump(ret, open(full_path + '/training/' + abbrev[algorithm] + '_CV_' + str(cvCount) + "_metrics", 'wb'))
+    if not os.path.exists(full_path+'/model_evaluation/pickled_metrics'):
+        os.mkdir(full_path+'/model_evaluation/pickled_metrics')
+    pickle.dump(ret, open(full_path + '/model_evaluation/pickled_metrics/' + abbrev[algorithm] + '_CV_' + str(cvCount) + "_metrics", 'wb'))
     #Save runtime of ml algorithm training and evaluation
     saveRuntime(full_path,job_start_time,abbrev,algorithm,cvCount)
     # Print phase completion
@@ -146,7 +148,7 @@ def run_NB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     clf = GaussianNB()
     model = clf.fit(x_train, y_train)
     #Save model
-    pickle.dump(model, open(full_path+'/training/pickledModels/NB_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/NB_'+str(i), 'wb'))
     #Prediction evaluation
     y_pred = clf.predict(x_test)
     metricList = classEval(y_test, y_pred)
@@ -195,9 +197,7 @@ def run_LR_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
-            print('viz')
-            fig.write_image(full_path+'/training/LR_ParamOptimization_'+str(i)+'.png')
-        print('4th')
+            fig.write_image(full_path+'/models/LR_ParamOptimization_'+str(i)+'.png')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial
@@ -208,18 +208,18 @@ def run_LR_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         # Specify model with optimized hyperparameters
         est = LogisticRegression()
         clf = est.set_params(**best_trial.params)
-        export_best_params(full_path + '/training/LR_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/LR_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
     else: #Specify hyperparameter values (no sweep)
         params = copy.deepcopy(param_grid)
         for key, value in param_grid.items():
             params[key] = value[0]
         clf = est.set_params(**params)
-        export_best_params(full_path + '/training/LR_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/LR_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/training/pickledModels/LR_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/LR_'+str(i), 'wb'))
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -274,7 +274,7 @@ def run_DT_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
-            fig.write_image(full_path+'/training/DT_ParamOptimization_'+str(i)+'.png')
+            fig.write_image(full_path+'/models/DT_ParamOptimization_'+str(i)+'.png')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial
@@ -285,18 +285,18 @@ def run_DT_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         # Specify model with optimized hyperparameters
         est = tree.DecisionTreeClassifier()
         clf = est.set_params(**best_trial.params)
-        export_best_params(full_path + '/training/DT_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/DT_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
     else: #Specify hyperparameter values (no sweep)
         params = copy.deepcopy(param_grid)
         for key, value in param_grid.items():
             params[key] = value[0]
         clf = est.set_params(**params)
-        export_best_params(full_path + '/training/DT_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/DT_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/training/pickledModels/DT_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/DT_'+str(i), 'wb'))
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -353,7 +353,7 @@ def run_RF_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
-            fig.write_image(full_path+'/training/RF_ParamOptimization_'+str(i)+'.png')
+            fig.write_image(full_path+'/models/RF_ParamOptimization_'+str(i)+'.png')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial
@@ -364,18 +364,18 @@ def run_RF_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         # Specify model with optimized hyperparameters
         est = RandomForestClassifier()
         clf = est.set_params(**best_trial.params)
-        export_best_params(full_path + '/training/RF_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/RF_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
     else: #Specify hyperparameter values (no sweep)
         params = copy.deepcopy(param_grid)
         for key, value in param_grid.items():
             params[key] = value[0]
         clf = est.set_params(**params)
-        export_best_params(full_path + '/training/RF_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/RF_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/training/pickledModels/RF_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/RF_'+str(i), 'wb'))
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -429,7 +429,7 @@ def run_GB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
-            fig.write_image(full_path+'/training/GB_ParamOptimization_'+str(i)+'.png')
+            fig.write_image(full_path+'/models/GB_ParamOptimization_'+str(i)+'.png')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial
@@ -440,18 +440,18 @@ def run_GB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         # Specify model with optimized hyperparameters
         est = GradientBoostingClassifier()
         clf = est.set_params(**best_trial.params)
-        export_best_params(full_path + '/training/GB_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/GB_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
     else: #Specify hyperparameter values (no sweep)
         params = copy.deepcopy(param_grid)
         for key, value in param_grid.items():
             params[key] = value[0]
         clf = est.set_params(**params)
-        export_best_params(full_path + '/training/GB_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/GB_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/training/pickledModels/GB_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/GB_'+str(i), 'wb'))
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -525,7 +525,7 @@ def run_XGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
-            fig.write_image(full_path+'/training/XGB_ParamOptimization_'+str(i)+'.png')
+            fig.write_image(full_path+'/models/XGB_ParamOptimization_'+str(i)+'.png')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial
@@ -536,19 +536,19 @@ def run_XGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         # Specify model with optimized hyperparameters
         est = xgb.XGBClassifier()
         clf = clone(est).set_params(**best_trial.params)
-        export_best_params(full_path + '/training/XGB_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/XGB_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
         setattr(clf, 'random_state', randSeed)
     else: #Specify hyperparameter values (no sweep)
         params = copy.deepcopy(param_grid)
         for key, value in param_grid.items():
             params[key] = value[0]
         clf = est.set_params(**params)
-        export_best_params(full_path + '/training/XGB_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/XGB_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/training/pickledModels/XGB_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/XGB_'+str(i), 'wb'))
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -613,7 +613,7 @@ def run_LGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
-            fig.write_image(full_path+'/training/LGB_ParamOptimization_'+str(i)+'.png')
+            fig.write_image(full_path+'/models/LGB_ParamOptimization_'+str(i)+'.png')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial
@@ -624,18 +624,18 @@ def run_LGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         # Specify model with optimized hyperparameters
         est = lgb.LGBMClassifier()
         clf = est.set_params(**best_trial.params)
-        export_best_params(full_path + '/training/LGB_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/LGB_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
     else: #Specify hyperparameter values (no sweep)
         params = copy.deepcopy(param_grid)
         for key, value in param_grid.items():
             params[key] = value[0]
         clf = est.set_params(**params)
-        export_best_params(full_path + '/training/LGB_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/LGB_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/training/pickledModels/LGB_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/LGB_'+str(i), 'wb'))
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -695,7 +695,7 @@ def run_SVM_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
-            fig.write_image(full_path+'/training/SVM_ParamOptimization_'+str(i)+'.png')
+            fig.write_image(full_path+'/models/SVM_ParamOptimization_'+str(i)+'.png')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial
@@ -706,18 +706,18 @@ def run_SVM_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         # Specify model with optimized hyperparameters
         est = SVC()
         clf = est.set_params(**best_trial.params)
-        export_best_params(full_path + '/training/SVM_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/SVM_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
     else: #Specify hyperparameter values (no sweep)
         params = copy.deepcopy(param_grid)
         for key, value in param_grid.items():
             params[key] = value[0]
         clf = est.set_params(**params)
-        export_best_params(full_path + '/training/SVM_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/SVM_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/training/pickledModels/SVM_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/SVM_'+str(i), 'wb'))
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -781,7 +781,7 @@ def run_ANN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
-            fig.write_image(full_path+'/training/ANN_ParamOptimization_'+str(i)+'.png')
+            fig.write_image(full_path+'/models/ANN_ParamOptimization_'+str(i)+'.png')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial
@@ -800,18 +800,18 @@ def run_ANN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         # Specify model with optimized hyperparameters
         est = MLPClassifier()
         clf = est.set_params(**best_trial.params)
-        export_best_params(full_path + '/training/ANN_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/ANN_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
     else: #Specify hyperparameter values (no sweep)
         params = copy.deepcopy(param_grid)
         for key, value in param_grid.items():
             params[key] = value[0]
         clf = est.set_params(**params)
-        export_best_params(full_path + '/training/ANN_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/ANN_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/training/pickledModels/ANN_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/ANN_'+str(i), 'wb'))
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -866,7 +866,7 @@ def run_KN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
-            fig.write_image(full_path+'/training/KN_ParamOptimization_'+str(i)+'.png')
+            fig.write_image(full_path+'/models/KN_ParamOptimization_'+str(i)+'.png')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial
@@ -877,18 +877,18 @@ def run_KN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         # Specify model with optimized hyperparameters
         est = KNeighborsClassifier()
         clf = est.set_params(**best_trial.params)
-        export_best_params(full_path + '/training/KN_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/KN_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
     else: #Specify hyperparameter values (no sweep)
         params = copy.deepcopy(param_grid)
         for key, value in param_grid.items():
             params[key] = value[0]
         clf = est.set_params(**params)
-        export_best_params(full_path + '/training/KN_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/KN_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/training/pickledModels/KN_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/KN_'+str(i), 'wb'))
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -935,7 +935,7 @@ def run_eLCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trial
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
-            fig.write_image(full_path+'/training/eLCS_ParamOptimization_'+str(i)+'.png')
+            fig.write_image(full_path+'/models/eLCS_ParamOptimization_'+str(i)+'.png')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial
@@ -945,18 +945,18 @@ def run_eLCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trial
             print('    {}: {}'.format(key, value))
         # Specify model with optimized hyperparameters
         clf = est.set_params(**best_trial.params)
-        export_best_params(full_path + '/training/eLCS_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/eLCS_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
     else: #Specify hyperparameter values (no sweep)
         params = copy.deepcopy(param_grid)
         for key, value in param_grid.items():
             params[key] = value[0]
         clf = est.set_params(**params)
-        export_best_params(full_path + '/training/eLCS_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/eLCS_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/training/pickledModels/eLCS_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/eLCS_'+str(i), 'wb'))
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -1006,7 +1006,7 @@ def run_XCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
-            fig.write_image(full_path+'/training/XCS_ParamOptimization_'+str(i)+'.png')
+            fig.write_image(full_path+'/models/XCS_ParamOptimization_'+str(i)+'.png')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial
@@ -1016,18 +1016,18 @@ def run_XCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
             print('    {}: {}'.format(key, value))
         # Specify model with optimized hyperparameters
         clf = est.set_params(**best_trial.params)
-        export_best_params(full_path + '/training/XCS_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/XCS_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
     else: #Specify hyperparameter values (no sweep)
         params = copy.deepcopy(param_grid)
         for key, value in param_grid.items():
             params[key] = value[0]
         clf = est.set_params(**params)
-        export_best_params(full_path + '/training/XCS_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/XCS_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/training/pickledModels/XCS_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/XCS_'+str(i), 'wb'))
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -1116,7 +1116,7 @@ def run_ExSTraCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_t
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
-            fig.write_image(full_path+'/training/ExSTraCS_ParamOptimization_'+str(i)+'.png')
+            fig.write_image(full_path+'/models/ExSTraCS_ParamOptimization_'+str(i)+'.png')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial
@@ -1126,7 +1126,7 @@ def run_ExSTraCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_t
             print('    {}: {}'.format(key, value))
         # Specify model with optimized hyperparameters
         clf = est.set_params(**best_trial.params)
-        export_best_params(full_path+'/training/ExSTraCS_bestparams'+str(i)+'.csv',best_trial.params) #Export final model hyperparamters to csv file
+        export_best_params(full_path+'/models/ExSTraCS_bestparams'+str(i)+'.csv',best_trial.params) #Export final model hyperparamters to csv file
     else: #Specify hyperparameter values (no sweep)
         params = copy.deepcopy(param_grid)
         for key, value in param_grid.items():
@@ -1135,12 +1135,12 @@ def run_ExSTraCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_t
             else:
                 params[key] = value[0]
         clf = est.set_params(**params)
-        export_best_params(full_path + '/training/ExSTraCS_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/ExSTraCS_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/training/pickledModels/ExSTraCS_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/ExSTraCS_'+str(i), 'wb'))
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics

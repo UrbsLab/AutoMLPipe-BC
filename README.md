@@ -231,53 +231,53 @@ The primary way to run AutoMLPipe-BC is via the command line, one phase at a tim
 ### Local Run Example
 Below we give an example of the set of all commands needed to run AutoMLPipe-BC in it's entirety using mostly default run parameters. In this example we specify instance and class label run parameters to emphasize the importance setting these values correctly.
 ```
-python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test --instance-label InstanceID --class-label Class --run-parallel False
+python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --out-path /myoutputpath/output --exp-name hcc_test --inst-label InstanceID --class-label Class --run-parallel False
 
-python DataPreprocessingMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+python DataPreprocessingMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
 
-python FeatureImportanceMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+python FeatureImportanceMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
 
-python FeatureSelectionMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+python FeatureSelectionMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
 
-python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+python ModelMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
 
-python StatsMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+python StatsMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
 
-python DataCompareMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+python DataCompareMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
 
-python KeyFileCopyMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+python KeyFileCopyMain.py --data-path /mydatapath/TestData --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
 
-python PDF_ReportTrainMain.py --output-path /myoutputpath/output --experiment-name hcc_test --run-parallel False
+python PDF_ReportTrainMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
 
-python ApplyModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv --run-parallel False
+python ApplyModelMain.py --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv --run-parallel False
 
-python PDF_ReportApplyMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv --run-parallel False
+python PDF_ReportApplyMain.py --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv --run-parallel False
 ```
 
 ### Computing Cluster Run (Parallelized) Example
 Below we give the same set of AutoMLPipe-BC run command, however in each, the run parameter --run-parallel is left to its default value of 'True'.
 ```
-python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test --instance-label InstanceID --class-label Class
+python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --out-path /myoutputpath/output --exp-name hcc_test --inst-label InstanceID --class-label Class
 
-python DataPreprocessingMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python DataPreprocessingMain.py --out-path /myoutputpath/output --exp-name hcc_test
 
-python FeatureImportanceMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python FeatureImportanceMain.py --out-path /myoutputpath/output --exp-name hcc_test
 
-python FeatureSelectionMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python FeatureSelectionMain.py --out-path /myoutputpath/output --exp-name hcc_test
 
-python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python ModelMain.py --out-path /myoutputpath/output --exp-name hcc_test
 
-python StatsMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python StatsMain.py --out-path /myoutputpath/output --exp-name hcc_test
 
-python DataCompareMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python DataCompareMain.py --out-path /myoutputpath/output --exp-name hcc_test
 
-python KeyFileCopyMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test
+python KeyFileCopyMain.py --data-path /mydatapath/TestData --out-path /myoutputpath/output --exp-name hcc_test
 
-python PDF_ReportTrainMain.py --output-path /myoutputpath/output --experiment-name hcc_test
+python PDF_ReportTrainMain.py --out-path /myoutputpath/output --exp-name hcc_test
 
-python ApplyModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
+python ApplyModelMain.py --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
 
-python PDF_ReportApplyMain.py --output-path /myoutputpath/output --experiment-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
+python PDF_ReportApplyMain.py --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
 ```
 
 ### Checking Phase Completion
@@ -285,7 +285,7 @@ After running any of Phases 1-6 a 'phase-complete' file is automatically generat
 
 For example, after running ModelMain.py, the following command can be given to check whether all jobs have been completed.
 ```
-python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test -c
+python ModelMain.py --out-path /myoutputpath/output --exp-name hcc_test -c
 ```
 
 ## Phase Details (Run Parameters and Additional Examples)
@@ -321,19 +321,19 @@ Run parameters for ExploratoryAnalysisMain.py:
 #### Example: Data with instances matched by one or more covariates
 Run on dataset with a match label (i.e. a column that identifies groups of instances matched by one or more covariates to remove their effect). Here we specify the use of matched CV partitioning and indicate the column label including the matched instance group identifiers. All instances with the same unique identifier in this column are assumed to be a part of a matched group, and are kept together within a given data partition.
 ```
-python ExploratoryAnalysisMain.py --data-path /mydatapath/MatchData --output-path /myoutputpath/output --experiment-name match_test --part M --match-label MatchGroups
+python ExploratoryAnalysisMain.py --data-path /mydatapath/MatchData --out-path /myoutputpath/output --exp-name match_test --part M --match-label MatchGroups
 ```
 
 #### Example: Ignore specified feature columns in data
 A convenience for running the analysis, but ignoring one or more feature columns that were originally included in the dataset.  
 ```
-python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test --fi /mydatapath/ignoreFeatureList.csv
+python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --out-path /myoutputpath/output --exp-name hcc_test --fi /mydatapath/ignoreFeatureList.csv
 ```
 
 #### Example: Specify features to treat as categorical
 By default AutoMLPipe-BC uses the --cat-cutoff parameter to try and automatically decide what features to treat as categorical (i.e. are there < 10 unique values in the feature column) vs. continuous valued. With this option the user can specify the list of feature names to explicitly treat as categorical. Currently this only impacts the exploratory analysis as well as the imputation in data preprocessing. The identification of categorical variables within AutoMLPipe-BC has no impact on ML modeling.
 ```
-python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --output-path /myoutputpath/output --experiment-name hcc_test --cf /mydatapath/categoricalFeatureList.csv
+python ExploratoryAnalysisMain.py --data-path /mydatapath/TestData --out-path /myoutputpath/output --exp-name hcc_test --cf /mydatapath/categoricalFeatureList.csv
 ```
 
 ### Phase 2: Data Preprocessing
@@ -345,6 +345,7 @@ Run parameters for DataPreprocessingMain.py:
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |
 | --scale | perform data scaling (required for SVM, and to use Logistic regression with non-uniform feature importance estimation) | True |
 | --impute | perform missing value data imputation (required for most ML algorithms if missing data is present) | True |
+| --multi-impute | applies multivariate imputation to quantitative features, otherwise uses median imputation | True |
 | --over-cv | overwrites earlier cv datasets with new scaled/imputed ones | True |
 | --run-parallel | if run parallel | True |
 | --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
@@ -431,25 +432,25 @@ Run parameters for ModelMain.py:
 #### Example: Run only one ML modeling algorithm
 By default AutoMLPipe-BC runs all ML modeling algorithms. If the user only wants to run one (or a small number) of these algorithms, they can run the following command first turning all algorithms off, then specifying the ones to activate. In this example we only run random forest. Other algorithms could be specified as True here to run them as well.
 ```
-python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --do-all False --do-RF True
+python ModelMain.py --out-path /myoutputpath/output --exp-name hcc_test --do-all False --do-RF True
 ```
 
 #### Example: Utilize the same model feature importance estimation for all algorithms
 By default AutoMLPipe-BC uses any feature importance estimation that may already be available for a given algorithm.  However, Naive Bayes, Support Vector Machines (for non-linear kernels), ANN, and k-NN do not have such built in estimates. By default, these instead estimate model feature importances using a permutation-based estimator. However, to more consistently compare feature importance scores across algorithms, the user may wish to apply the permutation-based estimator uniformly across all algorithms. This is illustrated in the following example:
 ```
-python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --use-uniformFI True
+python ModelMain.py --out-path /myoutputpath/output --exp-name hcc_test --use-uniformFI True
 ```
 
 #### Example: Specify an alternative primary evaluation metric
 By default AutoMLPipe-BC uses balanced accuracy as it's primary evaluation metric for both hyperparameter optimization and permutation-based model feature importance evaluation. However any classification metrics defined by scikit-learn (see https://scikit-learn.org/stable/modules/model_evaluation.html) could be used instead.  We chose balanced accuracy because it equally values accurate prediction of both 'positive' and 'negative' classes, and accounts for class imbalance. In this example we change this metric to the F1 score.
 ```
-python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --metric f1
+python ModelMain.py --out-path /myoutputpath/output --exp-name hcc_test --metric f1
 ```
 
 #### Example: Reduce computational burden of algorithms that run slow in large instance spaces
 By default AutoMLPipe-BC uses all available training instances to train each specified ML algorithm. However XGB, SVM, ANN, and k-NN can run very slowly when the number of training instances is very large. To be able to run these algorithms in a reasonable amount of time this pipeline includes the option to specify a random (class-balance-preserved) subset of the training instances upon which to train. In this example we set this training sample to 2000. This will only be applied to the 4 aformentioned algorithms.  All others will still train on the entire training set.
 ```
-python ModelMain.py --output-path /myoutputpath/output --experiment-name hcc_test --subsample 2000
+python ModelMain.py --out-path /myoutputpath/output --exp-name hcc_test --subsample 2000
 ```
 
 ### Phase 6: Statistics Summary

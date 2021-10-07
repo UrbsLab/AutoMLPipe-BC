@@ -89,7 +89,7 @@ def job(experiment_path,rep_data_path,data_path):
         analy_report.set_font(family='times', size=9)
 
         #Exploratory Analysis ----------------------------
-        analy_report.image(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+'/exploratory/ClassCounts.png', 5, 12, 70,48) #10, 30, 82)
+        analy_report.image(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+'/exploratory/ClassCountsBarPlot.png', 5, 12, 70,48) #10, 30, 82)
 
         analy_report.x = 125
         analy_report.y = 55
@@ -111,7 +111,7 @@ def job(experiment_path,rep_data_path,data_path):
         analy_report.multi_cell(w=40, h=4, txt='Variable:  Count'+'\n'+listToString(info_ls), border=1, align='L')
 
         #Report Best Algorithms by metric
-        summary_performance = pd.read_csv(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+"/training/results/Summary_performance_mean.csv")
+        summary_performance = pd.read_csv(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+"/model_evaluation/Summary_performance_mean.csv")
         summary_performance['ROC_AUC'] = summary_performance['ROC_AUC'].astype(float)
         highest_ROC = summary_performance['ROC_AUC'].max()
         algorithm = summary_performance[summary_performance['ROC_AUC'] == highest_ROC].index.values
@@ -149,15 +149,15 @@ def job(experiment_path,rep_data_path,data_path):
         analy_report.x = 5
         analy_report.y = 112
         analy_report.cell(10, 4, 'ROC', 1, align="L")
-        analy_report.image(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+'/training/results/Summary_ROC.png', 4, 118, 120)
-        analy_report.image(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+'/training/results/performanceBoxplots/Compare_ROC_AUC.png', 124, 118, 82,85)
+        analy_report.image(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+'/model_evaluation/Summary_ROC.png', 4, 118, 120)
+        analy_report.image(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+'/model_evaluation/metricBoxplots/Compare_ROC_AUC.png', 124, 118, 82,85)
 
         #PRC-------------------------------
         analy_report.x = 5
         analy_report.y = 200
         analy_report.cell(10, 4, 'PRC', 1, align="L")
-        analy_report.image(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+'/training/results/Summary_PRC.png', 4, 206, 133) #wider to account for more text
-        analy_report.image(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+'/training/results/performanceBoxplots/Compare_PRC_AUC.png', 138, 205, 68,80)
+        analy_report.image(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+'/model_evaluation/Summary_PRC.png', 4, 206, 133) #wider to account for more text
+        analy_report.image(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+'/model_evaluation/metricBoxplots/Compare_PRC_AUC.png', 138, 205, 68,80)
 
         footer(analy_report)
 
@@ -171,7 +171,7 @@ def job(experiment_path,rep_data_path,data_path):
         analy_report.cell(w=0, h = 8, txt="Average Model Prediction Statistics:  D"+str(n+1)+" = "+ds[n], border=1, align="L", ln=2)
         analy_report.set_font(family='times', size=7)
 
-        stats_ds = pd.read_csv(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+'/training/results/Summary_performance_mean.csv',sep=',',index_col=0)
+        stats_ds = pd.read_csv(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+'/model_evaluation/Summary_performance_mean.csv',sep=',',index_col=0)
         stats_ds = stats_ds.round(4)
 
         #Format

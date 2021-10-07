@@ -88,11 +88,11 @@ def main(argv):
                 pass
         #Delete temporary feature importance pickle files (only needed for phase 4 and then saved as summary files in phase 6)
         try:
-            shutil.rmtree(experiment_path+'/'+dataset+'/mutualinformation/pickledForPhase4')
+            shutil.rmtree(experiment_path+'/'+dataset+'/feature_selection/mutualinformation/pickledForPhase4')
         except:
             pass
         try:
-            shutil.rmtree(experiment_path+'/'+dataset+'/multisurf/pickledForPhase4')
+            shutil.rmtree(experiment_path+'/'+dataset+'/feature_selection/multisurf/pickledForPhase4')
         except:
             pass
         #Delete older training and testing CV datasets (does not delete any final versions used for training). Older cv datasets might have been kept to see what they look like prior to preprocessing and feature selection.

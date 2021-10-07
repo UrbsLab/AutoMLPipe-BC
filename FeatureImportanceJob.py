@@ -30,21 +30,21 @@ def job(cv_train_path,experiment_path,random_state,class_label,instance_label,in
     dataset_name,dataFeatures,dataOutcome,header,cvCount = prepareData(cv_train_path,instance_label,class_label)
     # Apply mutual information if specified by user
     if algorithm == 'mi':
-        scores,outpath,outname = runMutualInformation(experiment_path,dataset_name,cvCount,dataFeatures,dataOutcome,random_state)
+        scores,outpath,alg_name = runMutualInformation(experiment_path,dataset_name,cvCount,dataFeatures,dataOutcome,random_state)
     # Apply MultiSURF if specified by user
     elif algorithm == 'ms':
-        scores,outpath,outname = runMultiSURF(dataFeatures,dataOutcome,instance_subset,experiment_path,dataset_name,cvCount,use_TURF,TURF_pct,njobs)
+        scores,outpath,alg_name = runMultiSURF(dataFeatures,dataOutcome,instance_subset,experiment_path,dataset_name,cvCount,use_TURF,TURF_pct,njobs)
     else:
         raise Exception("Feature importance algorithm not found")
     # Save sorted feature importance scores:
-    scoreDict, score_sorted_features = sort_save_fi_scores(scores, header, outpath, outname)
+    scoreDict, score_sorted_features = sort_save_fi_scores(scores, header, outpath, alg_name)
     # Pickle feature importance information to be used in Phase 4 (feature selection)
-    pickleScores(experiment_path,dataset_name,outname,scores,scoreDict,score_sorted_features,cvCount)
+    pickleScores(experiment_path,dataset_name,alg_name,scores,scoreDict,score_sorted_features,cvCount)
     # Save phase runtime
-    saveRuntime(experiment_path,dataset_name,job_start_time,outname,cvCount)
+    saveRuntime(experiment_path,dataset_name,job_start_time,alg_name,cvCount)
     # Print phase completion
-    print(dataset_name+" CV"+str(cvCount)+" phase 3 "+outname+" evaluation complete")
-    job_file = open(experiment_path + '/jobsCompleted/job_'+outname+'_' + dataset_name + '_'+str(cvCount)+'.txt', 'w')
+    print(dataset_name+" CV"+str(cvCount)+" phase 3 "+alg_name+" evaluation complete")
+    job_file = open(experiment_path + '/jobsCompleted/job_'+alg_name+'_' + dataset_name + '_'+str(cvCount)+'.txt', 'w')
     job_file.write('complete')
     job_file.close()
 
@@ -67,7 +67,7 @@ def prepareData(cv_train_path,instance_label,class_label):
 def runMutualInformation(experiment_path,dataset_name,cvCount,dataFeatures,dataOutcome,random_state):
     """ Run mutual information on target training dataset and return scores as well as file path/name information. """
     alg_name = "mutualinformation"
-    outpath = experiment_path + '/' + dataset_name + "/"+alg_name+"/scores_cv_" + str(cvCount) + '.csv'
+    outpath = experiment_path + '/' + dataset_name + "/feature_selection/"+alg_name+"/"+alg_name+"_scores_cv_" + str(cvCount) + '.csv'
     scores = mutual_info_classif(dataFeatures, dataOutcome, random_state=random_state)
     return scores,outpath,alg_name
 
@@ -83,21 +83,21 @@ def runMultiSURF(dataFeatures,dataOutcome,instance_subset,experiment_path,datase
     dataFeatures = np.delete(formatted,-1,axis=1)
     dataPhenotypes = formatted[:,-1]
     #Run MultiSURF
-    outname = "multisurf"
-    outpath = experiment_path + '/' + dataset_name + "/"+outname+"/scores_cv_" + str(cvCount) + '.csv'
+    alg_name = "multisurf"
+    outpath = experiment_path + '/' + dataset_name + "/feature_selection/"+alg_name+"/"+alg_name+"_scores_cv_" + str(cvCount) + '.csv'
     if eval(use_TURF):
         clf = TURF(MultiSURF(n_jobs=njobs),pct=TURF_pct).fit(dataFeatures,dataPhenotypes)
     else:
         clf = MultiSURF(n_jobs=njobs).fit(dataFeatures, dataPhenotypes)
     scores = clf.feature_importances_
-    return scores,outpath,outname
+    return scores,outpath,alg_name
 
 def pickleScores(experiment_path,dataset_name,outname,scores,scoreDict,score_sorted_features,cvCount):
     """ Pickle the scores, score dicitonary and features sorted by score to be used primarily in phase 4 (feature selection) of pipeline"""
     #Save Scores to pickled file for later use
-    if not os.path.exists(experiment_path + '/' + dataset_name + "/"+outname+"/pickledForPhase4"):
-        os.mkdir(experiment_path + '/' + dataset_name + "/"+outname+"/pickledForPhase4")
-    outfile = open(experiment_path + '/' + dataset_name + "/"+outname+"/pickledForPhase4/"+str(cvCount),'wb')
+    if not os.path.exists(experiment_path + '/' + dataset_name + "/feature_selection/"+outname+"/pickledForPhase4"):
+        os.mkdir(experiment_path + '/' + dataset_name + "/feature_selection/"+outname+"/pickledForPhase4")
+    outfile = open(experiment_path + '/' + dataset_name + "/feature_selection/"+outname+"/pickledForPhase4/"+str(cvCount),'wb')
     pickle.dump([scores,scoreDict,score_sorted_features],outfile)
     outfile.close()
 

@@ -312,11 +312,13 @@ def job(experiment_path):
     analy_report.set_font('Times', 'B', 12)
     analy_report.cell(w=0, h = 8, txt="Compare ML Performance Across Datasets", border=1, align="L", ln=2)
     analy_report.set_font(family='times', size=9)
-
-    analy_report.image(experiment_path+'/DatasetComparisons/dataCompBoxplots/'+'DataCompareAllModels_ROC_AUC.png',  5, 12, 170, 130) #Images adjusted to fit a width of 100 and length of 135
-    #analy_report.x = 0
-    #analy_report.y = 150
-    analy_report.image(experiment_path+'/DatasetComparisons/dataCompBoxplots/'+'DataCompareAllModels_PRC_AUC.png',  5, 150, 170, 130) #Images adjusted to fit a width of 100 and length of 135
+    try:
+        analy_report.image(experiment_path+'/DatasetComparisons/dataCompBoxplots/'+'DataCompareAllModels_ROC_AUC.png',  5, 12, 170, 130) #Images adjusted to fit a width of 100 and length of 135
+        #analy_report.x = 0
+        #analy_report.y = 150
+        analy_report.image(experiment_path+'/DatasetComparisons/dataCompBoxplots/'+'DataCompareAllModels_PRC_AUC.png',  5, 150, 170, 130) #Images adjusted to fit a width of 100 and length of 135
+    except:
+        pass
     footer(analy_report)
 
     #Create Best Kruskall Wallis Dataset Comparison Page---------------------------------------

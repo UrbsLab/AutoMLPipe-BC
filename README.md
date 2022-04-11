@@ -310,7 +310,6 @@ Run parameters for ExploratoryAnalysisMain.py:
 | --match-label | only applies when M selected for partition-method; indicates column with matched instance ids | None |
 | --cat-cutoff | number of unique values after which a variable is considered to be quantitative vs categorical | 10 |
 | --sig | significance cutoff used throughout pipeline | 0.05 |
-| --export-ea | run and export basic exploratory analysis files, i.e. unique value counts, missingness counts, class balance barplot | True |
 | --export-fc | run and export feature correlation analysis (yields correlation heatmap) | True |
 | --export-up | export univariate analysis plots (note: univariate analysis still output by default) | False |
 | --rand-state | "Dont Panic" - sets a specific random seed for reproducible results | 42 |
@@ -485,20 +484,7 @@ Run parameters for DataCompareMain.py:
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
 
-### Phase 8: [Optional] Copy Key Files
-Run parameters for KeyFileCopyMain.py:
-
-| Argument | Description | Default Value |
-|:-------- |:---------------------  | ----------- |
-| --data-path | path to directory containing datasets | MANDATORY |
-| --out-path | path to output directory | MANDATORY |
-| --exp-name | name of experiment output folder (no spaces) | MANDATORY |
-| --run-parallel | if run parallel | True |
-| --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
-| --res-mem | reserved memory for the job (in Gigabytes) | 4 |
-| --max-mem | maximum memory before the job is automatically terminated | 15 |
-
-### Phase 9: [Optional] Generate PDF Training Summary Report
+### Phase 8: [Optional] Generate PDF Training Summary Report
 Run parameters for PDF_ReportTrainMain.py:
 
 | Argument | Description | Default Value |
@@ -510,7 +496,7 @@ Run parameters for PDF_ReportTrainMain.py:
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
 
-### Phase 10: [Optional] Apply Models to Replication Data
+### Phase 9: [Optional] Apply Models to Replication Data
 Run parameters for ApplyModelMain.py:
 
 | Argument | Description | Default Value |
@@ -530,7 +516,7 @@ Run parameters for ApplyModelMain.py:
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
 
-### Phase 11: [Optional] Generate PDF 'Apply Replication' Summary Report
+### Phase 10: [Optional] Generate PDF 'Apply Replication' Summary Report
 Run parameters for PDF_ReportApplyMain.py:
 
 | Argument | Description | Default Value |

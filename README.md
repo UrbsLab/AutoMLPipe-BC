@@ -189,17 +189,12 @@ The base code for AutoMLPipe-BC is organized into a series of script phases desi
   * \[Code]: DataCompareMain.py and DataCompareJob.py
   * \[Runtime]: Fast
 
-* Phase 8: [Optional] Copy Key Files
-  * Makes a copy of key results files and puts them in a folder called 'KeyFileCopy'
-  * \[Code]: KeyFileCopyMain.py and KeyFileCopyJob.py
-  * \[Runtime]: Fast
-
-* Phase 9: [Optional] Generate PDF Training Summary Report
+* Phase 8: [Optional] Generate PDF Training Summary Report
   * Generates a pre-formatted PDF including all pipeline run parameters, basic dataset information, and key exploratory analyses, ML modeling results, statistical comparisons, and runtime. Will properly format on analyses that include up to 20 datasets (aim to expand this in the future).
   * \[Code]: PDF_ReportTrainMain.py and PDF_ReportTrainJob.py
   * \[Runtime]: Moderately fast
 
-* Phase 10: [Optional] Apply Models to Replication Data
+* Phase 9: [Optional] Apply Models to Replication Data
   * Applies all previously trained models for a single 'target' dataset to one or more new 'replication' dataset that has all features found in the original 'target' datasets
   * Conducts exploratory analysis on new 'replication' dataset(s)
   * Applies scaling, imputation, and feature selection (unique to each CV partition from model training) to new 'replication' dataset(s) in preparation for model application
@@ -209,10 +204,16 @@ The base code for AutoMLPipe-BC is organized into a series of script phases desi
   * \[Code]: ApplyModelMain.py and ApplyModelJob.py
   * \[Runtime]: Moderately fast
 
-* Phase 11: [Optional] Generate PDF 'Apply Replication' Summary Report
+* Phase 10: [Optional] Generate PDF 'Apply Replication' Summary Report
   * Generates a pre-formatted PDF including all pipeline run parameters, basic dataset information, and key exploratory analyses, ML modeling results, and statistics.
   * \[Code]: PDF_ReportApplyMain.py and PDF_ReportApplyJob.py
   * \[Runtime]: Moderately fast
+
+* Phase 11: [Optional] File Cleanup
+  * Deletes files that do not need to be kept following pipeline run.
+  * \[Code]: FileCleanup.py
+  * \[Runtime]: Fast
+
 
 ***
 ## Run From Jupyter Notebook
@@ -247,13 +248,13 @@ python StatsMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-pa
 
 python DataCompareMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
 
-python KeyFileCopyMain.py --data-path /mydatapath/TestData --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
-
 python PDF_ReportTrainMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
 
 python ApplyModelMain.py --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv --run-parallel False
 
 python PDF_ReportApplyMain.py --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv --run-parallel False
+
+python FileCleanup.py --out-path /myoutputpath/output --exp-name hcc_test
 ```
 
 ### Computing Cluster Run (Parallelized) Example
@@ -273,13 +274,13 @@ python StatsMain.py --out-path /myoutputpath/output --exp-name hcc_test
 
 python DataCompareMain.py --out-path /myoutputpath/output --exp-name hcc_test
 
-python KeyFileCopyMain.py --data-path /mydatapath/TestData --out-path /myoutputpath/output --exp-name hcc_test
-
 python PDF_ReportTrainMain.py --out-path /myoutputpath/output --exp-name hcc_test
 
 python ApplyModelMain.py --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
 
 python PDF_ReportApplyMain.py --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
+
+python FileCleanup.py --out-path /myoutputpath/output --exp-name hcc_test
 ```
 
 ### Checking Phase Completion
@@ -529,6 +530,16 @@ Run parameters for PDF_ReportApplyMain.py:
 | --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
+
+### Phase 11: [Optional] File Cleanup
+Run parameters for FileCleanup.py:
+
+| Argument | Description | Default Value |
+|:-------- |:---------------------  | ----------- |
+| --out-path | path to output directory | MANDATORY |
+| --exp-name | name of experiment output folder (no spaces) | MANDATORY |
+| --del-time | delete individual run-time files (but save summary) | True |
+| --del-oldCV | path to target original training dataset | True |
 
 # Troubleshooting
 

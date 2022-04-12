@@ -465,7 +465,7 @@ Run parameters for StatsMain.py:
 | --plot-ROC | Plot ROC curves individually for each algorithm including all CV results and averages | True |
 | --plot-PRC | Plot PRC curves individually for each algorithm including all CV results and averages | True |
 | --plot-box | Plot box plot summaries comparing algorithms for each metric | True |
-| --plot-FI_box | Plot feature importance boxplots for each algorithm | True |
+| --plot-FI_box | Plot feature importance boxplots and histograms for each algorithm | True |
 | --top-results| Number of top features to illustrate in figures | 20 |
 | --run-parallel | if run parallel | True |
 | --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |

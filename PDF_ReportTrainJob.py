@@ -173,12 +173,12 @@ def job(experiment_path):
         analy_report.set_font(family='times', size=9)
 
         #Exploratory Analysis ----------------------------
-        analy_report.image(experiment_path+'/'+ds[n]+'/exploratory/ClassCountsBarPlot.png', 5, 12, 70,48) #10, 30, 82)
+        analy_report.image(experiment_path+'/'+ds[n]+'/exploratory/ClassCountsBarPlot.png', 5, 10, 70,46) #10, 30, 82)
 
         analy_report.x = 125
         analy_report.y = 55
         try:
-            analy_report.image(experiment_path+'/'+ds[n]+'/exploratory/FeatureCorrelations.png', 85, 12, 115) #88, 30, 120, 60)
+            analy_report.image(experiment_path+'/'+ds[n]+'/exploratory/FeatureCorrelations.png', 85, 10, 115) #88, 30, 120, 60)
         except:
             analy_report.cell(40, 4, 'No Feature Correlation Plot', 1, align="L")
             pass
@@ -190,9 +190,10 @@ def job(experiment_path):
             info_ls.append(str(data_summary.iloc[i,1]))
             info_ls.append('\n')
 
-        analy_report.x = 23
-        analy_report.y = 62
-        analy_report.multi_cell(w=40, h=4, txt='Variable:  Count'+'\n'+listToString(info_ls), border=1, align='L')
+
+        analy_report.x = 5
+        analy_report.y = 58
+        analy_report.multi_cell(w=60, h=4, txt='Variable:  Count'+'\n'+listToString(info_ls), border=1, align='L')
 
         #Report Best Algorithms by metric
         summary_performance = pd.read_csv(experiment_path+'/'+ds[n]+"/model_evaluation/Summary_performance_mean.csv")
@@ -222,7 +223,7 @@ def job(experiment_path):
         best_alg_APS = summary_performance.iloc[algorithm, 0]
 
         analy_report.x = 5
-        analy_report.y = 87
+        analy_report.y = 89
         analy_report.multi_cell(w=70, h=4, txt="Best (ROC_AUC): "+ str(best_alg_ROC.values)+' = '+ str("{:.3f}".format(highest_ROC))+
                     '\n'+"Best (Balanced Acc.): "+ str(best_alg_BA.values)+' = '+ str("{:.3f}".format(highest_BA))+
                     '\n'+"Best (F1 Score): "+ str(best_alg_F1.values)+' = '+ str("{:.3f}".format(highest_F1))+

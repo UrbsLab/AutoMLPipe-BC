@@ -73,8 +73,9 @@ def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,
     repData = ExploratoryAnalysisJob.removeRowsColumns(repData,class_label,[])
     #Export basic exploratory analysis files
     ExploratoryAnalysisJob.describeData(repData,full_path,'applymodel/'+apply_name) #Arguments changed to send to correct locations describeData(data,experiment_path,dataset_name)
-    ExploratoryAnalysisJob.countsSummary(repData,class_label,full_path,'applymodel/'+apply_name,instance_label,match_label,categorical_variables,jupyterRun)
-    ExploratoryAnalysisJob.missingnessCounts(repData,full_path,'applymodel/'+apply_name,jupyterRun)
+    totalMissing = ExploratoryAnalysisJob.missingnessCounts(repData,full_path,'applymodel/'+apply_name,jupyterRun)
+    ExploratoryAnalysisJob.countsSummary(repData,class_label,full_path,'applymodel/'+apply_name,instance_label,match_label,categorical_variables,totalMissing,jupyterRun)
+
     #Create features-only version of dataset for some operations
     if instance_label == "None" and match_label == "None":
         x_repData = repData.drop([class_label],axis=1) #exclude class column

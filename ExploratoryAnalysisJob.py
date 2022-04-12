@@ -23,7 +23,7 @@ import csv
 import time
 import pickle
 
-def job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun):
+def job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun):
     """ Prepares ignore_features and categorical_feature_headers lists then calls the exploratory analyisis method."""
     #Allows user to specify features in target datasets that should be excluded during pipeline analysis
     if ignore_features_path == 'None':
@@ -37,9 +37,9 @@ def job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_
     else:
         categorical_feature_headers = pd.read_csv(categorical_feature_path,sep=',')
         categorical_feature_headers = list(categorical_feature_headers)
-    runExplore(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features,categorical_feature_headers,sig_cutoff,jupyterRun)
+    runExplore(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features,categorical_feature_headers,sig_cutoff,jupyterRun)
 
-def runExplore(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features,categorical_feature_headers,sig_cutoff,jupyterRun):
+def runExplore(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features,categorical_feature_headers,sig_cutoff,jupyterRun):
     """ Run all elements of the exploratory analysis: basic data cleaning, automated identification of categorical vs. quantitative features, basic data summary (e.g. sample size, feature type counts, class counts)"""
     job_start_time = time.time() #for tracking phase runtime
     topFeatures = 20 # only used with jupyter notebook reporting of univariate analyses.
@@ -49,8 +49,12 @@ def runExplore(dataset_path,experiment_path,cv_partitions,partition_method,categ
     #Make analysis folder for target dataset and a folder for the respective exploratory analysis within it
     dataset_name,dataset_ext = makeFolders(dataset_path,experiment_path)
     #Load target dataset
+    if eval(jupyterRun):
+        print("Loading Dataset: "+str(dataset_name))
     data = loadData(dataset_path,dataset_ext)
     #Basic data cleaning
+    if eval(jupyterRun):
+        print("Cleaning Dataset...")
     data = removeRowsColumns(data,class_label,ignore_features)
     #Account for possibility that only one dataset in folder has a match label. Check for presence of match label (this allows multiple datasets to be analyzed in the pipeline where not all of them have match labels if specified)
     if not match_label == 'None':
@@ -69,24 +73,36 @@ def runExplore(dataset_path,experiment_path,cv_partitions,partition_method,categ
     else:
         x_data = data.drop([class_label,instance_label,match_label],axis=1) #exclude class column
     #Automatically identify categorical vs. quantitative features/variables
+    if eval(jupyterRun):
+        print("Identifying Feature Types...")
     categorical_variables = idFeatureTypes(x_data,categorical_feature_headers,categorical_cutoff,experiment_path,dataset_name)
-    #Export basic exploratory analysis files if user specified
-    if eval(export_exploratory_analysis):
-        describeData(data,experiment_path,dataset_name)
-        countsSummary(data,class_label,experiment_path,dataset_name,instance_label,match_label,categorical_variables,jupyterRun)
-        missingnessCounts(data,experiment_path,dataset_name,jupyterRun)
+    #Export basic exploratory analysis files
+    if eval(jupyterRun):
+        print("Running Basic Exploratory Analysis...")
+    describeData(data,experiment_path,dataset_name)
+    totalMissing = missingnessCounts(data,experiment_path,dataset_name,jupyterRun)
+    countsSummary(data,class_label,experiment_path,dataset_name,instance_label,match_label,categorical_variables,totalMissing,jupyterRun)
+
     #Export feature correlation plot if user specified
     if eval(export_feature_correlations):
+        if eval(jupyterRun):
+            print("Generating Feature Correlation Heatmap...")
         featureCorrelationPlot(x_data,experiment_path,dataset_name,jupyterRun)
     #Export feature labels from data header as a reference to be used later in the pipeline
     reportHeaders(x_data,experiment_path,dataset_name)
     del x_data #memory cleanup
     #Conduct univariate analyses of association between individual features and class
+    if eval(jupyterRun):
+        print("Running Univariate Analyses...")
     sorted_p_list = univariateAnalysis(data,experiment_path,dataset_name,class_label,instance_label,match_label,categorical_variables,jupyterRun,topFeatures)
     #Export univariate association plots (for significant features) if user specifies
     if eval(export_univariate_plots):
+        if eval(jupyterRun):
+            print("Generating Univariate Analysis Plots...")
         univariatePlots(data,sorted_p_list,class_label,categorical_variables,experiment_path,dataset_name,sig_cutoff)
     #Generate and export cross validation datasets (i.e. training and testing sets)
+    if eval(jupyterRun):
+        print("Generating and Saving CV Datasets...")
     train_dfs,test_dfs = cv_partitioner(data,cv_partitions,partition_method,class_label,match_label,random_state)
     saveCVDatasets(experiment_path,dataset_name,train_dfs,test_dfs)
     #Save phase runtime
@@ -149,7 +165,26 @@ def describeData(data,experiment_path,dataset_name):
     data.dtypes.to_csv(experiment_path + '/' + dataset_name + '/exploratory/'+'DtypesDataset.csv',header=['DataType'],index_label='Variable')
     data.nunique().to_csv(experiment_path + '/' + dataset_name + '/exploratory/'+'NumUniqueDataset.csv',header=['Count'],index_label='Variable')
 
-def countsSummary(data,class_label,experiment_path,dataset_name,instance_label,match_label,categorical_variables,jupyterRun):
+def missingnessCounts(data,experiment_path,dataset_name,jupyterRun):
+    """ Count and export missing values for all data columns. Also plots a histogram of missingness across all data columns."""
+    #Assess Missingness in all data columns
+    missing_count = data.isnull().sum()
+    totalMissing = data.isnull().sum().sum()
+    missing_count.to_csv(experiment_path + '/' + dataset_name + '/exploratory/'+'DataMissingness.csv',header=['Count'],index_label='Variable')
+    #Plot a histogram of the missingness observed over all columns in the dataset
+    #plt.hist(missing_count,bins=data.shape[0]) #To view the full spectrum of posssible missingness
+    plt.hist(missing_count,bins=100)
+    plt.xlabel("Missing Value Counts")
+    plt.ylabel("Frequency")
+    plt.title("Histogram of Missing Value Counts in Dataset")
+    plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'DataMissingnessHistogram.png',bbox_inches='tight')
+    if eval(jupyterRun):
+        plt.show()
+    else:
+        plt.close('all')
+    return totalMissing
+
+def countsSummary(data,class_label,experiment_path,dataset_name,instance_label,match_label,categorical_variables,totalMissing,jupyterRun):
     """ Reports various dataset counts: i.e. number of instances, total features, categorical features, quantitative features, and class counts.
         Also saves a simple bar graph of class counts."""
     #Calculate, print, and export instance and feature counts
@@ -158,12 +193,16 @@ def countsSummary(data,class_label,experiment_path,dataset_name,instance_label,m
         fCount -= 1
     if not match_label == 'None':
         fCount -=1
-    print('Data Counts: ----------------')
-    print('Instance Count = '+str(data.shape[0]))
-    print('Feature Count = '+str(fCount))
-    print('    Categorical  = '+str(len(categorical_variables)))
-    print('    Quantitative = '+str(fCount - len(categorical_variables)))
-    summary = [['instances',data.shape[0]],['features',fCount],['categorical_features',len(categorical_variables)],['quantitative_features',fCount - len(categorical_variables)]]
+    percentMissing = int(totalMissing)/float(data.shape[0]*fCount)
+    if jupyterRun:
+        print('Data Counts: ----------------')
+        print('Instance Count = '+str(data.shape[0]))
+        print('Feature Count = '+str(fCount))
+        print('    Categorical  = '+str(len(categorical_variables)))
+        print('    Quantitative = '+str(fCount - len(categorical_variables)))
+        print('Missing Count = '+str(totalMissing))
+        print('    Missing Percent = '+str(percentMissing))
+    summary = [['instances',data.shape[0]],['features',fCount],['categorical_features',len(categorical_variables)],['quantitative_features',fCount - len(categorical_variables)],['missing_values',totalMissing],['missing_percent',round(percentMissing,5)]]
     dfSummary = pd.DataFrame(summary, columns = ['Variable','Count'])
     dfSummary.to_csv(experiment_path + '/' + dataset_name + '/exploratory/'+'DataCounts.csv',index=None)
     #Calculate, print, and export class counts
@@ -176,22 +215,6 @@ def countsSummary(data,class_label,experiment_path,dataset_name,instance_label,m
     plt.ylabel('Count')
     plt.title('Class Counts')
     plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'ClassCountsBarPlot.png',bbox_inches='tight')
-    if eval(jupyterRun):
-        plt.show()
-    else:
-        plt.close('all')
-
-def missingnessCounts(data,experiment_path,dataset_name,jupyterRun):
-    """ Count and export missing values for all data columns. Also plots a histogram of missingness across all data columns."""
-    #Assess Missingness in all data columns
-    missing_count = data.isnull().sum()
-    missing_count.to_csv(experiment_path + '/' + dataset_name + '/exploratory/'+'DataMissingness.csv',header=['Count'],index_label='Variable')
-    #Plot a histogram of the missingness observed over all columns in the dataset
-    plt.hist(missing_count,bins=data.shape[0])
-    plt.xlabel("Missing Value Counts")
-    plt.ylabel("Frequency")
-    plt.title("Histogram of Missing Value Counts in Dataset")
-    plt.savefig(experiment_path + '/' + dataset_name + '/exploratory/'+'DataMissingnessHistogram.png',bbox_inches='tight')
     if eval(jupyterRun):
         plt.show()
     else:
@@ -419,4 +442,4 @@ def saveRuntime(experiment_path,dataset_name,job_start_time):
     runtime_file.close()
 
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],int(sys.argv[3]),sys.argv[4],int(sys.argv[5]),sys.argv[6],sys.argv[7],sys.argv[8],sys.argv[9],sys.argv[10],sys.argv[11],int(sys.argv[12]),sys.argv[13],sys.argv[14],float(sys.argv[15]),sys.argv[16])
+    job(sys.argv[1],sys.argv[2],int(sys.argv[3]),sys.argv[4],int(sys.argv[5]),sys.argv[6],sys.argv[7],sys.argv[8],sys.argv[9],sys.argv[10],int(sys.argv[11]),sys.argv[12],sys.argv[13],float(sys.argv[14]),sys.argv[15])

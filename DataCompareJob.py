@@ -57,6 +57,8 @@ def job(experiment_path,sig_cutoff,jupyterRun):
     # Create directory to store dataset statistical comparisons
     if not os.path.exists(experiment_path+'/DatasetComparisons'):
         os.mkdir(experiment_path+'/DatasetComparisons')
+    if eval(jupyterRun):
+        print('Running Statistical Significance Comparisons Between Multiple Datasets...')
     #Run Kruscall Wallis test (for each algorithm) to determine if there was a significant difference in any metric performance between all analyzed datasets
     kruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff)
     #Run MannWhitney U test (for each algorithm) to determine if there was a significant difference between any pair of datasets for any metric. Runs for all pairs even if kruscall wallis not significant for given metric.
@@ -70,6 +72,8 @@ def job(experiment_path,sig_cutoff,jupyterRun):
     #Run Wilcoxon Rank sum test for each metric comparing pairs of datsets using the best performing algorithm (based on given metric).
     bestWilcoxonRank(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff,global_data)
     #Generate boxplots comparing average algorithm performance (for a given metric) across all dataset comparisons
+    if eval(jupyterRun):
+        print('Generate Boxplots Comparing Dataset Performance...')
     dataCompareBPAll(experiment_path,metrics,dataset_directory_paths,algorithms,jupyterRun)
     #Generate boxplots comparing a specific algorithm's CV performance (for AUC_ROC or AUC_PRC) across all dataset comparisons
     dataCompareBP(experiment_path,metrics,dataset_directory_paths,algorithms,name_to_abbrev,jupyterRun)

@@ -29,6 +29,9 @@ def job(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_f
     selected_feature_lists = {}
     meta_feature_ranks = {}
     algorithms = []
+    totalFeatures = 0
+    if eval(jupyterRun):
+        print('Plotting Feature Importance Scores...')
     #Manage and summarize mutual information feature importance scores
     if eval(do_mutual_info):
         algorithms.append('Mutual Information')
@@ -38,10 +41,14 @@ def job(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_f
         algorithms.append('MultiSURF')
         selected_feature_lists,meta_feature_ranks = reportAveFS("MultiSURF","multisurf",cv_partitions,top_results,full_path,selected_feature_lists,meta_feature_ranks,export_scores,jupyterRun)
     # Conduct collective feature selection
+    if eval(jupyterRun):
+        print('Applying collective feature selection...')
     if len(algorithms) != 0:
         if eval(filter_poor_features):
             #Identify top feature subset for each cv
-            cv_selected_list = selectFeatures(algorithms,cv_partitions,selected_feature_lists,max_features_to_keep,meta_feature_ranks)
+            cv_selected_list, informativeFeatureCounts, uninformativeFeatureCounts = selectFeatures(algorithms,cv_partitions,selected_feature_lists,max_features_to_keep,meta_feature_ranks)
+            # Save count of features identified as informative for each CV partitions
+            reportInformativeFeatures(informativeFeatureCounts,uninformativeFeatureCounts,full_path)
             #Generate new datasets with selected feature subsets
             genFilteredDatasets(cv_selected_list,class_label,instance_label,cv_partitions,full_path+'/CVDatasets',dataset_name,overwrite_cv)
     # Save phase runtime
@@ -52,6 +59,12 @@ def job(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_f
     job_file = open(experiment_path + '/jobsCompleted/job_featureselection_' + dataset_name + '.txt', 'w')
     job_file.write('complete')
     job_file.close()
+
+def reportInformativeFeatures(informativeFeatureCounts,uninformativeFeatureCounts,full_path):
+    """ Saves counts of informative vs uninformative features (i.e. those with feature importance scores <= 0) in an csv file. """
+    counts = {'Informative':informativeFeatureCounts, 'Uninformative':uninformativeFeatureCounts}
+    count_df = pd.DataFrame(counts)
+    count_df.to_csv(full_path+"/feature_selection/InformativeFeatureSummary.csv",index_label='CV_Partition')
 
 def reportAveFS(algorithm,algorithmlabel,cv_partitions,top_results,full_path,selected_feature_lists,meta_feature_ranks,export_scores,jupyterRun):
     """ Loads feature importance results from phase 3, stores sorted feature importance scores for all cvs, creates a list of all feature names
@@ -115,15 +128,22 @@ def reportAveFS(algorithm,algorithmlabel,cv_partitions,top_results,full_path,sel
 def selectFeatures(algorithms, cv_partitions, selectedFeatureLists, maxFeaturesToKeep, metaFeatureRanks):
     """ Identifies features to keep for each cv. If more than one feature importance algorithm was applied, collective feature selection
         is applied so that the union of informative features is preserved. Overall, only informative features (i.e. those with a score > 0
-        are preserved). If there are more informative features than the maxFeaturesToKeep, then only those top scoring features are preserved."""
+        are preserved). If there are more informative features than the maxFeaturesToKeep, then only those top scoring features are preserved.
+        To reduce the feature list to some max limit, we alternate between algorithm ranked feature lists grabbing the top features from each
+        until the max limit is reached."""
     cv_Selected_List = []  # final list of selected features for each cv (list of lists)
     numAlgorithms = len(algorithms)
+    informativeFeatureCounts = []
+    uninformativeFeatureCounts = []
+    totalFeatures = len(metaFeatureRanks[algorithms[0]][0])
     if numAlgorithms > 1:  # 'Interesting' features determined by union of feature selection results (from different algorithms)
         for i in range(cv_partitions):
             unionList = selectedFeatureLists[algorithms[0]][i]  # grab first algorithm's lists of feature names to keep
             # Determine union
             for j in range(1, numAlgorithms):  # number of union comparisons
                 unionList = list(set(unionList) | set(selectedFeatureLists[algorithms[j]][i]))
+            informativeFeatureCounts.append(len(unionList))
+            uninformativeFeatureCounts.append(totalFeatures-len(unionList))
             #Further reduce selected feature set if it is larger than maxFeaturesToKeep
             if len(unionList) > maxFeaturesToKeep:  # Apply further filtering if more than max features remains
                 # Create score list dictionary with indexes in union list
@@ -143,6 +163,8 @@ def selectFeatures(algorithms, cv_partitions, selectedFeatureLists, maxFeaturesT
     else:  # Only one algorithm applied (collective feature selection not applied)
         for i in range(cv_partitions):
             featureList = selectedFeatureLists[algorithms[0]][i]  # grab first algorithm's lists
+            informativeFeatureCounts.append(len(featureList))
+            uninformativeFeatureCounts.append(totalFeatures-informativeFeatureCounts)
             if len(featureList) > maxFeaturesToKeep:  # Apply further filtering if more than max features remains
                 # Create score list dictionary with indexes in union list
                 newFeatureList = []
@@ -153,7 +175,7 @@ def selectFeatures(algorithms, cv_partitions, selectedFeatureLists, maxFeaturesT
                     k += 1
                 featureList = newFeatureList
             cv_Selected_List.append(featureList)
-    return cv_Selected_List #list of final selected features for each cv
+    return cv_Selected_List, informativeFeatureCounts, uninformativeFeatureCounts #list of final selected features for each cv
 
 def genFilteredDatasets(cv_selected_list,class_label,instance_label,cv_partitions,path_to_csv,dataset_name,overwrite_cv):
     """ Takes the lists of final features to be kept and creates new filtered cv training and testing datasets including only those features."""

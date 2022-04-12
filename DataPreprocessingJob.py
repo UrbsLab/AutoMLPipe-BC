@@ -23,7 +23,7 @@ import csv
 import time
 import pickle
 
-def job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,multi_impute):
+def job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwrite_cv,categorical_cutoff,class_label,instance_label,random_state,multi_impute,jupyterRun):
     """ Run all elements of the data preprocessing: data scaling and missing value imputation (mode imputation for categorical features and MICE-based iterative imputing for quantitative features)"""
     job_start_time = time.time() #for tracking phase runtime
     #Set random seeds for replicatability
@@ -31,6 +31,8 @@ def job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwr
     np.random.seed(random_state)
     #Load target training and testing datsets
     data_train,data_test,header,dataset_name,cvCount = loadData(cv_train_path,cv_test_path,experiment_path,class_label,instance_label)
+    if eval(jupyterRun):
+        print('Preparing Train and Test for: '+str(dataset_name)+ "_CV_"+str(cvCount))
     #Temporarily separate class column to be merged back into training and testing datasets later
     y_train = data_train[class_label]
     y_test = data_test[class_label]
@@ -52,11 +54,22 @@ def job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwr
     categorical_variables = pickle.load(file)
     #Impute Missing Values in training and testing data if specified by user
     if eval(impute_data):
-        x_train,x_test = imputeCVData(categorical_variables,x_train,x_test,random_state,experiment_path,dataset_name,cvCount,multi_impute)
-        x_train = pd.DataFrame(x_train, columns=header)
-        x_test = pd.DataFrame(x_test, columns=header)
+        if eval(jupyterRun):
+            print('Imputing Missing Values...')
+        #Confirm that there are missing values in original dataset to bother with imputation
+        dataCounts = pd.read_csv(experiment_path + '/' + dataset_name + '/exploratory/DataCounts.csv',na_values='NA',sep=',')
+        missingValues = int(dataCounts['Count'].values[4])
+        if missingValues != 0:
+            x_train,x_test = imputeCVData(categorical_variables,x_train,x_test,random_state,experiment_path,dataset_name,cvCount,multi_impute)
+            x_train = pd.DataFrame(x_train, columns=header)
+            x_test = pd.DataFrame(x_test, columns=header)
+        else:
+            if eval(jupyterRun):
+                print('Notice: No missing values found. Imputation skipped.')
     #Scale training and testing datasets if specified by user
     if eval(scale_data):
+        if eval(jupyterRun):
+            print('Scaling Data Values...')
         x_train,x_test = dataScaling(x_train,x_test,experiment_path,dataset_name,cvCount)
     #Remerge features with class and instance label in training and testing data
     if instance_label == None or instance_label == 'None':
@@ -70,6 +83,8 @@ def job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwr
         data_test = pd.concat([pd.DataFrame(y_test, columns=[class_label]), pd.DataFrame(i_test, columns=[instance_label]),pd.DataFrame(x_test, columns=header)], axis=1, sort=False)
     del x_test #memory cleanup
     #Export imputed and/or scaled cv data
+    if eval(jupyterRun):
+        print('Saving Processed Train and Test Data...')
     if eval(impute_data) or eval(scale_data):
         writeCVFiles(overwrite_cv,cv_train_path,cv_test_path,experiment_path,dataset_name,cvCount,data_train,data_test)
     #Save phase runtime
@@ -189,4 +204,4 @@ def saveRuntime(experiment_path,dataset_name,job_start_time):
     runtime_file.close()
 
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],int(sys.argv[7]),sys.argv[8],sys.argv[9],int(sys.argv[10]),sys.argv[11])
+    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],int(sys.argv[7]),sys.argv[8],sys.argv[9],int(sys.argv[10]),sys.argv[11],sys.argv[12])

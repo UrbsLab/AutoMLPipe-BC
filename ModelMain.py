@@ -78,6 +78,7 @@ def main(argv):
     parser.add_argument('-r','--do-resubmit',dest='do_resubmit', help='Boolean: Rerun any jobs that did not complete (or failed) in an earlier run.', action='store_true')
 
     options = parser.parse_args(argv[1:])
+    jupyterRun = 'False' #controls whether progress updates are shown or not depending on whether jupyter notebook is used
     job_counter = 0
     #Code to allow more flexible specification of which ML algorithms to run (i.e. all minus specific algorithms or none plus specific algorithms)
     if eval(options.do_all):
@@ -226,9 +227,9 @@ def main(argv):
                 for algorithm in algorithms:
                     if eval(options.run_parallel):
                         job_counter += 1
-                        submitClusterJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,options.output_path+'/'+options.experiment_name,cvCount,filter_poor_features,options.reserved_memory,options.maximum_memory,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.queue,options.use_uniform_FI,options.primary_metric)
+                        submitClusterJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,options.output_path+'/'+options.experiment_name,cvCount,filter_poor_features,options.reserved_memory,options.maximum_memory,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.queue,options.use_uniform_FI,options.primary_metric,jupyterRun)
                     else:
-                        submitLocalJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.use_uniform_FI,options.primary_metric)
+                        submitLocalJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.use_uniform_FI,options.primary_metric,jupyterRun)
 
         # Update metadata
         if metadata.shape[0] == 20: #Only update if metadata below hasn't been added before
@@ -316,20 +317,20 @@ def main(argv):
                         test_file_path = full_path + '/CVDatasets/' + dataset + "_CV_" + str(cv) + "_Test.csv"
                         if eval(options.run_parallel):
                             job_counter += 1
-                            submitClusterJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,options.output_path+'/'+options.experiment_name,cv,filter_poor_features,options.reserved_memory,options.maximum_memory,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.queue,options.use_uniform_FI,options.primary_metric)
+                            submitClusterJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,options.output_path+'/'+options.experiment_name,cv,filter_poor_features,options.reserved_memory,options.maximum_memory,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.queue,options.use_uniform_FI,options.primary_metric,jupyterRun)
                         else:
-                            submitLocalJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,cv,filter_poor_features,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.use_uniform_FI,options.primary_metric)
+                            submitLocalJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,cv,filter_poor_features,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.use_uniform_FI,options.primary_metric,jupyterRun)
     else:
         print("Run options in conflict. Do not request to run check and resubmit at the same time.")
 
     if not options.do_check:
         print(str(job_counter)+ " jobs submitted in Phase 5")
 
-def submitLocalJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric):
+def submitLocalJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,jupyterRun):
     """ Runs ModelJob.py locally, once for each combination of cv dataset (for each original target dataset) and ML modeling algorithm. These runs will be completed serially rather than in parallel. """
-    ModelJob.job(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric)
+    ModelJob.job(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,jupyterRun)
 
-def submitClusterJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,experiment_path,cvCount,filter_poor_features,reserved_memory,maximum_memory,do_lcs_sweep,nu,iterations,N,training_subsample,queue,use_uniform_FI,primary_metric):
+def submitClusterJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,experiment_path,cvCount,filter_poor_features,reserved_memory,maximum_memory,do_lcs_sweep,nu,iterations,N,training_subsample,queue,use_uniform_FI,primary_metric,jupyterRun):
     """ Runs ModelJob.py once for each combination of cv dataset (for each original target dataset) and ML modeling algorithm. Runs in parallel on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
     job_name = experiment_path+'/jobs/P5_'+str(algorithm)+'_'+str(cvCount)+'_'+job_ref+'_run.sh'
@@ -345,7 +346,7 @@ def submitClusterJob(algorithm,train_file_path,test_file_path,full_path,n_trials
     this_file_path = os.path.dirname(os.path.realpath(__file__))
     sh_file.write('python '+this_file_path+'/ModelJob.py '+algorithm+" "+train_file_path+" "+test_file_path+" "+full_path+" "+
                   str(n_trials)+" "+str(timeout)+" "+str(lcs_timeout)+" "+export_hyper_sweep_plots+" "+instance_label+" "+class_label+" "+
-                  str(random_state)+" "+str(cvCount)+" "+str(filter_poor_features)+" "+str(do_lcs_sweep)+" "+str(nu)+" "+str(iterations)+" "+str(N)+" "+str(training_subsample)+" "+str(use_uniform_FI)+" "+str(primary_metric)+'\n')
+                  str(random_state)+" "+str(cvCount)+" "+str(filter_poor_features)+" "+str(do_lcs_sweep)+" "+str(nu)+" "+str(iterations)+" "+str(N)+" "+str(training_subsample)+" "+str(use_uniform_FI)+" "+str(primary_metric)+" "+str(jupyterRun)+'\n')
     sh_file.close()
     os.system('bsub < ' + job_name)
     pass

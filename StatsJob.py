@@ -34,6 +34,8 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
     algorithm, and composite feature importance plots summarizing model feature importance across all ML algorithms"""
     job_start_time = time.time() #for tracking phase runtime
     data_name = full_path.split('/')[-1]
+    if eval(jupyterRun):
+        print('Running Statistics Summary for '+str(data_name))
     #Translate metric name from scikitlearn standard (currently balanced accuracy is hardcoded for use in generating FI plots due to no-skill normalization)
     metric_term_dict = {'balanced_accuracy': 'Balanced Accuracy','accuracy': 'Accuracy','f1': 'F1_Score','recall': 'Sensitivity (Recall)','precision': 'Precision (PPV)','roc_auc': 'ROC_AUC'}
     primary_metric = metric_term_dict[primary_metric]
@@ -42,31 +44,45 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
     #Gather and summarize all evaluation metrics for each algorithm across all CVs. Returns result_table used to plot average ROC and PRC plots and metric_dict organizing all metrics over all algorithms and CVs.
     result_table,metric_dict = primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,instance_label,class_label,abbrev,colors,plot_ROC,plot_PRC,jupyterRun)
     #Plot ROC and PRC curves comparing average ML algorithm performance (averaged over all CVs)
+    if eval(jupyterRun):
+        print('Generating ROC and PRC plots...')
     doPlotROC(result_table,colors,full_path,jupyterRun)
     doPlotPRC(result_table,colors,full_path,data_name,instance_label,class_label,jupyterRun)
     #Make list of metric names
+    if eval(jupyterRun):
+        print('Saving Metric Summaries...')
     metrics = list(metric_dict[algorithms[0]].keys())
     #Save metric means and standard deviations
     saveMetricMeans(full_path,metrics,metric_dict)
     saveMetricStd(full_path,metrics,metric_dict)
     #Generate boxplots comparing algorithm performance for each standard metric, if specified by user
     if eval(plot_metric_boxplots):
+        if eval(jupyterRun):
+            print('Generating Metric Boxplots...')
         metricBoxplots(full_path,metrics,algorithms,metric_dict,jupyterRun)
     #Calculate and export Kruskal Wallis, Mann Whitney, and wilcoxon Rank sum stats if more than one ML algorithm has been run (for the comparison) - note stats are based on comparing the multiple CV models for each algorithm.
     if len(algorithms) > 1:
+        if eval(jupyterRun):
+            print('Running Non-Parametric Statistical Significance Analysis...')
         kruskal_summary = kruskalWallis(full_path,metrics,algorithms,metric_dict,sig_cutoff)
         wilcoxonRank(full_path,metrics,algorithms,metric_dict,kruskal_summary,sig_cutoff)
         mannWhitneyU(full_path,metrics,algorithms,metric_dict,kruskal_summary,sig_cutoff)
-    #Visualize FI - Currently set up to only use Balanced Accuracy for composite FI plot visualization
     #Prepare for feature importance visualizations
-    fi_df_list,fi_ave_norm_list,ave_metric_list,all_feature_list,non_zero_union_features,non_zero_union_indexes = prepFI(algorithms,full_path,abbrev,metric_dict,'Balanced Accuracy')
+    if eval(jupyterRun):
+        print('Preparing for Model Feature Importance Plotting...')
+    fi_df_list,fi_ave_list,fi_ave_norm_list,ave_metric_list,all_feature_list,non_zero_union_features,non_zero_union_indexes = prepFI(algorithms,full_path,abbrev,metric_dict,'Balanced Accuracy')
     #Select 'top' features for composite vizualization
-    featuresToViz = selectForViz(top_results,non_zero_union_features,non_zero_union_indexes,algorithms,ave_metric_list,fi_ave_norm_list)
+    featuresToViz = selectForCompositeViz(top_results,non_zero_union_features,non_zero_union_indexes,algorithms,ave_metric_list,fi_ave_norm_list)
     #Generate FI boxplots for each modeling algorithm if specified by user
     if eval(plot_FI_box):
-        doFIBoxplots(full_path,fi_df_list,algorithms,original_headers,jupyterRun)
+        if eval(jupyterRun):
+            print('Generating Feature Importance Boxplots and Histograms...')
+        doFIBoxplots(full_path,fi_df_list,fi_ave_list,algorithms,original_headers,top_results,jupyterRun)
+        doFI_Histogram(full_path, fi_ave_list, algorithms, jupyterRun)
+    #Visualize composite FI - Currently set up to only use Balanced Accuracy for composite FI plot visualization
+    if eval(jupyterRun):
+        print('Generating Composite Feature Importance Plots...')
     #Take top feature names to vizualize and get associated feature importance values for each algorithm, and original data ordered feature names list
-    #top_fi_ave_norm_list,all_feature_listToViz = getFI_To_Viz(featuresToViz,all_feature_list,algorithms,fi_ave_norm_list) # If we want composite FI plots to remain in original dataset feature order
     top_fi_ave_norm_list,all_feature_listToViz = getFI_To_Viz_Sorted(featuresToViz,all_feature_list,algorithms,fi_ave_norm_list) #If we want composite FI plots to be displayed in descenting total bar height order.
     #Generate Normalized composite FI plot
     composite_FI_plot(top_fi_ave_norm_list, algorithms, list(colors.values()), all_feature_listToViz, 'Norm',full_path,jupyterRun, 'Normalized Feature Importance')
@@ -150,22 +166,21 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
         s_lrm = [] # likelihood ratio negative values
         # Define feature importance lists
         FI_all = [] # used to save model feature importances individually for each cv within single summary file (all original features in dataset prior to feature selection included)
-        #FI_ave = [0] * len(original_headers)  # used to save average FI scores over all cvs. (all original features in dataset prior to feature selection included)
         # Define ROC plot variable lists
-        tprs = [] # true postitive rates
-        aucs = [] #areas under ROC curve
-        mean_fpr = np.linspace(0, 1, 100) #used to plot all CVs in single ROC plot
-        mean_recall = np.linspace(0, 1, 100) #used to plot all CVs in single PRC plot
+        tprs = [] # stores interpolated true postitive rates for average CV line in ROC
+        aucs = [] #stores individual CV areas under ROC curve to calculate average
+        mean_fpr = np.linspace(0, 1, 100) #used to plot average of CV line in ROC plot
+        mean_recall = np.linspace(0, 1, 100) #used to plot average of CV line in PRC plot
         # Define PRC plot variable lists
-        precs = [] #precision values for PRC
-        praucs = [] #area under PRC curve
-        aveprecs = [] #average precisions for PRC
+        precs = [] #stores interpolated precision values for average CV line in PRC
+        praucs = [] #stores individual CV areas under PRC curve to calculate average
+        aveprecs = [] #stores individual CV average precisions for PRC to calculate CV average
         #Gather statistics over all CV partitions
         for cvCount in range(0,cv_partitions):
             #Unpickle saved metrics from previous phase
             result_file = full_path+'/model_evaluation/pickled_metrics/'+abbrev[algorithm]+"_CV_"+str(cvCount)+"_metrics"
             file = open(result_file, 'rb')
-            results = pickle.load(file)
+            results = pickle.load(file) #[metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, fi, probas_]
             file.close()
             #Separate pickled results
             metricList = results[0]
@@ -192,13 +207,14 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             s_lrp.append(metricList[11])
             s_lrm.append(metricList[12])
             #update list that stores values used in ROC and PRC plots
-            alg_result_table.append([fpr, tpr, roc_auc, recall, prec, prec_rec_auc, ave_prec])
+            alg_result_table.append([fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec]) # alg_result_table.append([fpr, tpr, roc_auc, recall, prec, prec_rec_auc, ave_prec])
             # Update ROC plot variable lists needed to plot all CVs in one ROC plot
             tprs.append(interp(mean_fpr, fpr, tpr))
             tprs[-1][0] = 0.0
             aucs.append(roc_auc)
             # Update PRC plot variable lists needed to plot all CVs in one PRC plot
-            precs.append(interp(mean_recall, recall, prec))
+            precs.append(interp(mean_recall, recall, prec)) #old way
+            #precs.append(interp(mean_recall, prec, recall))
             praucs.append(prec_rec_auc)
             aveprecs.append(ave_prec)
             # Format feature importance scores as list (takes into account that all features are not in each CV partition)
@@ -264,7 +280,8 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             plt.rcParams["figure.figsize"] = (6,6)
             # Plot individual CV PRC lines
             for i in range(cv_partitions):
-                plt.plot(alg_result_table[i][3], alg_result_table[i][4], lw=1, alpha=0.3, label='PRC fold %d (AUC = %0.3f)' % (i, alg_result_table[i][5]))
+                #plt.plot(alg_result_table[i][3], alg_result_table[i][4], lw=1, alpha=0.3, label='PRC fold %d (AUC = %0.3f)' % (i, alg_result_table[i][5]))
+                plt.plot(alg_result_table[i][4], alg_result_table[i][3], lw=1, alpha=0.3, label='PRC fold %d (AUC = %0.3f)' % (i, alg_result_table[i][5]))
             #Estimate no skill line based on the fraction of cases found in the first test dataset
             test = pd.read_csv(full_path + '/CVDatasets/' + data_name + '_CV_0_Test.csv') #Technically there could be a unique no-skill line for each CV dataset based on final class balance (however only one is needed, and stratified CV attempts to keep partitions with similar/same class balance)
             testY = test[class_label].values
@@ -273,12 +290,13 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             plt.plot([0, 1], [noskill, noskill], color='orange', linestyle='--', label='No-Skill', alpha=.8)
             # Plot average line for all CVs
             std_pr_auc = np.std(praucs)
-            # Plot standard deviation grey zone of curves
             plt.plot(mean_recall, mean_prec, color=colors[algorithm],label=r'Mean PRC (AUC = %0.3f $\pm$ %0.3f)' % (mean_pr_auc, std_pr_auc),lw=2, alpha=.8)
+            # Plot standard deviation grey zone of curves
             std_prec = np.std(precs, axis=0)
             precs_upper = np.minimum(mean_prec + std_prec, 1)
             precs_lower = np.maximum(mean_prec - std_prec, 0)
-            plt.fill_between(mean_fpr, precs_lower, precs_upper, color='grey', alpha=.2,label=r'$\pm$ 1 std. dev.')
+            #plt.fill_between(mean_fpr, precs_lower, precs_upper, color='grey', alpha=.2,label=r'$\pm$ 1 std. dev.')
+            plt.fill_between(mean_recall, precs_lower, precs_upper, color='grey', alpha=.2,label=r'$\pm$ 1 std. dev.')
             #Specify plot axes,labels, and legend
             plt.xlim([-0.05, 1.05])
             plt.ylim([-0.05, 1.05])
@@ -299,16 +317,13 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
         dr.to_csv(filepath, header=True, index=False)
         metric_dict[algorithm] = results
 
-        #Turn FI sums into averages
-        #for i in range(0, len(FI_ave)):
-        #    FI_ave[i] = FI_ave[i] / float(cv_partitions)
-
         #Save Average FI Stats
         save_FI(FI_all, abbrev[algorithm], original_headers, full_path)
 
         #Store ave metrics for creating global ROC and PRC plots later
         mean_ave_prec = np.mean(aveprecs)
-        result_dict = {'algorithm':algorithm,'fpr':mean_fpr, 'tpr':mean_tpr, 'auc':mean_auc, 'prec':mean_prec, 'pr_auc':mean_pr_auc, 'ave_prec':mean_ave_prec}
+        #result_dict = {'algorithm':algorithm,'fpr':mean_fpr, 'tpr':mean_tpr, 'auc':mean_auc, 'prec':mean_prec, 'pr_auc':mean_pr_auc, 'ave_prec':mean_ave_prec}
+        result_dict = {'algorithm':algorithm,'fpr':mean_fpr, 'tpr':mean_tpr, 'auc':mean_auc, 'prec':mean_prec, 'recall':mean_recall, 'pr_auc':mean_pr_auc, 'ave_prec':mean_ave_prec}
         result_table.append(result_dict)
     #Result table later used to create global ROC an PRC plots comparing average ML algorithm performance.
     result_table = pd.DataFrame.from_dict(result_table)
@@ -352,7 +367,9 @@ def doPlotPRC(result_table,colors,full_path,data_name,instance_label,class_label
     count = 0
     #Plot curves for each individual ML algorithm
     for i in result_table.index:
-        plt.plot(result_table.loc[i]['fpr'],result_table.loc[i]['prec'], color=colors[i],label="{}, AUC={:.3f}, APS={:.3f}".format(i, result_table.loc[i]['pr_auc'],result_table.loc[i]['ave_prec']))
+        #plt.plot(result_table.loc[i]['fpr'],result_table.loc[i]['prec'], color=colors[i],label="{}, AUC={:.3f}, APS={:.3f}".format(i, result_table.loc[i]['pr_auc'],result_table.loc[i]['ave_prec']))
+        plt.plot(result_table.loc[i]['recall'],result_table.loc[i]['prec'], color=colors[i],label="{}, AUC={:.3f}, APS={:.3f}".format(i, result_table.loc[i]['pr_auc'],result_table.loc[i]['ave_prec']))
+
         count += 1
     #Estimate no skill line based on the fraction of cases found in the first test dataset
     test = pd.read_csv(full_path+'/CVDatasets/'+data_name+'_CV_0_Test.csv')
@@ -564,9 +581,9 @@ def prepFI(algorithms,full_path,abbrev,metric_dict,primary_metric):
     non_zero_union_indexes = []
     for i in non_zero_union_features:
         non_zero_union_indexes.append(all_feature_list.index(i))
-    return fi_df_list,fi_ave_norm_list,ave_metric_list,all_feature_list,non_zero_union_features,non_zero_union_indexes
+    return fi_df_list,fi_ave_list,fi_ave_norm_list,ave_metric_list,all_feature_list,non_zero_union_features,non_zero_union_indexes
 
-def selectForViz(top_results,non_zero_union_features,non_zero_union_indexes,algorithms,ave_metric_list,fi_ave_norm_list):
+def selectForCompositeViz(top_results,non_zero_union_features,non_zero_union_indexes,algorithms,ave_metric_list,fi_ave_norm_list):
     """ Identify list of top features over all algorithms to visualize (note that best features to vizualize are chosen using algorithm performance weighting and normalization:
     frac plays no useful role here only for viz). All features included if there are fewer than 'top_results'. Top features are determined by the sum of performance
     (i.e. balanced accuracy) weighted feature importances over all algorithms."""
@@ -599,43 +616,57 @@ def selectForViz(top_results,non_zero_union_features,non_zero_union_indexes,algo
         featuresToViz = scoreSumDict_features
     return featuresToViz #list of feature names to vizualize in composite FI plots.
 
-def doFIBoxplots(full_path,fi_df_list,algorithms,original_headers,jupyterRun):
+def doFIBoxplots(full_path,fi_df_list,fi_ave_list,algorithms,original_headers,top_results, jupyterRun):
     """ Generate individual feature importance boxplots for each algorithm """
-    counter = 0
-    for df in fi_df_list:
+    algorithmCounter = 0
+    for algorithm in algorithms: #each algorithms
+        #Make average feature importance score dicitonary
+        scoreDict = {}
+        counter = 0
+        for ave_score in fi_ave_list[algorithmCounter]: #each feature
+            scoreDict[original_headers[counter]] = ave_score
+            counter += 1
+        # Sort features by decreasing score
+        scoreDict_features = sorted(scoreDict, key=lambda x: scoreDict[x], reverse=True)
+        #Make list of feature names to vizualize
+        if len(original_headers) > top_results:
+            featuresToViz = scoreDict_features[0:top_results]
+        else:
+            featuresToViz = scoreDict_features
+        # FI score dataframe for current algorithm
+        df = fi_df_list[algorithmCounter]
+        # Subset of dataframe (in ranked order) to vizualize
+        viz_df = df[featuresToViz]
+        #Generate Boxplot
         fig = plt.figure(figsize=(15, 4))
-        boxplot = df.boxplot(rot=90)
-        plt.title(algorithms[counter])
+        boxplot = viz_df.boxplot(rot=90)
+        plt.title(algorithm)
         plt.ylabel('Feature Importance Score')
         plt.xlabel('Features')
-        plt.xticks(np.arange(1, len(original_headers) + 1), original_headers, rotation='vertical')
-        plt.savefig(full_path+'/model_evaluation/feature_importance/' + algorithms[counter] + '_boxplot',bbox_inches="tight")
+        plt.xticks(np.arange(1, len(featuresToViz) + 1), featuresToViz, rotation='vertical')
+        plt.savefig(full_path+'/model_evaluation/feature_importance/' + algorithm + '_boxplot',bbox_inches="tight")
+        if eval(jupyterRun):
+            plt.show()
+        else:
+            plt.close('all')    #Identify and sort (decreaseing) features with top average FI
+        algorithmCounter += 1
+
+def doFI_Histogram(full_path, fi_ave_list, algorithms, jupyterRun):
+    """ Generate histogram showing distribution of average feature importances scores for each algorithm. """
+    algorithmCounter = 0
+    for algorithm in algorithms: #each algorithms
+        aveScores = fi_ave_list[algorithmCounter]
+        #Plot a histogram of average feature importance
+        plt.hist(aveScores,bins=100)
+        plt.xlabel("Average Feature Importance")
+        plt.ylabel("Frequency")
+        plt.title("Histogram of Average Feature Importance for "+str(algorithm))
+        plt.xticks(rotation = 'vertical')
+        plt.savefig(full_path+'/model_evaluation/feature_importance/' + algorithm + '_histogram',bbox_inches="tight")
         if eval(jupyterRun):
             plt.show()
         else:
             plt.close('all')
-        counter += 1
-
-def getFI_To_Viz(featuresToViz,all_feature_list,algorithms,fi_ave_norm_list):
-    """ Currently Not Used: Takes a list of top features names for vizualization, gets their indexes"""
-    #Get original feature indexs for selected feature names
-    feature_indexToViz = [] #indexes of top features
-    for i in featuresToViz:
-        feature_indexToViz.append(all_feature_list.index(i))
-    # Create list of top feature importance values in original dataset feature order
-    top_fi_ave_norm_list = [] #feature importance values of top featuers for each algorithm (list of lists)
-    for i in range(len(algorithms)):
-        tempList = []
-        for j in range(len(fi_ave_norm_list[i])):
-            if j in feature_indexToViz:
-                tempList.append(fi_ave_norm_list[i][j])
-        top_fi_ave_norm_list.append(tempList)
-    # Create feature name list in propper original dataset order (was in descending order)
-    all_feature_listToViz = []
-    for j in (all_feature_list):
-        if j in featuresToViz:
-            all_feature_listToViz.append(j)
-    return top_fi_ave_norm_list,all_feature_listToViz
 
 def getFI_To_Viz_Sorted(featuresToViz,all_feature_list,algorithms,fi_ave_norm_list):
     """ Takes a list of top features names for vizualization, gets their indexes. In every composite FI plot features are ordered the same way

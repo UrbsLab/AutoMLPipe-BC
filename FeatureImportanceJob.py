@@ -20,7 +20,7 @@ import csv
 import pickle
 import os
 
-def job(cv_train_path,experiment_path,random_state,class_label,instance_label,instance_subset,algorithm,njobs,use_TURF,TURF_pct):
+def job(cv_train_path,experiment_path,random_state,class_label,instance_label,instance_subset,algorithm,njobs,use_TURF,TURF_pct,jupyterRun):
     """ Run all elements of the feature importance evaluation: applies either mutual information and multisurf and saves a sorted dictionary of features with associated scores """
     job_start_time = time.time() #for tracking phase runtime
     # Set random seeds for replicatability
@@ -28,14 +28,22 @@ def job(cv_train_path,experiment_path,random_state,class_label,instance_label,in
     np.random.seed(random_state)
     # Load and format data for analysis
     dataset_name,dataFeatures,dataOutcome,header,cvCount = prepareData(cv_train_path,instance_label,class_label)
+    if eval(jupyterRun):
+        print('Prepared Train and Test for: '+str(dataset_name)+ "_CV_"+str(cvCount))
     # Apply mutual information if specified by user
     if algorithm == 'mi':
+        if eval(jupyterRun):
+            print('Running Mutual Information...')
         scores,outpath,alg_name = runMutualInformation(experiment_path,dataset_name,cvCount,dataFeatures,dataOutcome,random_state)
     # Apply MultiSURF if specified by user
     elif algorithm == 'ms':
+        if eval(jupyterRun):
+            print('Running MultiSURF...')
         scores,outpath,alg_name = runMultiSURF(dataFeatures,dataOutcome,instance_subset,experiment_path,dataset_name,cvCount,use_TURF,TURF_pct,njobs)
     else:
         raise Exception("Feature importance algorithm not found")
+    if eval(jupyterRun):
+        print('Sort and pickle feature importance scores...')
     # Save sorted feature importance scores:
     scoreDict, score_sorted_features = sort_save_fi_scores(scores, header, outpath, alg_name)
     # Pickle feature importance information to be used in Phase 4 (feature selection)
@@ -128,4 +136,4 @@ def sort_save_fi_scores(scores, ordered_feature_names, filename, algo_name):
 
 ########################################################################################################################
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],int(sys.argv[3]),sys.argv[4],sys.argv[5],int(sys.argv[6]),sys.argv[7],int(sys.argv[8]),sys.argv[9],float(sys.argv[10]))
+    job(sys.argv[1],sys.argv[2],int(sys.argv[3]),sys.argv[4],sys.argv[5],int(sys.argv[6]),sys.argv[7],int(sys.argv[8]),sys.argv[9],float(sys.argv[10]),sys.argv[11])

@@ -52,7 +52,6 @@ def main(argv):
     parser.add_argument('--match-label', dest='match_label', type=str, help='only applies when M selected for partition-method; indicates column with matched instance ids', default="None")
     parser.add_argument('--cat-cutoff', dest='categorical_cutoff', type=int,help='number of unique values after which a variable is considered to be quantitative vs categorical', default=10)
     parser.add_argument('--sig', dest='sig_cutoff', type=float, help='significance cutoff used throughout pipeline',default=0.05)
-    parser.add_argument('--export-ea', dest='export_exploratory_analysis', type=str, help='run and export basic exploratory analysis files, i.e. unique value counts, missingness counts, class balance barplot',default="True")
     parser.add_argument('--export-fc', dest='export_feature_correlations', type=str, help='run and export feature correlation analysis (yields correlation heatmap)',default="True")
     parser.add_argument('--export-up', dest='export_univariate_plots', type=str, help='export univariate analysis plots (note: univariate analysis still output by default)',default="False")
     parser.add_argument('--rand-state', dest='random_state', type=int, help='"Dont Panic" - sets a specific random seed for reproducible results',default=42)
@@ -81,9 +80,9 @@ def main(argv):
                     unique_datanames.append(data_name)
                     job_counter += 1
                     if eval(options.run_parallel): #Run as job in parallel on linux computing cluster
-                        submitClusterJob(dataset_path,options.output_path +'/'+options.experiment_name,options.cv_partitions,options.partition_method,options.categorical_cutoff,options.export_exploratory_analysis,options.export_feature_correlations,options.export_univariate_plots,options.class_label,options.instance_label,options.match_label,options.random_state,options.reserved_memory,options.maximum_memory,options.queue,options.ignore_features_path,options.categorical_feature_path,options.sig_cutoff,jupyterRun)
+                        submitClusterJob(dataset_path,options.output_path +'/'+options.experiment_name,options.cv_partitions,options.partition_method,options.categorical_cutoff,options.export_feature_correlations,options.export_univariate_plots,options.class_label,options.instance_label,options.match_label,options.random_state,options.reserved_memory,options.maximum_memory,options.queue,options.ignore_features_path,options.categorical_feature_path,options.sig_cutoff,jupyterRun)
                     else: #Run job locally, serially
-                        submitLocalJob(dataset_path,options.output_path+'/'+options.experiment_name,options.cv_partitions,options.partition_method,options.categorical_cutoff,options.export_exploratory_analysis,options.export_feature_correlations,options.export_univariate_plots,options.class_label,options.instance_label,options.match_label,options.random_state,options.ignore_features_path,options.categorical_feature_path,options.sig_cutoff,jupyterRun)
+                        submitLocalJob(dataset_path,options.output_path+'/'+options.experiment_name,options.cv_partitions,options.partition_method,options.categorical_cutoff,options.export_feature_correlations,options.export_univariate_plots,options.class_label,options.instance_label,options.match_label,options.random_state,options.ignore_features_path,options.categorical_feature_path,options.sig_cutoff,jupyterRun)
                     file_count += 1
         if file_count == 0: #Check that there was at least 1 dataset
             raise Exception("There must be at least one .txt or .csv dataset in data_path directory")
@@ -125,7 +124,7 @@ def main(argv):
             print("All Phase 1 Jobs Completed")
         else:
             print("Above Phase 1 Jobs Not Completed")
-            
+
     if not options.do_check:
         print(str(job_counter)+ " jobs submitted in Phase 1")
 
@@ -150,11 +149,11 @@ def makeDirTree(data_path,output_path,experiment_name,jupyterRun):
         os.mkdir(output_path+'/'+experiment_name+'/jobs')
         os.mkdir(output_path+'/'+experiment_name+'/logs')
 
-def submitLocalJob(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun):
+def submitLocalJob(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun):
     """ Runs ExploratoryAnalysisJob.py on each dataset in dataset_path locally. These runs will be completed serially rather than in parallel. """
-    ExploratoryAnalysisJob.job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun)
+    ExploratoryAnalysisJob.job(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun)
 
-def submitClusterJob(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_exploratory_analysis,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,reserved_memory,maximum_memory,queue,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun):
+def submitClusterJob(dataset_path,experiment_path,cv_partitions,partition_method,categorical_cutoff,export_feature_correlations,export_univariate_plots,class_label,instance_label,match_label,random_state,reserved_memory,maximum_memory,queue,ignore_features_path,categorical_feature_path,sig_cutoff,jupyterRun):
     """ Runs ExploratoryAnalysisJob.py on each dataset in dataset_path in parallel on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
     job_name = experiment_path+'/jobs/P1_'+job_ref+'_run.sh'
@@ -168,7 +167,7 @@ def submitClusterJob(dataset_path,experiment_path,cv_partitions,partition_method
     sh_file.write('#BSUB -e ' + experiment_path+'/logs/P1_'+job_ref+'.e\n')
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
-    sh_file.write('python '+this_file_path+'/ExploratoryAnalysisJob.py '+dataset_path+" "+experiment_path+" "+str(cv_partitions)+" "+partition_method+" "+str(categorical_cutoff)+" "+export_exploratory_analysis+
+    sh_file.write('python '+this_file_path+'/ExploratoryAnalysisJob.py '+dataset_path+" "+experiment_path+" "+str(cv_partitions)+" "+partition_method+" "+str(categorical_cutoff)+
                   " "+export_feature_correlations+" "+export_univariate_plots+" "+class_label+" "+instance_label+" "+match_label+" "+str(random_state)+" "+str(ignore_features_path)+" "+str(categorical_feature_path)+" "+str(sig_cutoff)+" "+str(jupyterRun)+'\n')
     sh_file.close()
     os.system('bsub < '+job_name)

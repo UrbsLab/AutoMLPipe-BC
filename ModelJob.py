@@ -52,8 +52,10 @@ from sklearn.base import clone
 from sklearn.inspection import permutation_importance
 import optuna #hyperparameter optimization
 
-def job(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric):
+def job(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,jupyterRun):
     """ Specifies hardcoded (below) range of hyperparameter options selected for each ML algorithm and then runs the modeling method. Set up this way so that users can easily modify ML hyperparameter settings when running from the Jupyter Notebook. """
+    if eval(jupyterRun):
+        print('Running '+str(algorithm)+' on '+str(train_file_path))
     #Get hyperparameter grid
     param_grid = hyperparameters(random_state,do_lcs_sweep,nu,iterations,N)[algorithm]
     runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,param_grid)
@@ -141,14 +143,8 @@ def hyper_eval(est, x_train, y_train, randSeed, hype_cv, params, scoring_metric)
     performance = np.mean(cross_val_score(model,x_train,y_train,cv=cv,scoring=scoring_metric ))
     return performance
 
-#Naive Bayes #############################################################################################################################
-def run_NB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,timeout,do_plot,full_path,use_uniform_FI,primary_metric):
-    """ Run Naive Bayes model training, evaluation, and model feature importance estimation. No hyperparameters to optimize."""
-    #Train model using 'best' hyperparameters - Uses default 3-fold internal CV (training/validation splits)
-    clf = GaussianNB()
-    model = clf.fit(x_train, y_train)
-    #Save model
-    pickle.dump(model, open(full_path+'/models/pickledModels/NB_'+str(i), 'wb'))
+def modelEvaluation(clf,model,x_test,y_test):
+    """ Runs commands to gather all evaluations for later summaries and plots. """
     #Prediction evaluation
     y_pred = clf.predict(x_test)
     metricList = classEval(y_test, y_pred)
@@ -162,6 +158,18 @@ def run_NB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
     prec_rec_auc = auc(recall, prec)
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
+    return metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_
+
+#Naive Bayes #############################################################################################################################
+def run_NB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,timeout,do_plot,full_path,use_uniform_FI,primary_metric):
+    """ Run Naive Bayes model training, evaluation, and model feature importance estimation. No hyperparameters to optimize."""
+    #Train model using 'best' hyperparameters - Uses default 3-fold internal CV (training/validation splits)
+    clf = GaussianNB()
+    model = clf.fit(x_train, y_train)
+    #Save model
+    pickle.dump(model, open(full_path+'/models/pickledModels/NB_'+str(i), 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
     #Feature Importance Estimates
     results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
     fi = results.importances_mean
@@ -220,6 +228,9 @@ def run_LR_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/LR_'+str(i), 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    """
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -234,6 +245,7 @@ def run_LR_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1] #reversed list orders
     prec_rec_auc = auc(recall, prec)
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
+    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -297,6 +309,9 @@ def run_DT_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/DT_'+str(i), 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    """
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -311,6 +326,7 @@ def run_DT_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
     prec_rec_auc = auc(recall, prec)
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
+    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -376,6 +392,9 @@ def run_RF_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/RF_'+str(i), 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    """
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -390,6 +409,7 @@ def run_RF_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
     prec_rec_auc = auc(recall, prec)
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
+    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -452,6 +472,9 @@ def run_GB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/GB_'+str(i), 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    """
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -466,6 +489,7 @@ def run_GB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
     prec_rec_auc = auc(recall, prec)
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
+    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -549,6 +573,9 @@ def run_XGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/XGB_'+str(i), 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    """
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -560,9 +587,10 @@ def run_XGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     roc_auc = auc(fpr, tpr)
     # Compute Precision/Recall curve and AUC
     prec, recall, thresholds = metrics.precision_recall_curve(y_test, probas_[:, 1])
-    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
+    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1] #reverse order
     prec_rec_auc = auc(recall, prec)
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
+    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -636,6 +664,9 @@ def run_LGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/LGB_'+str(i), 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    """
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -650,6 +681,7 @@ def run_LGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
     prec_rec_auc = auc(recall, prec)
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
+    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -718,6 +750,9 @@ def run_SVM_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/SVM_'+str(i), 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    """
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -732,6 +767,7 @@ def run_SVM_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
     prec_rec_auc = auc(recall, prec)
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
+    """
     # Feature Importance Estimates (SVM can only automatically obtain feature importance estimates (coef_) for linear kernel)
     results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
     fi = results.importances_mean
@@ -812,6 +848,9 @@ def run_ANN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/ANN_'+str(i), 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    """
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -826,6 +865,7 @@ def run_ANN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
     prec_rec_auc = auc(recall, prec)
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
+    """
     # Feature Importance Estimates
     results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
     fi = results.importances_mean
@@ -889,6 +929,9 @@ def run_KN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/KN_'+str(i), 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    """
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -903,6 +946,7 @@ def run_KN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
     prec_rec_auc = auc(recall, prec)
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
+    """
     # Feature Importance Estimates
     results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
     fi = results.importances_mean
@@ -957,6 +1001,9 @@ def run_eLCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trial
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/eLCS_'+str(i), 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    """
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -971,6 +1018,7 @@ def run_eLCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trial
     prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
     prec_rec_auc = auc(recall, prec)
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
+    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -1028,6 +1076,9 @@ def run_XCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/XCS_'+str(i), 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    """
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -1042,6 +1093,7 @@ def run_XCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
     prec_rec_auc = auc(recall, prec)
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
+    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -1141,6 +1193,9 @@ def run_ExSTraCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_t
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/ExSTraCS_'+str(i), 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    """
     # Prediction evaluation on hold out testing data
     y_pred = clf.predict(x_test)
     #Calculate standard classificaction metrics
@@ -1155,6 +1210,7 @@ def run_ExSTraCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_t
     prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
     prec_rec_auc = auc(recall, prec)
     ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
+    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -1292,4 +1348,4 @@ def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N):
     return param_grid
 
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],int(sys.argv[5]),int(sys.argv[6]),int(sys.argv[7]),sys.argv[8],sys.argv[9],sys.argv[10],int(sys.argv[11]),int(sys.argv[12]),sys.argv[13],sys.argv[14],int(sys.argv[15]),int(sys.argv[16]),int(sys.argv[17]),int(sys.argv[18]),sys.argv[19],sys.argv[20])
+    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],int(sys.argv[5]),int(sys.argv[6]),int(sys.argv[7]),sys.argv[8],sys.argv[9],sys.argv[10],int(sys.argv[11]),int(sys.argv[12]),sys.argv[13],sys.argv[14],int(sys.argv[15]),int(sys.argv[16]),int(sys.argv[17]),int(sys.argv[18]),sys.argv[19],sys.argv[20],sys.argv[21])

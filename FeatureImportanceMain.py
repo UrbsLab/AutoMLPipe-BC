@@ -45,6 +45,7 @@ def main(argv):
     parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')
 
     options = parser.parse_args(argv[1:])
+    jupyterRun = 'False' #controls whether progress updates are shown or not depending on whether jupyter notebook is used
     job_counter = 0
 
     # Argument checks
@@ -83,9 +84,9 @@ def main(argv):
                     command_text = '/FeatureImportanceJob.py ' + cv_train_path+" "+experiment_path+" "+str(random_state)+" "+class_label+" "+instance_label+" " +str(options.instance_subset)+" mi "+str(options.n_jobs)+' '+str(options.use_TURF)+' '+str(options.TURF_pct)
                     if eval(options.run_parallel):
                         job_counter += 1
-                        submitClusterJob(command_text, experiment_path,options.reserved_memory,options.maximum_memory,options.queue)
+                        submitClusterJob(command_text, experiment_path,options.reserved_memory,options.maximum_memory,options.queue,jupyterRun)
                     else:
-                        submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,options.instance_subset,'mi',options.n_jobs,options.use_TURF,options.TURF_pct)
+                        submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,options.instance_subset,'mi',options.n_jobs,options.use_TURF,options.TURF_pct,jupyterRun)
 
             if eval(options.do_multisurf):
                 if not os.path.exists(full_path+"/feature_selection/multisurf"):
@@ -94,9 +95,9 @@ def main(argv):
                     command_text = '/FeatureImportanceJob.py ' + cv_train_path+" "+experiment_path+" "+str(random_state)+" "+class_label+" "+instance_label+" " +str(options.instance_subset)+" ms "+str(options.n_jobs)+' '+str(options.use_TURF)+' '+str(options.TURF_pct)
                     if eval(options.run_parallel):
                         job_counter += 1
-                        submitClusterJob(command_text, experiment_path,options.reserved_memory,options.maximum_memory,options.queue)
+                        submitClusterJob(command_text, experiment_path,options.reserved_memory,options.maximum_memory,options.queue,jupyterRun)
                     else:
-                        submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,options.instance_subset,'ms',options.n_jobs,options.use_TURF,options.TURF_pct)
+                        submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,options.instance_subset,'ms',options.n_jobs,options.use_TURF,options.TURF_pct,jupyterRun)
 
         #Update metadata
         if metadata.shape[0] == 13: #Only update if metadata below hasn't been added before (i.e. in a previous phase 2 run)
@@ -140,11 +141,11 @@ def main(argv):
     if not options.do_check:
         print(str(job_counter)+ " jobs submitted in Phase 3")
 
-def submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,instance_subset,algorithm,n_jobs,use_TURF,TURF_pct):
+def submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,instance_subset,algorithm,n_jobs,use_TURF,TURF_pct,jupyterRun):
     """ Runs FeatureImportanceJob.py locally on a single CV dataset applying one of the implemented feature importance algorithms. These runs will be completed serially rather than in parallel. """
-    FeatureImportanceJob.job(cv_train_path,experiment_path,random_state,class_label,instance_label,instance_subset,algorithm,n_jobs,use_TURF,TURF_pct)
+    FeatureImportanceJob.job(cv_train_path,experiment_path,random_state,class_label,instance_label,instance_subset,algorithm,n_jobs,use_TURF,TURF_pct,jupyterRun)
 
-def submitClusterJob(command_text,experiment_path,reserved_memory,maximum_memory,queue):
+def submitClusterJob(command_text,experiment_path,reserved_memory,maximum_memory,queue,jupyterRun):
     """ Runs FeatureImportanceJob.py on a single CV dataset applying one of the implemented feature importance algorithms. Runs in parallel on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
     job_name = experiment_path+'/jobs/P3_'+job_ref+'_run.sh'
@@ -158,7 +159,7 @@ def submitClusterJob(command_text,experiment_path,reserved_memory,maximum_memory
     sh_file.write('#BSUB -e ' + experiment_path+'/logs/P3_'+job_ref+'.e\n')
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
-    sh_file.write('python ' + this_file_path + command_text+'\n')
+    sh_file.write('python ' + this_file_path + command_text+" "+jupyterRun+'\n')
     sh_file.close()
     os.system('bsub < ' + job_name)
     pass

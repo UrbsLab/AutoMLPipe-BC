@@ -35,7 +35,7 @@ def main(argv):
     #Defaults available
     parser.add_argument('--max-feat', dest='max_features_to_keep', type=int,help='max features to keep. None if no max', default=2000)
     parser.add_argument('--filter-feat', dest='filter_poor_features', type=str, help='filter out the worst performing features prior to modeling',default='True')
-    parser.add_argument('--top-results', dest='top_results', type=int,help='number of top features to illustrate in figures', default=20)
+    parser.add_argument('--top-results', dest='top_results', type=int,help='number of top features to illustrate in figures', default=40)
     parser.add_argument('--export-scores', dest='export_scores', type=str,help='export figure summarizing average feature importance scores over cv partitions', default='True')
     parser.add_argument('--over-cv', dest='overwrite_cv',type=str,help='overwrites working cv datasets with new feature subset datasets',default="True")
     #Lostistical arguments

@@ -4,7 +4,7 @@ Authors: Ryan J. Urbanowicz, Richard Zhang, Wilson Zhang
 Institution: University of Pensylvania, Philadelphia PA
 Creation Date: 6/1/2021
 License: GPL 3.0
-Description: Phase 11 of AutoMLPipe-BC - This 'Job' script is called by PDF_ReportApplyMain.py which generates a formatted PDF summary report of key
+Description: Phase 10 of AutoMLPipe-BC - This 'Job' script is called by PDF_ReportApplyMain.py which generates a formatted PDF summary report of key
 pipeline results (applying trained models to hold out replication data). It is run once.
 """
 #Import required packages  ---------------------------------------------------------------------------------------------------------------------------

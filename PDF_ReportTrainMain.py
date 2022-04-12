@@ -4,10 +4,10 @@ Authors: Ryan J. Urbanowicz, Richard Zhang, Wilson Zhang
 Institution: University of Pensylvania, Philadelphia PA
 Creation Date: 6/1/2021
 License: GPL 3.0
-Description: Phase 9 of AutoMLPipe-BC (Optional)- This 'Main' script manages Phase 9 run parameters, and submits job to run locally (to run serially) or on a linux computing
+Description: Phase 8 of AutoMLPipe-BC (Optional)- This 'Main' script manages Phase 8 run parameters, and submits job to run locally (to run serially) or on a linux computing
              cluster (parallelized). This script runs PDF_ReportTrainJob.py which generates a formatted PDF summary report of key pipeline results.
              All 'Main' scripts in this pipeline have the potential to be extended by users to submit jobs to other parallel computing frameworks (e.g. cloud computing).
-Warnings: Designed to be run following the completion of either AutoMLPipe-BC Phase 6 (StatsMain.py), Phase 7 (DataCompareMain.py), and or Phase 8 (KeyFileCopyMain.py).
+Warnings: Designed to be run following the completion of either AutoMLPipe-BC Phase 6 (StatsMain.py), and or Phase 7 (DataCompareMain.py).
 Sample Run Command (Linux cluster parallelized with all default run parameters):
     python PDF_ReportTrainMain.py --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1
 Sample Run Command (Local/serial with with all default run parameters):
@@ -42,7 +42,7 @@ def main(argv):
     else:
         submitLocalJob(experiment_path)
 
-    print(str(job_counter)+ " job submitted in Phase 9")
+    print(str(job_counter)+ " job submitted in Phase 8")
 
 def submitLocalJob(experiment_path):
     """ Runs PDF_ReportTrainJob.py locally, once. """

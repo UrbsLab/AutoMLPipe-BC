@@ -4,7 +4,7 @@ Authors: Ryan J. Urbanowicz, Robert Zhang
 Institution: University of Pensylvania, Philadelphia PA
 Creation Date: 6/1/2021
 License: GPL 3.0
-Description: Phase 10 of AutoMLPipe-BC - This 'Job' script is called by ApplyModelMain.py. It conducts exploratory analysis on the new replication dataset then
+Description: Phase 9 of AutoMLPipe-BC - This 'Job' script is called by ApplyModelMain.py. It conducts exploratory analysis on the new replication dataset then
 applies and evaluates all trained models on one or more previously unseen hold-out or replication study dataset(s). It also genertes new evaluation figure.
 It does not deal with model feature importance estimation as this is a part of model training interpretation only.  This script is run once for each replication
 dataset in rep_data_path.

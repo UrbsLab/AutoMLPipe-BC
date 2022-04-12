@@ -4,7 +4,7 @@ Authors: Ryan J. Urbanowicz, Richard Zhang, Wilson Zhang
 Institution: University of Pensylvania, Philadelphia PA
 Creation Date: 6/1/2021
 License: GPL 3.0
-Description: Phase 9 of AutoMLPipe-BC - This 'Job' script is called by PDF_ReportTrainMain.py which generates a formatted PDF summary report of key
+Description: Phase 8 of AutoMLPipe-BC - This 'Job' script is called by PDF_ReportTrainMain.py which generates a formatted PDF summary report of key
 pipeline results It is run once for the whole pipeline analysis.
 """
 #Import required packages  ---------------------------------------------------------------------------------------------------------------------------

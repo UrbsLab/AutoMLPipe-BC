@@ -4,7 +4,7 @@ Authors: Ryan J. Urbanowicz, Robert Zhang
 Institution: University of Pensylvania, Philadelphia PA
 Creation Date: 6/1/2021
 License: GPL 3.0
-Description: Phase 12 of AutoMLPipe-BC (Optional)- This 'Main' script runs Phase 12 which deletes all temporary files in pipeline output folder.
+Description: Phase 11 of AutoMLPipe-BC (Optional)- This 'Main' script runs Phase 11 which deletes all temporary files in pipeline output folder.
             This script is not necessary to run, but serves as a convenience to reduce space and clutter following a pipeline run.
 Sample Run Command (runs locally only):
     python FileCleanupMain.py --out-path /Users/robert/Desktop/outputs --exp-name myexperiment1

@@ -4,7 +4,7 @@ Authors: Ryan J. Urbanowicz, Richard Zhang, Wilson Zhang
 Institution: University of Pensylvania, Philadelphia PA
 Creation Date: 6/1/2021
 License: GPL 3.0
-Description: Phase 10 of AutoMLPipe-BC (Optional)- This 'Main' script manages Phase 10 run parameters, and submits job to run locally (to run serially) or on a linux computing
+Description: Phase 9 of AutoMLPipe-BC (Optional)- This 'Main' script manages Phase 9 run parameters, and submits job to run locally (to run serially) or on a linux computing
              cluster (parallelized). This script runs ApplyModelJob.py which applies and evaluates all trained models on one or more previously unseen hold-out or replication study dataset(s).
              All 'Main' scripts in this pipeline have the potential to be extended by users to submit jobs to other parallel computing frameworks (e.g. cloud computing).
 Warnings: Designed to be run following the completion anytime after AutoMLPipe-BC Phase 6 (StatsMain.py).

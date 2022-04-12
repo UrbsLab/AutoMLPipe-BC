@@ -32,10 +32,7 @@ python StatsMain.py --out-path $out_path --exp-name $exp_name --run-parallel Fal
 echo "Phase 7: [Optional] Compare Datasets"
 python DataCompareMain.py --out-path $out_path --exp-name $exp_name --run-parallel False
 
-echo "Phase 8: [Optional] Copy Key Files"
-python KeyFileCopyMain.py --data-path $data_path --output-path $out_path --exp-name $exp_name --run-parallel False
-
-echo "Phase 9: [Optional] Generate PDF Training Summary Report"
+echo "Phase 8: [Optional] Generate PDF Training Summary Report"
 python PDF_ReportTrainMain.py --out-path $out_path --exp-name $exp_name --run-parallel False
 
 # echo "Phase 10: [Optional] Apply Models to Replication Data"

@@ -228,7 +228,6 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
                 if each in headers:  # Check if current feature from original dataset was in the partition
                     # Deal with features not being in original order (find index of current feature list.index()
                     f_index = headers.index(each)
-                    #FI_ave[j] += fi[f_index]
                     tempList.append(fi[f_index])
                 else:
                     tempList.append(0)
@@ -280,7 +279,6 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             plt.rcParams["figure.figsize"] = (6,6)
             # Plot individual CV PRC lines
             for i in range(cv_partitions):
-                #plt.plot(alg_result_table[i][3], alg_result_table[i][4], lw=1, alpha=0.3, label='PRC fold %d (AUC = %0.3f)' % (i, alg_result_table[i][5]))
                 plt.plot(alg_result_table[i][4], alg_result_table[i][3], lw=1, alpha=0.3, label='PRC fold %d (AUC = %0.3f)' % (i, alg_result_table[i][5]))
             #Estimate no skill line based on the fraction of cases found in the first test dataset
             test = pd.read_csv(full_path + '/CVDatasets/' + data_name + '_CV_0_Test.csv') #Technically there could be a unique no-skill line for each CV dataset based on final class balance (however only one is needed, and stratified CV attempts to keep partitions with similar/same class balance)
@@ -295,7 +293,6 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
             std_prec = np.std(precs, axis=0)
             precs_upper = np.minimum(mean_prec + std_prec, 1)
             precs_lower = np.maximum(mean_prec - std_prec, 0)
-            #plt.fill_between(mean_fpr, precs_lower, precs_upper, color='grey', alpha=.2,label=r'$\pm$ 1 std. dev.')
             plt.fill_between(mean_recall, precs_lower, precs_upper, color='grey', alpha=.2,label=r'$\pm$ 1 std. dev.')
             #Specify plot axes,labels, and legend
             plt.xlim([-0.05, 1.05])
@@ -367,9 +364,7 @@ def doPlotPRC(result_table,colors,full_path,data_name,instance_label,class_label
     count = 0
     #Plot curves for each individual ML algorithm
     for i in result_table.index:
-        #plt.plot(result_table.loc[i]['fpr'],result_table.loc[i]['prec'], color=colors[i],label="{}, AUC={:.3f}, APS={:.3f}".format(i, result_table.loc[i]['pr_auc'],result_table.loc[i]['ave_prec']))
         plt.plot(result_table.loc[i]['recall'],result_table.loc[i]['prec'], color=colors[i],label="{}, AUC={:.3f}, APS={:.3f}".format(i, result_table.loc[i]['pr_auc'],result_table.loc[i]['ave_prec']))
-
         count += 1
     #Estimate no skill line based on the fraction of cases found in the first test dataset
     test = pd.read_csv(full_path+'/CVDatasets/'+data_name+'_CV_0_Test.csv')

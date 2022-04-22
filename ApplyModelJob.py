@@ -119,6 +119,12 @@ def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,
         #For all previously trained algorithms, load pickled model and apply prepared replication dataset
         evalDict = {}
         algorithms = []
+        if eval(do_NB):
+            algorithm = 'NB'
+            algorithms.append('Naive Bayes')
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_LR):
             algorithm = 'LR'
             algorithms.append('Logistic Regression')
@@ -137,9 +143,9 @@ def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,
             ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
             evalDict[algorithm] = ret
             pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_NB):
-            algorithm = 'NB'
-            algorithms.append('Naive Bayes')
+        if eval(do_GB):
+            algorithm = 'GB'
+            algorithms.append('Gradient Boosting')
             ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
             evalDict[algorithm] = ret
             pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
@@ -155,15 +161,21 @@ def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,
             ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
             evalDict[algorithm] = ret
             pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
+        if eval(do_SVM):
+            algorithm = 'SVM'
+            algorithms.append('SVM')
+            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+            evalDict[algorithm] = ret
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         if eval(do_ANN):
             algorithm = 'ANN'
             algorithms.append('ANN')
             ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
             evalDict[algorithm] = ret
             pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_SVM):
-            algorithm = 'SVM'
-            algorithms.append('SVM')
+        if eval(do_KN):
+            algorithm = 'KN'
+            algorithms.append('K Neighbors')
             ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
             evalDict[algorithm] = ret
             pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
@@ -185,25 +197,13 @@ def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,
             ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
             evalDict[algorithm] = ret
             pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_GB):
-            algorithm = 'GB'
-            algorithms.append('Gradient Boosting')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_KN):
-            algorithm = 'KN'
-            algorithms.append('K Neighbors')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
         masterList.append(evalDict) #update master list with evalDict for this CV model
     #Summarize top_results
-    abbrev = {'Logistic Regression':'LR','Decision Tree':'DT','Random Forest':'RF','Naive Bayes':'NB','XGB':'XGB','LGB':'LGB','ANN':'ANN','SVM':'SVM','ExSTraCS':'ExSTraCS','eLCS':'eLCS','XCS':'XCS','Gradient Boosting':'GB','K Neighbors':'KN'}
-    colors = {'Logistic Regression':'black','Decision Tree':'yellow','Random Forest':'orange','Naive Bayes':'grey','XGB':'purple','LGB':'aqua','ANN':'red','SVM':'blue','ExSTraCS':'lightcoral','eLCS':'firebrick','XCS':'deepskyblue','Gradient Boosting':'bisque','K Neighbors':'seagreen'}
+    abbrev = {'Naive Bayes':'NB','Logistic Regression':'LR','Decision Tree':'DT','Random Forest':'RF','Gradient Boosting':'GB','XGB':'XGB','LGB':'LGB','SVM':'SVM','ANN':'ANN','K Neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
+    colors = {'Naive Bayes':'grey','Logistic Regression':'black','Decision Tree':'yellow','Random Forest':'orange','Gradient Boosting':'bisque','XGB':'purple','LGB':'aqua','SVM':'blue','ANN':'red','K Neighbors':'seagreen','eLCS':'firebrick','XCS':'deepskyblue','ExSTraCS':'lightcoral'}
     result_table,metric_dict = primaryStats(algorithms,cv_partitions,full_path,apply_name,instance_label,class_label,abbrev,colors,plot_ROC,plot_PRC,jupyterRun,masterList,repData)
     StatsJob.doPlotROC(result_table,colors,full_path+'/applymodel/'+apply_name,jupyterRun)
-    doPlotPRC(result_table,colors,full_path,apply_name,instance_label,class_label,jupyterRun,repData)
+    doPlotPRC(result_table,colors,full_path,apply_name,instance_label,class_label,jupyterRun,repData) #can't use existing method since we need to recalculate 'no skill' line
     metrics = list(metric_dict[algorithms[0]].keys())
     StatsJob.saveMetricMeans(full_path+'/applymodel/'+apply_name,metrics,metric_dict)
     StatsJob.saveMetricStd(full_path+'/applymodel/'+apply_name,metrics,metric_dict)
@@ -298,25 +298,25 @@ def primaryStats(algorithms,cv_partitions,full_path,apply_name,instance_label,cl
     #Main Ops
     result_table = []
     metric_dict = {}
-    for algorithm in algorithms:
-        alg_result_table = []
+    for algorithm in algorithms: #completed for each individual ML modeling algorithm
+        alg_result_table = [] #stores values used in ROC and PRC plots
         # Define evaluation stats variable lists
-        s_bac = []
-        s_ac = []
-        s_f1 = []
-        s_re = []
-        s_sp = []
-        s_pr = []
-        s_tp = []
-        s_tn = []
-        s_fp = []
-        s_fn = []
-        s_npv = []
-        s_lrp = []
-        s_lrm = []
+        s_bac = [] # balanced accuracies
+        s_ac = [] # standard accuracies
+        s_f1 = [] # F1 scores
+        s_re = [] # recall values
+        s_sp = [] # specificities
+        s_pr = [] # precision values
+        s_tp = [] # true positives
+        s_tn = [] # true negatives
+        s_fp = [] # false positives
+        s_fn = [] # false negatives
+        s_npv = [] # negative predictive values
+        s_lrp = [] # likelihood ratio positive values
+        s_lrm = [] # likelihood ratio negative values
         # Define ROC plot variable lists
-        tprs = []
-        aucs = []
+        tprs = [] # stores interpolated true postitive rates for average CV line in ROC
+        aucs = [] #stores individual CV areas under ROC curve to calculate average
         mean_fpr = np.linspace(0, 1, 100)
         mean_recall = np.linspace(0, 1, 100)
         # Define PRC plot variable lists
@@ -347,7 +347,7 @@ def primaryStats(algorithms,cv_partitions,full_path,apply_name,instance_label,cl
             s_npv.append(metricList[10])
             s_lrp.append(metricList[11])
             s_lrm.append(metricList[12])
-            alg_result_table.append([fpr, tpr, roc_auc, recall, prec, prec_rec_auc, ave_prec])
+            alg_result_table.append([fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec])
             # Update ROC plot variable lists
             tprs.append(interp(mean_fpr, fpr, tpr))
             tprs[-1][0] = 0.0
@@ -363,51 +363,66 @@ def primaryStats(algorithms,cv_partitions,full_path,apply_name,instance_label,cl
         mean_tpr = np.mean(tprs, axis=0)
         mean_tpr[-1] = 1.0
         mean_auc = np.mean(aucs)
+        #Generate ROC Plot (including individual CV's lines, average line, and no skill line) - based on https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc_crossval.html-----------------------
         if eval(plot_ROC):
-            # Plot individual CV ROC line
+            # Set figure dimensions
             plt.rcParams["figure.figsize"] = (6,6)
+            # Plot individual CV ROC lines
             for i in range(cv_partitions):
                 plt.plot(alg_result_table[i][0], alg_result_table[i][1], lw=1, alpha=0.3,label='ROC fold %d (AUC = %0.3f)' % (i, alg_result_table[i][2]))
+            # Plot no-skill line
             plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r',label='No-Skill', alpha=.8)
+            # Plot average line for all CVs
             std_auc = np.std(aucs)
-            std_tpr = np.std(tprs, axis=0)
             plt.plot(mean_fpr, mean_tpr, color=colors[algorithm],label=r'Mean ROC (AUC = %0.3f $\pm$ %0.3f)' % (mean_auc, std_auc),lw=2, alpha=.8)
+            # Plot standard deviation grey zone of curves
+            std_tpr = np.std(tprs, axis=0)
             tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
             tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
             plt.fill_between(mean_fpr, tprs_lower, tprs_upper, color='grey', alpha=.2,label=r'$\pm$ 1 std. dev.')
+            #Specify plot axes,labels, and legend
             plt.xlim([-0.05, 1.05])
             plt.ylim([-0.05, 1.05])
             plt.xlabel('False Positive Rate')
             plt.ylabel('True Positive Rate')
-            #plt.title(algorithm + ' : ROC over CV Partitions')
             plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
+            #Export and/or show plot
             plt.savefig(full_path+"/applymodel/"+apply_name+'/model_evaluation/'+abbrev[algorithm]+"_ROC.png", bbox_inches="tight")
             if eval(jupyterRun):
                 plt.show()
             else:
                 plt.close('all')
 
-        #CV PRC plot ---------------------------------------------------------------
+        #Define values for the mean PRC line (mean of individual CVs)
         mean_prec = np.mean(precs, axis=0)
         mean_pr_auc = np.mean(praucs)
+        #Generate PRC Plot (including individual CV's lines, average line, and no skill line)--------------------------------------------------
         if eval(plot_PRC):
+            # Set figure dimensions
+            plt.rcParams["figure.figsize"] = (6,6)
+            # Plot individual CV PRC lines
             for i in range(cv_partitions):
-                plt.plot(alg_result_table[i][3], alg_result_table[i][4], lw=1, alpha=0.3, label='PRC fold %d (AUC = %0.3f)' % (i, alg_result_table[i][5]))
+                plt.plot(alg_result_table[i][4], alg_result_table[i][3], lw=1, alpha=0.3, label='PRC fold %d (AUC = %0.3f)' % (i, alg_result_table[i][5]))
+            #Estimate no skill line based on the fraction of cases found in the first test dataset
             repClass = repData[class_label].values
             noskill = len(repClass[repClass == 1]) / len(repClass)  # Fraction of cases
+            # Plot no-skill line
             plt.plot([0, 1], [noskill, noskill], color='orange', linestyle='--', label='No-Skill', alpha=.8)
+            # Plot average line for all CVs
             std_pr_auc = np.std(praucs)
-            std_prec = np.std(precs, axis=0)
             plt.plot(mean_recall, mean_prec, color=colors[algorithm],label=r'Mean PRC (AUC = %0.3f $\pm$ %0.3f)' % (mean_pr_auc, std_pr_auc),lw=2, alpha=.8)
+            # Plot standard deviation grey zone of curves
+            std_prec = np.std(precs, axis=0)
             precs_upper = np.minimum(mean_prec + std_prec, 1)
             precs_lower = np.maximum(mean_prec - std_prec, 0)
-            plt.fill_between(mean_fpr, precs_lower, precs_upper, color='grey', alpha=.2,label=r'$\pm$ 1 std. dev.')
+            plt.fill_between(mean_recall, precs_lower, precs_upper, color='grey', alpha=.2,label=r'$\pm$ 1 std. dev.')
+            #Specify plot axes,labels, and legend
             plt.xlim([-0.05, 1.05])
             plt.ylim([-0.05, 1.05])
             plt.xlabel('Recall (Sensitivity)')
             plt.ylabel('Precision (PPV)')
-            #plt.title(algorithm + ' : PRC over CV Partitions')
             plt.legend(loc="upper left", bbox_to_anchor=(1.01,1))
+            #Export and/or show plot
             plt.savefig(full_path+"/applymodel/"+apply_name+'/model_evaluation/'+abbrev[algorithm]+"_PRC.png", bbox_inches="tight")
             if eval(jupyterRun):
                 plt.show()
@@ -421,7 +436,7 @@ def primaryStats(algorithms,cv_partitions,full_path,apply_name,instance_label,cl
         metric_dict[algorithm] = results
         #Store ave metrics for creating global ROC and PRC plots later
         mean_ave_prec = np.mean(aveprecs)
-        result_dict = {'algorithm':algorithm,'fpr':mean_fpr, 'tpr':mean_tpr, 'auc':mean_auc, 'prec':mean_prec, 'pr_auc':mean_pr_auc, 'ave_prec':mean_ave_prec}
+        result_dict = {'algorithm':algorithm,'fpr':mean_fpr, 'tpr':mean_tpr, 'auc':mean_auc, 'prec':mean_prec, 'recall':mean_recall, 'pr_auc':mean_pr_auc, 'ave_prec':mean_ave_prec}
         result_table.append(result_dict)
     result_table = pd.DataFrame.from_dict(result_table)
     result_table.set_index('algorithm',inplace=True)
@@ -431,7 +446,7 @@ def doPlotPRC(result_table,colors,full_path,apply_name,instance_label,class_labe
     #Plot summarizing average PRC across algorithms
     count = 0
     for i in result_table.index:
-        plt.plot(result_table.loc[i]['fpr'],result_table.loc[i]['prec'], color=colors[i],label="{}, AUC={:.3f}, APS={:.3f}".format(i, result_table.loc[i]['pr_auc'],result_table.loc[i]['ave_prec']))
+        plt.plot(result_table.loc[i]['recall'],result_table.loc[i]['prec'], color=colors[i],label="{}, AUC={:.3f}, APS={:.3f}".format(i, result_table.loc[i]['pr_auc'],result_table.loc[i]['ave_prec']))
         count += 1
     repClass = repData[class_label].values
     noskill = len(repClass[repClass == 1]) / len(repClass)  # Fraction of cases

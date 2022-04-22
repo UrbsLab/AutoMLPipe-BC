@@ -42,9 +42,9 @@ def job(experiment_path,sig_cutoff,jupyterRun):
         dataset_directory_paths.append(full_path)
     # Get ML modeling algorithms that were applied in analysis pipeline
     algorithms = []
-    name_to_abbrev = {'naive_bayes': 'NB','logistic_regression': 'LR', 'decision_tree': 'DT', 'random_forest': 'RF','gradient_boosting':'GB',
-                      'XGB': 'XGB', 'LGB': 'LGB', 'SVM': 'SVM', 'ANN': 'ANN','k_neighbors':'KN', 'eLCS': 'eLCS',
-                      'XCS': 'XCS', 'ExSTraCS': 'ExSTraCS'}
+    name_to_abbrev = {'Naive Bayes':'NB','Logistic Regression':'LR','Decision Tree':'DT','Random Forest':'RF','Gradient Boosting':'GB','XGB':'XGB',
+                      'LGB':'LGB','SVM':'SVM','ANN':'ANN','K Neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
+    colors = {'Naive Bayes':'grey','Logistic Regression':'black','Decision Tree':'yellow','Random Forest':'orange','Gradient Boosting':'bisque','XGB':'purple','LGB':'aqua','SVM':'blue','ANN':'red','eLCS':'firebrick','XCS':'deepskyblue','K Neighbors':'seagreen','ExSTraCS':'lightcoral'}
     abbrev_to_name = dict([(value, key) for key, value in name_to_abbrev.items()])
     for filepath in glob.glob(dataset_directory_paths[0] + '/models/pickledModels/*'):
         filepath = str(filepath).replace('\\','/')
@@ -74,9 +74,9 @@ def job(experiment_path,sig_cutoff,jupyterRun):
     #Generate boxplots comparing average algorithm performance (for a given metric) across all dataset comparisons
     if eval(jupyterRun):
         print('Generate Boxplots Comparing Dataset Performance...')
-    dataCompareBPAll(experiment_path,metrics,dataset_directory_paths,algorithms,jupyterRun)
-    #Generate boxplots comparing a specific algorithm's CV performance (for AUC_ROC or AUC_PRC) across all dataset comparisons
-    dataCompareBP(experiment_path,metrics,dataset_directory_paths,algorithms,name_to_abbrev,jupyterRun)
+        dataCompareBPAll(experiment_path,metrics,dataset_directory_paths,algorithms,colors,jupyterRun)
+        #Generate boxplots comparing a specific algorithm's CV performance (for AUC_ROC or AUC_PRC) across all dataset comparisons
+        dataCompareBP(experiment_path,metrics,dataset_directory_paths,algorithms,name_to_abbrev,jupyterRun)
     print("Phase 7 complete")
 
 def kruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff):
@@ -383,31 +383,37 @@ def bestWilcoxonRank(experiment_path,datasets,algorithms,metrics,dataset_directo
     df.columns = label
     df.to_csv(experiment_path + '/DatasetComparisons/BestCompare_WilcoxonRank.csv',index=False)
 
-def dataCompareBPAll(experiment_path,metrics,dataset_directory_paths,algorithms,jupyterRun):
+def dataCompareBPAll(experiment_path,metrics,dataset_directory_paths,algorithms,colors,jupyterRun):
     """ Generate a boxplot comparing algorithm performance (CV average of each target metric) across all target datasets to be compared."""
-    colors = ['grey','black','yellow','orange','bisque','purple','aqua','blue','red','firebrick','deepskyblue','seagreen','lightcoral']
+    #colors = ['grey','black','yellow','orange','bisque','purple','aqua','blue','red','firebrick','deepskyblue','seagreen','lightcoral']
     if not os.path.exists(experiment_path+'/DatasetComparisons/dataCompBoxplots'):
         os.mkdir(experiment_path+'/DatasetComparisons/dataCompBoxplots')
-    for metric in metrics:
+    for metric in metrics: #One boxplot generated for each available metric
         df = pd.DataFrame()
         data_name_list = []
         alg_values_dict = {}
-        for algorithm in algorithms:
-            alg_values_dict[algorithm] = []
-        for each in dataset_directory_paths:
+        for algorithm in algorithms: #Dictionary of all algorithms run that will each have a list of respective mean metric value
+            alg_values_dict[algorithm] = [] #Used to generate algorithm lines on top of boxplot
+        for each in dataset_directory_paths: #each target dataset
             data_name_list.append(each.split('/')[-1])
-            data = pd.read_csv(each + '/model_evaluation/Summary_performance_mean.csv', sep=',')
+            data = pd.read_csv(each + '/model_evaluation/Summary_performance_mean.csv', sep=',', index_col=0)
+            rownames = data.index.values # makes a list of algorithm names from file
+            rownames = list(rownames)
             #Grab data in metric column
-            col = data[metric]
-            colList = data[metric].tolist()
-            for j in range(len(colList)):
-                alg_values_dict[algorithms[j]].append(colList[j])
+            col = data[metric] #Dataframe of average target metric values for each algorithm
+            colList = data[metric].tolist() #List of average target metric values for each algorithm
+            #for j in range(len(colList)): #For each algorithm
+            for j in range(len(rownames)): #For each algorithm
+                alg_values_dict[rownames[j]].append(colList[j])
+            # Create dataframe of average target metric where columns are datasets, and rows are algorithms
             df = pd.concat([df, col], axis=1)
         df.columns = data_name_list
-        # Generate boxplot (with legend for each box)
+        # Generate boxplot (with legend for each box) ---------------------------------------
+        # Plot boxplots
         boxplot = df.boxplot(column=data_name_list,rot=90)
+        # Plot lines for each algorithm (to illustrate algorithm performance trajectories between datasets)
         for i in range(len(algorithms)):
-            plt.plot(np.arange(len(dataset_directory_paths))+1,alg_values_dict[algorithms[i]], color = colors[i], label=algorithms[i])
+            plt.plot(np.arange(len(dataset_directory_paths))+1,alg_values_dict[algorithms[i]], color = colors[algorithms[i]], label=algorithms[i])
         #Specify plot labels
         plt.ylabel(str(metric))
         plt.xlabel('Dataset')

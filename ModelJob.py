@@ -54,6 +54,8 @@ import optuna #hyperparameter optimization
 
 def job(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,algAbrev,jupyterRun):
     """ Specifies hardcoded (below) range of hyperparameter options selected for each ML algorithm and then runs the modeling method. Set up this way so that users can easily modify ML hyperparameter settings when running from the Jupyter Notebook. """
+    #Add spaces back to algorithm names
+    algorithm = algorithm.replace("_", " ")
     if eval(jupyterRun):
         print('Running '+str(algorithm)+' on '+str(train_file_path))
     #Get hyperparameter grid

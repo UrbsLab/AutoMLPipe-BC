@@ -39,7 +39,7 @@ def job(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_pa
         print('Running Statistics Summary for '+str(data_name))
     #Unpickle algorithm information from previous phase
     file = open(experiment_path+'/'+"algInfo.pickle", 'rb')
-    algInfo = pickle.load(file) #[metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, fi, probas_]
+    algInfo = pickle.load(file) 
     file.close()
     #Translate metric name from scikitlearn standard (currently balanced accuracy is hardcoded for use in generating FI plots due to no-skill normalization)
     metric_term_dict = {'balanced_accuracy': 'Balanced Accuracy','accuracy': 'Accuracy','f1': 'F1_Score','recall': 'Sensitivity (Recall)','precision': 'Precision (PPV)','roc_auc': 'ROC_AUC'}

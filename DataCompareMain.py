@@ -24,6 +24,7 @@ import sys
 import time
 import DataCompareJob
 import pandas as pd
+import pickle
 
 def main(argv):
     # Parse arguments
@@ -37,12 +38,15 @@ def main(argv):
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
 
     options = parser.parse_args(argv[1:])
-    jupyterRun = 'False'
     job_counter = 0
 
-    #Load variables specified earlier in the pipeline from metadata file
-    metadata = pd.read_csv(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv').values
-    sig_cutoff = metadata[5,1]
+    #Unpickle metadata from previous phase
+    file = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'rb')
+    metadata = pickle.load(file)
+    file.close()
+    #Load variables specified earlier in the pipeline from metadata
+    sig_cutoff = metadata['Statistical Significance Cutoff']
+    jupyterRun = metadata['Run From Jupyter Notebook']
 
     if eval(options.run_parallel):
         job_counter += 1

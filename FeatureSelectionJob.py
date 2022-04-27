@@ -22,7 +22,7 @@ import os
 import csv
 import sys
 
-def job(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,jupyterRun):
+def job(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_features,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,jupyterRun):
     """ Run all elements of the feature selection: reports average feature importance scores across CV sets and applies collective feature selection to generate new feature selected datasets """
     job_start_time = time.time() #for tracking phase runtime
     dataset_name = full_path.split('/')[-1]
@@ -35,11 +35,11 @@ def job(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_f
     #Manage and summarize mutual information feature importance scores
     if eval(do_mutual_info):
         algorithms.append('Mutual Information')
-        selected_feature_lists,meta_feature_ranks = reportAveFS("Mutual Information","mutualinformation",cv_partitions,top_results,full_path,selected_feature_lists,meta_feature_ranks,export_scores,jupyterRun)
+        selected_feature_lists,meta_feature_ranks = reportAveFS("Mutual Information","mutualinformation",cv_partitions,top_features,full_path,selected_feature_lists,meta_feature_ranks,export_scores,jupyterRun)
     #Manage and summarize MultiSURF feature importance scores
     if eval(do_multisurf):
         algorithms.append('MultiSURF')
-        selected_feature_lists,meta_feature_ranks = reportAveFS("MultiSURF","multisurf",cv_partitions,top_results,full_path,selected_feature_lists,meta_feature_ranks,export_scores,jupyterRun)
+        selected_feature_lists,meta_feature_ranks = reportAveFS("MultiSURF","multisurf",cv_partitions,top_features,full_path,selected_feature_lists,meta_feature_ranks,export_scores,jupyterRun)
     # Conduct collective feature selection
     if eval(jupyterRun):
         print('Applying collective feature selection...')
@@ -66,7 +66,7 @@ def reportInformativeFeatures(informativeFeatureCounts,uninformativeFeatureCount
     count_df = pd.DataFrame(counts)
     count_df.to_csv(full_path+"/feature_selection/InformativeFeatureSummary.csv",index_label='CV_Partition')
 
-def reportAveFS(algorithm,algorithmlabel,cv_partitions,top_results,full_path,selected_feature_lists,meta_feature_ranks,export_scores,jupyterRun):
+def reportAveFS(algorithm,algorithmlabel,cv_partitions,top_features,full_path,selected_feature_lists,meta_feature_ranks,export_scores,jupyterRun):
     """ Loads feature importance results from phase 3, stores sorted feature importance scores for all cvs, creates a list of all feature names
     that have a feature importance score greater than 0 (i.e. some evidence that it may be informative), and creates a barplot of average
     feature importance scores. """
@@ -75,7 +75,7 @@ def reportAveFS(algorithm,algorithmlabel,cv_partitions,top_results,full_path,sel
     cv_keep_list = []
     feature_name_ranks = [] #stores sorded feature importance dictionaries for all CVs
     for i in range(0,cv_partitions):
-        scoreInfo = full_path+"/feature_selection/"+algorithmlabel+"/pickledForPhase4/"+str(i)
+        scoreInfo = full_path+"/feature_selection/"+algorithmlabel+"/pickledForPhase4/"+str(i)+'.pickle'
         file = open(scoreInfo, 'rb')
         rawData = pickle.load(file)
         file.close()
@@ -111,7 +111,7 @@ def reportAveFS(algorithm,algorithmlabel,cv_partitions,top_results,full_path,sel
         ns = pd.DataFrame(names_scores)
         ns = ns.sort_values(by='Scores', ascending=False)
         # Select top 'n' to report and plot
-        ns = ns.head(top_results)
+        ns = ns.head(top_features)
         # Visualize sorted feature scores
         ns['Scores'].plot(kind='barh', figsize=(6, 12))
         plt.ylabel('Features')

@@ -25,6 +25,7 @@ import FeatureSelectionJob
 import time
 import csv
 import glob
+import pickle
 
 def main(argv):
     #Parse arguments
@@ -35,7 +36,7 @@ def main(argv):
     #Defaults available
     parser.add_argument('--max-feat', dest='max_features_to_keep', type=int,help='max features to keep. None if no max', default=2000)
     parser.add_argument('--filter-feat', dest='filter_poor_features', type=str, help='filter out the worst performing features prior to modeling',default='True')
-    parser.add_argument('--top-results', dest='top_results', type=int,help='number of top features to illustrate in figures', default=40)
+    parser.add_argument('--top-features', dest='top_features', type=int,help='number of top features to illustrate in figures', default=40)
     parser.add_argument('--export-scores', dest='export_scores', type=str,help='export figure summarizing average feature importance scores over cv partitions', default='True')
     parser.add_argument('--over-cv', dest='overwrite_cv',type=str,help='overwrites working cv datasets with new feature subset datasets',default="True")
     #Lostistical arguments
@@ -48,14 +49,17 @@ def main(argv):
     options = parser.parse_args(argv[1:])
     job_counter = 0
 
-    #Load variables specified earlier in the pipeline from metadata file
-    metadata = pd.read_csv(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv').values
-    class_label = metadata[0, 1]
-    instance_label = metadata[1, 1]
-    cv_partitions = int(metadata[6,1])
-    do_mutual_info = metadata[13,1]
-    do_multisurf = metadata[14,1]
-    jupyterRun = 'False'
+    #Unpickle metadata from previous phase
+    file = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'rb')
+    metadata = pickle.load(file) 
+    file.close()
+    #Load variables specified earlier in the pipeline from metadata
+    class_label = metadata['Class Label']
+    instance_label = metadata['Instance Label']
+    cv_partitions = int(metadata['CV Partitions'])
+    do_mutual_info = metadata['Use Mutual Information']
+    do_multisurf = metadata['Use MultiSURF']
+    jupyterRun = metadata['Run From Jupyter Notebook']
 
     # Argument checks
     if not os.path.exists(options.output_path):
@@ -68,30 +72,33 @@ def main(argv):
         dataset_paths.remove('logs')
         dataset_paths.remove('jobs')
         dataset_paths.remove('jobsCompleted')
-        dataset_paths.remove('metadata.csv')
+        dataset_paths.remove('metadata.pickle')
         for dataset_directory_path in dataset_paths:
             full_path = options.output_path + "/" + options.experiment_name + "/" + dataset_directory_path
             if eval(options.run_parallel):
                 job_counter += 1
-                submitClusterJob(full_path,options.output_path+'/'+options.experiment_name,do_mutual_info,do_multisurf,options.max_features_to_keep,options.filter_poor_features,options.top_results,options.export_scores,class_label,instance_label,cv_partitions,options.overwrite_cv,options.reserved_memory,options.maximum_memory,options.queue,jupyterRun)
+                submitClusterJob(full_path,options.output_path+'/'+options.experiment_name,do_mutual_info,do_multisurf,options.max_features_to_keep,options.filter_poor_features,options.top_features,options.export_scores,class_label,instance_label,cv_partitions,options.overwrite_cv,options.reserved_memory,options.maximum_memory,options.queue,jupyterRun)
             else:
-                submitLocalJob(full_path,do_mutual_info,do_multisurf,options.max_features_to_keep,options.filter_poor_features,options.top_results,options.export_scores,class_label,instance_label,cv_partitions,options.overwrite_cv,jupyterRun)
+                submitLocalJob(full_path,do_mutual_info,do_multisurf,options.max_features_to_keep,options.filter_poor_features,options.top_features,options.export_scores,class_label,instance_label,cv_partitions,options.overwrite_cv,jupyterRun)
 
         #Update metadata
-        if metadata.shape[0] == 18: #Only update if metadata below hasn't been added before
-            with open(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv',mode='a', newline="") as file:
-                writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow(["max features to keep",options.max_features_to_keep])
-                writer.writerow(["filter poor features", options.filter_poor_features])
-            file.close()
+        metadata['Max Features to Keep'] = options.max_features_to_keep
+        metadata['Filter Poor Features'] = options.filter_poor_features
+        metadata['Top Features to Display'] = options.top_features
+        metadata['Export Feature Importance Plot'] = options.export_scores
+        metadata['Overwrite CV Datasets'] = options.overwrite_cv
+        #Pickle the metadata for future use
+        pickle_out = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'wb')
+        pickle.dump(metadata,pickle_out)
+        pickle_out.close()
 
     else: #Instead of running job, checks whether previously run jobs were successfully completed
         datasets = os.listdir(options.output_path + "/" + options.experiment_name)
         datasets.remove('logs')
         datasets.remove('jobs')
         datasets.remove('jobsCompleted')
-        if 'metadata.csv' in datasets:
-            datasets.remove('metadata.csv')
+        if 'metadata.pickle' in datasets:
+            datasets.remove('metadata.pickle')
         if 'DatasetComparisons' in datasets:
             datasets.remove('DatasetComparisons')
 
@@ -112,11 +119,11 @@ def main(argv):
     if not options.do_check:
         print(str(job_counter)+ " jobs submitted in Phase 4")
 
-def submitLocalJob(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,jupyterRun):
+def submitLocalJob(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_features,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,jupyterRun):
     """ Runs FeatureSelectionJob.py locally, once for each of the original target datasets (all CV datasets analyzed at once). These runs will be completed serially rather than in parallel. """
-    FeatureSelectionJob.job(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,jupyterRun)
+    FeatureSelectionJob.job(full_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_features,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,jupyterRun)
 
-def submitClusterJob(full_path,experiment_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_results,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,reserved_memory,maximum_memory,queue,jupyterRun):
+def submitClusterJob(full_path,experiment_path,do_mutual_info,do_multisurf,max_features_to_keep,filter_poor_features,top_features,export_scores,class_label,instance_label,cv_partitions,overwrite_cv,reserved_memory,maximum_memory,queue,jupyterRun):
     """ Runs FeatureSelectionJob.py once for each of the original target datasets (all CV datasets analyzed at once). Runs in parallel on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
     job_name = experiment_path+'/jobs/P4_'+job_ref+'_run.sh'
@@ -131,7 +138,7 @@ def submitClusterJob(full_path,experiment_path,do_mutual_info,do_multisurf,max_f
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
     sh_file.write('python '+this_file_path+'/FeatureSelectionJob.py '+full_path+" "+do_mutual_info+" "+do_multisurf+" "+
-                  str(max_features_to_keep)+" "+filter_poor_features+" "+str(top_results)+" "+export_scores+" "+class_label+" "+instance_label+" "+str(cv_partitions)+" "+overwrite_cv+" "+jupyterRun+'\n')
+                  str(max_features_to_keep)+" "+filter_poor_features+" "+str(top_features)+" "+export_scores+" "+class_label+" "+instance_label+" "+str(cv_partitions)+" "+overwrite_cv+" "+jupyterRun+'\n')
     sh_file.close()
     os.system('bsub < ' + job_name)
     pass

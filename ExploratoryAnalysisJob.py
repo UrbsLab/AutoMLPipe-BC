@@ -153,7 +153,7 @@ def idFeatureTypes(x_data,categorical_feature_headers,categorical_cutoff,experim
     else:
         categorical_variables = categorical_feature_headers
     #Pickle list of feature names to be treated as categorical variables
-    outfile = open(experiment_path + '/' + dataset_name + '/exploratory/categorical_variables', 'wb')
+    outfile = open(experiment_path + '/' + dataset_name + '/exploratory/categorical_variables.pickle', 'wb')
     pickle.dump(categorical_variables, outfile)
     outfile.close()
     return categorical_variables

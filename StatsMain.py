@@ -24,6 +24,7 @@ import time
 import pandas as pd
 import StatsJob
 import glob
+import pickle
 
 def main(argv):
     #Parse arguments
@@ -36,7 +37,7 @@ def main(argv):
     parser.add_argument('--plot-PRC', dest='plot_PRC', type=str,help='Plot PRC curves individually for each algorithm including all CV results and averages', default='True')
     parser.add_argument('--plot-box', dest='plot_metric_boxplots', type=str,help='Plot box plot summaries comparing algorithms for each metric', default='True')
     parser.add_argument('--plot-FI_box', dest='plot_FI_box', type=str,help='Plot feature importance boxplots and histograms for each algorithm', default='True')
-    parser.add_argument('--top-results', dest='top_results', type=int,help='number of top features to illustrate in figures', default=40)
+    parser.add_argument('--top-features', dest='top_model_features', type=int,help='number of top features to illustrate in figures', default=40)
     #Lostistical arguments
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")
     parser.add_argument('--queue',dest='queue',type=str,help='specify name of parallel computing queue (uses our research groups queue by default)',default="i2c2_normal")
@@ -45,49 +46,39 @@ def main(argv):
     parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')
 
     options = parser.parse_args(argv[1:])
-    jupyterRun = 'False'
     job_counter = 0
+
     # Argument checks
     if not os.path.exists(options.output_path):
         raise Exception("Output path must exist (from phase 1) before phase 6 can begin")
     if not os.path.exists(options.output_path + '/' + options.experiment_name):
         raise Exception("Experiment must exist (from phase 1) before phase 6 can begin")
 
-    #Load variables specified earlier in the pipeline from metadata file
-    metadata = pd.read_csv(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv').values
-    class_label = metadata[0, 1]
-    instance_label = metadata[1, 1]
-    sig_cutoff = metadata[5,1]
-    cv_partitions = int(metadata[6,1])
-    do_NB = metadata[20,1]
-    do_LR = metadata[21,1]
-    do_DT = metadata[22,1]
-    do_RF = metadata[23,1]
-    do_GB = metadata[24, 1]
-    do_XGB = metadata[25,1]
-    do_LGB = metadata[26,1]
-    do_SVM = metadata[27,1]
-    do_ANN = metadata[28,1]
-    do_KN = metadata[29, 1]
-    do_eLCS = metadata[30,1]
-    do_XCS = metadata[31,1]
-    do_ExSTraCS = metadata[32,1]
-    primary_metric = metadata[33,1]
-
-    encodedAlgos = ''
-    encodedAlgos = encode(do_NB, encodedAlgos)
-    encodedAlgos = encode(do_LR,encodedAlgos)
-    encodedAlgos = encode(do_DT, encodedAlgos)
-    encodedAlgos = encode(do_RF, encodedAlgos)
-    encodedAlgos = encode(do_GB, encodedAlgos)
-    encodedAlgos = encode(do_XGB, encodedAlgos)
-    encodedAlgos = encode(do_LGB, encodedAlgos)
-    encodedAlgos = encode(do_SVM, encodedAlgos)
-    encodedAlgos = encode(do_ANN, encodedAlgos)
-    encodedAlgos = encode(do_KN, encodedAlgos)
-    encodedAlgos = encode(do_eLCS, encodedAlgos)
-    encodedAlgos = encode(do_XCS, encodedAlgos)
-    encodedAlgos = encode(do_ExSTraCS, encodedAlgos)
+    #Unpickle metadata from previous phase
+    file = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'rb')
+    metadata = pickle.load(file)
+    file.close()
+    #Load variables specified earlier in the pipeline from metadata
+    class_label = metadata['Class Label']
+    instance_label = metadata['Instance Label']
+    sig_cutoff = metadata['Statistical Significance Cutoff']
+    cv_partitions = int(metadata['CV Partitions'])
+    jupyterRun = metadata['Run From Jupyter Notebook']
+    do_NB = metadata['Naive Bayes']
+    do_LR = metadata['Logistic Regression']
+    do_DT = metadata['Decision Tree']
+    do_RF = metadata['Random Forest']
+    do_GB = metadata['Gradient Boosting']
+    do_XGB = metadata['Extreme Gradient Boosting']
+    do_LGB = metadata['Light Gradient Boosting']
+    do_SVM = metadata['Support Vector Machine']
+    do_ANN = metadata['Artificial Neural Network']
+    do_KNN = metadata['K-Nearest Neightbors']
+    do_eLCS = metadata['eLCS']
+    do_XCS = metadata['XCS']
+    do_ExSTraCS = metadata['ExSTraCS']
+    ### Add new algorithms here...
+    primary_metric = metadata['Primary Metric'] # 0 list position is the True/False for algorithm use
 
     if not options.do_check: #Run job submission
         # Iterate through datasets
@@ -95,21 +86,39 @@ def main(argv):
         dataset_paths.remove('logs')
         dataset_paths.remove('jobs')
         dataset_paths.remove('jobsCompleted')
-        dataset_paths.remove('metadata.csv')
+        dataset_paths.remove('metadata.pickle')
+        dataset_paths.remove('algInfo.pickle')
         for dataset_directory_path in dataset_paths:
             full_path = options.output_path + "/" + options.experiment_name + "/" + dataset_directory_path
             if eval(options.run_parallel):
                 job_counter += 1
-                submitClusterJob(full_path,encodedAlgos,options.plot_ROC,options.plot_PRC,options.plot_FI_box,class_label,instance_label,options.output_path+'/'+options.experiment_name,cv_partitions,options.reserved_memory,options.maximum_memory,options.queue,options.plot_metric_boxplots,primary_metric,options.top_results,sig_cutoff,jupyterRun)
+                submitClusterJob(full_path,options.plot_ROC,options.plot_PRC,options.plot_FI_box,class_label,instance_label,options.output_path+'/'+options.experiment_name,cv_partitions,options.reserved_memory,options.maximum_memory,options.queue,options.plot_metric_boxplots,primary_metric,options.top_model_features,sig_cutoff,jupyterRun)
             else:
-                submitLocalJob(full_path,encodedAlgos,options.plot_ROC,options.plot_PRC,options.plot_FI_box,class_label,instance_label,cv_partitions,options.plot_metric_boxplots,primary_metric,options.top_results,sig_cutoff,jupyterRun)
+                submitLocalJob(full_path,options.plot_ROC,options.plot_PRC,options.plot_FI_box,class_label,instance_label,cv_partitions,options.plot_metric_boxplots,primary_metric,options.top_model_features,sig_cutoff,jupyterRun)
+
+        metadata['Export ROC Plot'] = options.plot_ROC
+        metadata['Export PRC Plot'] = options.plot_PRC
+        metadata['Export Metric Boxplots'] = options.plot_metric_boxplots
+        metadata['Export Feature Importance Boxplots'] = options.plot_FI_box
+        metadata['Top Model Features To Display'] = options.top_model_features
+        #Pickle the metadata for future use
+        pickle_out = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'wb')
+        pickle.dump(metadata,pickle_out)
+        pickle_out.close()
+
+        #Now that primary pipeline phases are complete generate a human readable version of metadata
+        df = pd.DataFrame.from_dict(metadata, orient ='index')
+        df.to_csv(output_path+'/'+experiment_name+'/'+'metadata.csv',index=True)
+
     else: #run job completion checks
         datasets = os.listdir(options.output_path + "/" + options.experiment_name)
         datasets.remove('logs')
         datasets.remove('jobs')
         datasets.remove('jobsCompleted')
-        if 'metadata.csv' in datasets:
-            datasets.remove('metadata.csv')
+        if 'metadata.pickle' in datasets:
+            datasets.remove('metadata.pickle')
+        if 'algInfo.pickle' in datasets:
+            datasets.remove('algInfo.pickle')
         if 'DatasetComparisons' in datasets:
             datasets.remove('DatasetComparisons')
 
@@ -130,11 +139,11 @@ def main(argv):
     if not options.do_check:
         print(str(job_counter)+ " jobs submitted in Phase 6")
 
-def submitLocalJob(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun):
+def submitLocalJob(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_model_features,sig_cutoff,jupyterRun):
     """ Runs StatsJob.py locally, once for each of the original target datasets (all CV datasets analyzed at once). These runs will be completed serially rather than in parallel. """
-    StatsJob.job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun)
+    StatsJob.job(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_model_features,sig_cutoff,jupyterRun)
 
-def submitClusterJob(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,experiment_path,cv_partitions,reserved_memory,maximum_memory,queue,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun):
+def submitClusterJob(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,experiment_path,cv_partitions,reserved_memory,maximum_memory,queue,plot_metric_boxplots,primary_metric,top_model_features,sig_cutoff,jupyterRun):
     """ Runs StatsJob.py once for each of the original target datasets (all CV datasets analyzed at once). Runs in parallel on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
     job_name = experiment_path + '/jobs/P6_' + job_ref + '_run.sh'
@@ -148,18 +157,10 @@ def submitClusterJob(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class
     sh_file.write('#BSUB -e ' + experiment_path+'/logs/P6_'+job_ref+'.e\n')
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
-    sh_file.write('python '+this_file_path+'/StatsJob.py '+full_path+" "+encoded_algos+" "+plot_ROC+" "+plot_PRC+" "+plot_FI_box+" "+class_label+" "+instance_label+" "+str(cv_partitions)+" "+str(plot_metric_boxplots)+" "+str(primary_metric)+" "+str(top_results)+" "+str(sig_cutoff)+" "+str(jupyterRun)+'\n')
+    sh_file.write('python '+this_file_path+'/StatsJob.py '+full_path+" "+plot_ROC+" "+plot_PRC+" "+plot_FI_box+" "+class_label+" "+instance_label+" "+str(cv_partitions)+" "+str(plot_metric_boxplots)+" "+str(primary_metric)+" "+str(top_model_features)+" "+str(sig_cutoff)+" "+str(jupyterRun)+'\n')
     sh_file.close()
     os.system('bsub < ' + job_name)
     pass
-
-def encode(do_algo,encodedAlgos):
-    """ Encodes boolean values identifying which ML algorithms were run and should be included in the stats analysis. """
-    if eval(do_algo):
-        encodedAlgos += '1'
-    else:
-        encodedAlgos += '0'
-    return encodedAlgos
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

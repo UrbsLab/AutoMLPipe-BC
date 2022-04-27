@@ -383,7 +383,7 @@ Run parameters for FeatureSelectionMain.py:
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |
 | --max-feat | max features to keep. None if no max | 2000 |
 | --filter-feat | filter out the worst performing features prior to modeling | True |
-| --top-results | number of top features to illustrate in figures | 20 |
+| --top-features | number of top features to illustrate in figures | 20 |
 | --export-scores | export figure summarizing average feature importance scores over cv partitions | True |
 | --over-cv | overwrites working cv datasets with new feature subset datasets | True |
 | --run-parallel | if run parallel | True |
@@ -400,19 +400,19 @@ Run parameters for ModelMain.py:
 | --out-path | path to output directory | MANDATORY |
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |
 | --do-all | run all modeling algorithms by default (when set False, individual algorithms are activated individually) | True |
-| --do-NB | run naive bayes modeling | True |
-| --do-LR | run logistic regression modeling | True |
-| --do-DT | run decision tree modeling | True |
-| --do-RF | run random forest modeling | True |
-| --do-GB | run gradient boosting modeling | True |
-| --do-XGB | run XGBoost modeling | True |
-| --do-LGB | run LGBoost modeling | True |
-| --do-SVM | run support vector machine modeling | True |
-| --do-ANN | run artificial neural network modeling | True |
-| --do-KN | run k-neighbors classifier modeling | True |
-| --do-eLCS | run eLCS modeling (a basic supervised-learning learning classifier system) | True |
-| --do-XCS | run XCS modeling (a supervised-learning-only implementation of the best studied learning classifier system) | True |
-| --do-ExSTraCS | run ExSTraCS modeling (a learning classifier system designed for biomedical data mining) | True |
+| --do-NB | run naive bayes modeling | None |
+| --do-LR | run logistic regression modeling | None |
+| --do-DT | run decision tree modeling | None |
+| --do-RF | run random forest modeling | None |
+| --do-GB | run gradient boosting modeling | None |
+| --do-XGB | run XGBoost modeling | None |
+| --do-LGB | run LGBoost modeling | None |
+| --do-SVM | run support vector machine modeling | None |
+| --do-ANN | run artificial neural network modeling | None |
+| --do-KNN | run k-nearest neighbors classifier modeling | None |
+| --do-eLCS | run eLCS modeling (a basic supervised-learning learning classifier system) | None |
+| --do-XCS | run XCS modeling (a supervised-learning-only implementation of the best studied learning classifier system) | None |
+| --do-ExSTraCS | run ExSTraCS modeling (a learning classifier system designed for biomedical data mining) | None |
 | --metric |primary scikit-learn specified scoring metric used for hyperparameter optimization and permutation-based model feature importance evaluation | balanced_accuracy |
 | --subsample | for long running algos (XGB,SVM,ANN,KN), option to subsample training set (0 for no subsample) | 0 |
 | --use-uniformFI | overrides use of any available feature importance estimate methods from models, instead using permutation_importance uniformly | False |
@@ -466,7 +466,7 @@ Run parameters for StatsMain.py:
 | --plot-PRC | Plot PRC curves individually for each algorithm including all CV results and averages | True |
 | --plot-box | Plot box plot summaries comparing algorithms for each metric | True |
 | --plot-FI_box | Plot feature importance boxplots and histograms for each algorithm | True |
-| --top-results| Number of top features to illustrate in figures | 20 |
+| --top-features| Number of top features to illustrate in figures | 20 |
 | --run-parallel | if run parallel | True |
 | --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |
@@ -510,7 +510,6 @@ Run parameters for ApplyModelMain.py:
 | --plot-ROC | Plot ROC curves individually for each algorithm including all CV results and averages | True |
 | --plot-PRC | Plot PRC curves individually for each algorithm including all CV results and averages | True |
 | --plot-box | Plot box plot summaries comparing algorithms for each metric | True |
-| --top-results| Number of top features to illustrate in figures | 20 |
 | --match-label | applies if original training data included column with matched instance ids | None |
 | --run-parallel | if run parallel | True |
 | --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |

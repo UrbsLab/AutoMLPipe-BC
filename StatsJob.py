@@ -27,20 +27,25 @@ from statistics import mean,stdev
 import pickle
 import copy
 
-def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_results,sig_cutoff,jupyterRun):
+def job(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_model_features,sig_cutoff,jupyterRun):
     """ Run all elements of stats summary and analysis for one one the original phase 1 datasets: summaries of average and standard deviations for all metrics and modeling algorithms,
     ROC and PRC plots (comparing CV performance in the same ML algorithm and comparing average performance between ML algorithms), model feature importance averages over CV runs,
     boxplots comparing ML algorithms for each metric, Kruskal Wallis and Mann Whitney statistical comparsions between ML algorithms, model feature importance boxplots for each
     algorithm, and composite feature importance plots summarizing model feature importance across all ML algorithms"""
     job_start_time = time.time() #for tracking phase runtime
     data_name = full_path.split('/')[-1]
+    experiment_path = '/'.join(full_path.split('/')[:-1])
     if eval(jupyterRun):
         print('Running Statistics Summary for '+str(data_name))
+    #Unpickle algorithm information from previous phase
+    file = open(experiment_path+'/'+"algInfo.pickle", 'rb')
+    algInfo = pickle.load(file) #[metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, fi, probas_]
+    file.close()
     #Translate metric name from scikitlearn standard (currently balanced accuracy is hardcoded for use in generating FI plots due to no-skill normalization)
     metric_term_dict = {'balanced_accuracy': 'Balanced Accuracy','accuracy': 'Accuracy','f1': 'F1_Score','recall': 'Sensitivity (Recall)','precision': 'Precision (PPV)','roc_auc': 'ROC_AUC'}
     primary_metric = metric_term_dict[primary_metric]
     #Get algorithms run, specify algorithm abbreviations, colors to use for algorithms in plots, and original ordered feature name list
-    algorithms,abbrev,colors,original_headers = preparation(full_path,encoded_algos)
+    algorithms,abbrev,colors,original_headers = preparation(full_path,algInfo)
     #Gather and summarize all evaluation metrics for each algorithm across all CVs. Returns result_table used to plot average ROC and PRC plots and metric_dict organizing all metrics over all algorithms and CVs.
     result_table,metric_dict = primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,instance_label,class_label,abbrev,colors,plot_ROC,plot_PRC,jupyterRun)
     #Plot ROC and PRC curves comparing average ML algorithm performance (averaged over all CVs)
@@ -72,12 +77,12 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
         print('Preparing for Model Feature Importance Plotting...')
     fi_df_list,fi_ave_list,fi_ave_norm_list,ave_metric_list,all_feature_list,non_zero_union_features,non_zero_union_indexes = prepFI(algorithms,full_path,abbrev,metric_dict,'Balanced Accuracy')
     #Select 'top' features for composite vizualization
-    featuresToViz = selectForCompositeViz(top_results,non_zero_union_features,non_zero_union_indexes,algorithms,ave_metric_list,fi_ave_norm_list)
+    featuresToViz = selectForCompositeViz(top_model_features,non_zero_union_features,non_zero_union_indexes,algorithms,ave_metric_list,fi_ave_norm_list)
     #Generate FI boxplots for each modeling algorithm if specified by user
     if eval(plot_FI_box):
         if eval(jupyterRun):
             print('Generating Feature Importance Boxplots and Histograms...')
-        doFIBoxplots(full_path,fi_df_list,fi_ave_list,algorithms,original_headers,top_results,jupyterRun)
+        doFIBoxplots(full_path,fi_df_list,fi_ave_list,algorithms,original_headers,top_model_features,jupyterRun)
         doFI_Histogram(full_path, fi_ave_list, algorithms, jupyterRun)
     #Visualize composite FI - Currently set up to only use Balanced Accuracy for composite FI plot visualization
     if eval(jupyterRun):
@@ -101,47 +106,33 @@ def job(full_path,encoded_algos,plot_ROC,plot_PRC,plot_FI_box,class_label,instan
     #Export phase runtime
     saveRuntime(full_path,job_start_time)
     #Parse all pipeline runtime files into a single runtime report
-    parseRuntime(full_path,abbrev)
+    parseRuntime(full_path,algorithms,abbrev)
     # Print phase completion
     print(data_name + " phase 5 complete")
-    experiment_path = '/'.join(full_path.split('/')[:-1])
     job_file = open(experiment_path + '/jobsCompleted/job_stats_' + data_name + '.txt', 'w')
     job_file.write('complete')
     job_file.close()
 
-def preparation(full_path,encoded_algos):
+def preparation(full_path,algInfo):
     """ Creates directory for all results files, decodes included ML modeling algorithms that were run, specifies figure abbreviations for algorithms
     and color to use for each algorithm in plots, and loads original ordered feature name list to use as a reference to facilitate combining feature
     importance results across cv runs where different features may have been dropped during the feature selection phase."""
     #Create Directory
     if not os.path.exists(full_path+'/model_evaluation'):
         os.mkdir(full_path+'/model_evaluation')
-    #Decode algos
+
+    #Extract the original algorithm name, abreviated name, and color to use for each algortithm run by users
     algorithms = []
-    possible_algos = ['Naive Bayes','Logistic Regression','Decision Tree','Random Forest','Gradient Boosting','XGB','LGB','SVM','ANN','K Neighbors','eLCS','XCS','ExSTraCS']
-    algorithms = decode(algorithms, encoded_algos, possible_algos, 0)
-    algorithms = decode(algorithms, encoded_algos, possible_algos, 1)
-    algorithms = decode(algorithms, encoded_algos, possible_algos, 2)
-    algorithms = decode(algorithms, encoded_algos, possible_algos, 3)
-    algorithms = decode(algorithms, encoded_algos, possible_algos, 4)
-    algorithms = decode(algorithms, encoded_algos, possible_algos, 5)
-    algorithms = decode(algorithms, encoded_algos, possible_algos, 6)
-    algorithms = decode(algorithms, encoded_algos, possible_algos, 7)
-    algorithms = decode(algorithms, encoded_algos, possible_algos, 8)
-    algorithms = decode(algorithms, encoded_algos, possible_algos, 9)
-    algorithms = decode(algorithms, encoded_algos, possible_algos, 10)
-    algorithms = decode(algorithms, encoded_algos, possible_algos, 11)
-    algorithms = decode(algorithms, encoded_algos, possible_algos, 12)
-    abbrev = {'Naive Bayes':'NB','Logistic Regression':'LR','Decision Tree':'DT','Random Forest':'RF','Gradient Boosting':'GB','XGB':'XGB','LGB':'LGB','SVM':'SVM','ANN':'ANN','K Neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
-    colors = {'Naive Bayes':'grey','Logistic Regression':'black','Decision Tree':'yellow','Random Forest':'orange','Gradient Boosting':'bisque','XGB':'purple','LGB':'aqua','SVM':'blue','ANN':'red','eLCS':'firebrick','XCS':'deepskyblue','K Neighbors':'seagreen','ExSTraCS':'lightcoral'}
+    abbrev = {}
+    colors = {}
+    for key in algInfo:
+        if algInfo[key][0]: # If that algorithm was used
+            algorithms.append(key)
+            abbrev[key] = (algInfo[key][1])
+            colors[key] = (algInfo[key][2])
+
     original_headers = pd.read_csv(full_path+"/exploratory/OriginalFeatureNames.csv",sep=',').columns.values.tolist() #Get Original Headers
     return algorithms,abbrev,colors,original_headers
-
-def decode(algorithms,encoded_algos,possible_algos,index):
-    """ Decodes which algorithms were applied in this pipeline. """
-    if encoded_algos[index] == "1":
-        algorithms.append(possible_algos[index])
-    return algorithms
 
 def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,instance_label,class_label,abbrev,colors,plot_ROC,plot_PRC,jupyterRun):
     """ Combine classification metrics and model feature importance scores as well as ROC and PRC plot data across all CV datasets.
@@ -178,7 +169,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
         #Gather statistics over all CV partitions
         for cvCount in range(0,cv_partitions):
             #Unpickle saved metrics from previous phase
-            result_file = full_path+'/model_evaluation/pickled_metrics/'+abbrev[algorithm]+"_CV_"+str(cvCount)+"_metrics"
+            result_file = full_path+'/model_evaluation/pickled_metrics/'+abbrev[algorithm]+"_CV_"+str(cvCount)+"_metrics.pickle"
             file = open(result_file, 'rb')
             results = pickle.load(file) #[metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, fi, probas_]
             file.close()
@@ -340,6 +331,7 @@ def doPlotROC(result_table,colors,full_path,jupyterRun):
     count = 0
     #Plot curves for each individual ML algorithm
     for i in result_table.index:
+        #plt.plot(result_table.loc[i]['fpr'],result_table.loc[i]['tpr'], color=colors[i],label="{}, AUC={:.3f}".format(i, result_table.loc[i]['auc']))
         plt.plot(result_table.loc[i]['fpr'],result_table.loc[i]['tpr'], color=colors[i],label="{}, AUC={:.3f}".format(i, result_table.loc[i]['auc']))
         count += 1
     # Set figure dimensions
@@ -578,9 +570,9 @@ def prepFI(algorithms,full_path,abbrev,metric_dict,primary_metric):
         non_zero_union_indexes.append(all_feature_list.index(i))
     return fi_df_list,fi_ave_list,fi_ave_norm_list,ave_metric_list,all_feature_list,non_zero_union_features,non_zero_union_indexes
 
-def selectForCompositeViz(top_results,non_zero_union_features,non_zero_union_indexes,algorithms,ave_metric_list,fi_ave_norm_list):
+def selectForCompositeViz(top_model_features,non_zero_union_features,non_zero_union_indexes,algorithms,ave_metric_list,fi_ave_norm_list):
     """ Identify list of top features over all algorithms to visualize (note that best features to vizualize are chosen using algorithm performance weighting and normalization:
-    frac plays no useful role here only for viz). All features included if there are fewer than 'top_results'. Top features are determined by the sum of performance
+    frac plays no useful role here only for viz). All features included if there are fewer than 'top_model_features'. Top features are determined by the sum of performance
     (i.e. balanced accuracy) weighted feature importances over all algorithms."""
     featuresToViz = None
     #Create performance weighted score sum dictionary for all features
@@ -605,13 +597,13 @@ def selectForCompositeViz(top_results,non_zero_union_features,non_zero_union_ind
         i += 1
     # Sort features by decreasing score
     scoreSumDict_features = sorted(scoreSumDict, key=lambda x: scoreSumDict[x], reverse=True)
-    if len(non_zero_union_features) > top_results: #Keep all features if there are fewer than specified top results
-        featuresToViz = scoreSumDict_features[0:top_results]
+    if len(non_zero_union_features) > top_model_features: #Keep all features if there are fewer than specified top results
+        featuresToViz = scoreSumDict_features[0:top_model_features]
     else:
         featuresToViz = scoreSumDict_features
     return featuresToViz #list of feature names to vizualize in composite FI plots.
 
-def doFIBoxplots(full_path,fi_df_list,fi_ave_list,algorithms,original_headers,top_results, jupyterRun):
+def doFIBoxplots(full_path,fi_df_list,fi_ave_list,algorithms,original_headers,top_model_features, jupyterRun):
     """ Generate individual feature importance boxplots for each algorithm """
     algorithmCounter = 0
     for algorithm in algorithms: #each algorithms
@@ -624,8 +616,8 @@ def doFIBoxplots(full_path,fi_df_list,fi_ave_list,algorithms,original_headers,to
         # Sort features by decreasing score
         scoreDict_features = sorted(scoreDict, key=lambda x: scoreDict[x], reverse=True)
         #Make list of feature names to vizualize
-        if len(original_headers) > top_results:
-            featuresToViz = scoreDict_features[0:top_results]
+        if len(original_headers) > top_model_features:
+            featuresToViz = scoreDict_features[0:top_model_features]
         else:
             featuresToViz = scoreDict_features
         # FI score dataframe for current algorithm
@@ -776,7 +768,7 @@ def saveRuntime(full_path,job_start_time):
     runtime_file.write(str(time.time() - job_start_time))
     runtime_file.close()
 
-def parseRuntime(full_path,abbrev):
+def parseRuntime(full_path,algorithms,abbrev):
     """ Loads runtime summaries from entire pipeline and parses them into a single summary file."""
     dict = {}
     for file_path in glob.glob(full_path+'/runtime/*.txt'):
@@ -803,59 +795,9 @@ def parseRuntime(full_path,abbrev):
         except:
             pass
         writer.writerow(["Feature Selection",dict['featureselection']])
-        try:
-            writer.writerow(["Naive Bayes",dict['NB']])
-        except:
-            pass
-        try:
-            writer.writerow(["Logistic Regression",dict['LR']])
-        except:
-            pass
-        try:
-            writer.writerow(["Decision Tree",dict['DT']])
-        except:
-            pass
-        try:
-            writer.writerow(["Random Forest",dict['RF']])
-        except:
-            pass
-        try:
-            writer.writerow(["Gradient Boosting",dict['GB']])
-        except:
-            pass
-        try:
-            writer.writerow(["XGB",dict['XGB']])
-        except:
-            pass
-        try:
-            writer.writerow(["LGB",dict['LGB']])
-        except:
-            pass
-        try:
-            writer.writerow(["Support Vector Machine",dict['SVM']])
-        except:
-            pass
-        try:
-            writer.writerow(["Artificial Neural Network",dict['ANN']])
-        except:
-            pass
-        try:
-            writer.writerow(["K Nearest Neighbors",dict['KN']])
-        except:
-            pass
-        try:
-            writer.writerow(["eLCS",dict['eLCS']])
-        except:
-            pass
-        try:
-            writer.writerow(["XCS",dict['XCS']])
-        except:
-            pass
-        try:
-            writer.writerow(["ExSTraCS",dict['ExSTraCS']])
-        except:
-            pass
+        for algorithm in algorithms: #Repoert runtimes for each algorithm
+            writer.writerow(([algorithm,dict[abbrev[algorithm]]]))
         writer.writerow(["Stats Summary",dict['Stats']])
 
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],sys.argv[7],int(sys.argv[8]),sys.argv[9],sys.argv[10],int(sys.argv[11]),float(sys.argv[12]),sys.argv[13])
+    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],int(sys.argv[7]),sys.argv[8],sys.argv[9],int(sys.argv[10]),float(sys.argv[11]),sys.argv[12])

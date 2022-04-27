@@ -23,6 +23,7 @@ import FeatureImportanceJob
 import time
 import pandas as pd
 import csv
+import pickle
 
 def main(argv):
     #Parse arguments
@@ -45,7 +46,6 @@ def main(argv):
     parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')
 
     options = parser.parse_args(argv[1:])
-    jupyterRun = 'False' #controls whether progress updates are shown or not depending on whether jupyter notebook is used
     job_counter = 0
 
     # Argument checks
@@ -54,13 +54,17 @@ def main(argv):
     if not os.path.exists(options.output_path + '/' + options.experiment_name):
         raise Exception("Experiment must exist (from phase 1) before phase 3 can begin")
 
-    #Load variables specified earlier in the pipeline from metadata file
-    metadata = pd.read_csv(options.output_path+'/'+options.experiment_name + '/' + 'metadata.csv').values
-    class_label = metadata[0, 1]
-    instance_label = metadata[1,1]
-    random_state = int(metadata[3, 1])
-    categorical_cutoff = int(metadata[4,1])
-    cv_partitions = int(metadata[6,1])
+    #Unpickle metadata from previous phase
+    file = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'rb')
+    metadata = pickle.load(file)
+    file.close()
+    #Load variables specified earlier in the pipeline from metadata
+    class_label = metadata['Class Label']
+    instance_label = metadata['Instance Label']
+    random_state = int(metadata['Random Seed'])
+    categorical_cutoff = int(metadata['Categorical Cutoff'])
+    cv_partitions = int(metadata['CV Partitions'])
+    jupyterRun = metadata['Run From Jupyter Notebook']
 
     if not options.do_check: #Run job file
         #Iterate through datasets, ignoring common folders
@@ -68,7 +72,7 @@ def main(argv):
         dataset_paths.remove('logs')
         dataset_paths.remove('jobs')
         dataset_paths.remove('jobsCompleted')
-        dataset_paths.remove('metadata.csv')
+        dataset_paths.remove('metadata.pickle')
         for dataset_directory_path in dataset_paths:
             full_path = options.output_path+"/"+options.experiment_name+"/"+dataset_directory_path
             experiment_path = options.output_path+'/'+options.experiment_name
@@ -100,23 +104,23 @@ def main(argv):
                         submitLocalJob(cv_train_path,experiment_path,random_state,class_label,instance_label,options.instance_subset,'ms',options.n_jobs,options.use_TURF,options.TURF_pct,jupyterRun)
 
         #Update metadata
-        if metadata.shape[0] == 13: #Only update if metadata below hasn't been added before (i.e. in a previous phase 2 run)
-            with open(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv',mode='a', newline="") as file:
-                writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow(["mutual information",options.do_mutual_info])
-                writer.writerow(["MultiSURF", options.do_multisurf])
-                writer.writerow(["TURF",options.use_TURF])
-                writer.writerow(["TURF cutoff", options.TURF_pct])
-                writer.writerow(["MultiSURF instance subset", options.instance_subset])
-            file.close()
+        metadata['Use Mutual Information'] = options.do_mutual_info
+        metadata['Use MultiSURF'] = options.do_multisurf
+        metadata['Use TURF'] = options.use_TURF
+        metadata['TURF Cutoff'] = options.TURF_pct
+        metadata['MultiSURF Instance Subset'] = options.instance_subset
+        #Pickle the metadata for future use
+        pickle_out = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'wb')
+        pickle.dump(metadata,pickle_out)
+        pickle_out.close()
 
     else: #Instead of running job, checks whether previously run jobs were successfully completed
         datasets = os.listdir(options.output_path + "/" + options.experiment_name)
         datasets.remove('logs')
         datasets.remove('jobs')
         datasets.remove('jobsCompleted')
-        if 'metadata.csv' in datasets:
-            datasets.remove('metadata.csv')
+        if 'metadata.pickle' in datasets:
+            datasets.remove('metadata.pickle')
         if 'DatasetComparisons' in datasets:
             datasets.remove('DatasetComparisons')
 

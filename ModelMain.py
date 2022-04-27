@@ -32,6 +32,7 @@ import ModelJob
 import time
 import csv
 import random
+import pickle
 
 def main(argv):
     #Parse arguments
@@ -42,19 +43,20 @@ def main(argv):
     #Sets default run all or none to make algorithm selection from command line simpler
     parser.add_argument('--do-all', dest='do_all', type=str, help='run all modeling algorithms by default (when set False, individual algorithms are activated individually)',default='True')
     #ML modeling algorithms: Defaults available
-    parser.add_argument('--do-NB', dest='do_NB', type=str, help='run naive bayes modeling',default='True')
-    parser.add_argument('--do-LR', dest='do_LR', type=str, help='run logistic regression modeling',default='True')
-    parser.add_argument('--do-DT', dest='do_DT', type=str, help='run decision tree modeling',default='True')
-    parser.add_argument('--do-RF', dest='do_RF', type=str, help='run random forest modeling',default='True')
-    parser.add_argument('--do-GB', dest='do_GB', type=str, help='run gradient boosting modeling',default='True')
-    parser.add_argument('--do-XGB', dest='do_XGB', type=str, help='run XGBoost modeling',default='True')
-    parser.add_argument('--do-LGB', dest='do_LGB', type=str, help='run LGBoost modeling',default='True')
-    parser.add_argument('--do-SVM', dest='do_SVM', type=str, help='run support vector machine modeling',default='True')
-    parser.add_argument('--do-ANN', dest='do_ANN', type=str, help='run artificial neural network modeling',default='True')
-    parser.add_argument('--do-KN', dest='do_KN', type=str, help='run k-neighbors classifier modeling',default='True')
-    parser.add_argument('--do-eLCS', dest='do_eLCS', type=str, help='run eLCS modeling (a basic supervised-learning learning classifier system)',default='True')
-    parser.add_argument('--do-XCS', dest='do_XCS', type=str, help='run XCS modeling (a supervised-learning-only implementation of the best studied learning classifier system)',default='True')
-    parser.add_argument('--do-ExSTraCS', dest='do_ExSTraCS', type=str, help='run ExSTraCS modeling (a learning classifier system designed for biomedical data mining)',default='True')
+    parser.add_argument('--do-NB', dest='do_NB', type=str, help='run naive bayes modeling',default='None')
+    parser.add_argument('--do-LR', dest='do_LR', type=str, help='run logistic regression modeling',default='None')
+    parser.add_argument('--do-DT', dest='do_DT', type=str, help='run decision tree modeling',default='None')
+    parser.add_argument('--do-RF', dest='do_RF', type=str, help='run random forest modeling',default='None')
+    parser.add_argument('--do-GB', dest='do_GB', type=str, help='run gradient boosting modeling',default='None')
+    parser.add_argument('--do-XGB', dest='do_XGB', type=str, help='run XGBoost modeling',default='None')
+    parser.add_argument('--do-LGB', dest='do_LGB', type=str, help='run LGBoost modeling',default='None')
+    parser.add_argument('--do-SVM', dest='do_SVM', type=str, help='run support vector machine modeling',default='None')
+    parser.add_argument('--do-ANN', dest='do_ANN', type=str, help='run artificial neural network modeling',default='None')
+    parser.add_argument('--do-KNN', dest='do_KNN', type=str, help='run k-nearest neighbors classifier modeling',default='None')
+    parser.add_argument('--do-eLCS', dest='do_eLCS', type=str, help='run eLCS modeling (a basic supervised-learning learning classifier system)',default='None')
+    parser.add_argument('--do-XCS', dest='do_XCS', type=str, help='run XCS modeling (a supervised-learning-only implementation of the best studied learning classifier system)',default='None')
+    parser.add_argument('--do-ExSTraCS', dest='do_ExSTraCS', type=str, help='run ExSTraCS modeling (a learning classifier system designed for biomedical data mining)',default='None')
+    ### Add new algorithms here...
     #Other Analysis Parameters - Defaults available
     parser.add_argument('--metric', dest='primary_metric', type=str,help='primary scikit-learn specified scoring metric used for hyperparameter optimization and permutation-based model feature importance evaluation', default='balanced_accuracy')
     parser.add_argument('--subsample', dest='training_subsample', type=int, help='for long running algos (XGB,SVM,ANN,KN), option to subsample training set (0 for no subsample)', default=0)
@@ -78,117 +80,7 @@ def main(argv):
     parser.add_argument('-r','--do-resubmit',dest='do_resubmit', help='Boolean: Rerun any jobs that did not complete (or failed) in an earlier run.', action='store_true')
 
     options = parser.parse_args(argv[1:])
-    jupyterRun = 'False' #controls whether progress updates are shown or not depending on whether jupyter notebook is used
     job_counter = 0
-    #Code to allow more flexible specification of which ML algorithms to run (i.e. all minus specific algorithms or none plus specific algorithms)
-    if eval(options.do_all):
-        do_NB = True
-        do_LR = True
-        do_DT = True
-        do_RF = True
-        do_GB = True
-        do_XGB = True
-        do_LGB = True
-        do_SVM = True
-        do_ANN = True
-        do_KN = True
-        do_eLCS = True
-        do_XCS = True
-        do_ExSTraCS = True
-        algorithms = ['naive_bayes','logistic_regression','decision_tree','random_forest','gradient_boosting','XGB','LGB','SVM','ANN','k_neighbors','eLCS','XCS','ExSTraCS']
-        if options.do_NB == 'False':
-            do_NB = False
-            algorithms.remove('naive_bayes')
-        if options.do_LR == 'False':
-            do_LR = False
-            algorithms.remove("logistic_regression")
-        if options.do_DT == 'False':
-            do_DT = False
-            algorithms.remove("decision_tree")
-        if options.do_RF == 'False':
-            do_RF = False
-            algorithms.remove('random_forest')
-        if options.do_GB == 'False':
-            do_GB = False
-            algorithms.remove('gradient_boosting')
-        if options.do_XGB == 'False':
-            do_XGB = False
-            algorithms.remove('XGB')
-        if options.do_LGB == 'False':
-            do_LGB = False
-            algorithms.remove('LGB')
-        if options.do_SVM == 'False':
-            do_SVM = False
-            algorithms.remove('SVM')
-        if options.do_ANN == 'False':
-            do_ANN = False
-            algorithms.remove('ANN')
-        if options.do_KN == 'False':
-            do_KN = False
-            algorithms.remove('k_neighbors')
-        if options.do_eLCS == 'False':
-            do_eLCS = False
-            algorithms.remove('eLCS')
-        if options.do_XCS == 'False':
-            do_XCS = False
-            algorithms.remove('XCS')
-        if options.do_ExSTraCS == 'False':
-            do_ExSTraCS = False
-            algorithms.remove('ExSTraCS')
-    else:
-        do_NB = False
-        do_LR = False
-        do_DT = False
-        do_RF = False
-        do_GB = False
-        do_XGB = False
-        do_LGB = False
-        do_SVM = False
-        do_ANN = False
-        do_KN = False
-        do_eLCS = False
-        do_XCS = False
-        do_ExSTraCS = False
-        algorithms = []
-        if options.do_NB == 'True':
-            do_NB = True
-            algorithms.append('naive_bayes')
-        if options.do_LR == 'True':
-            do_LR = True
-            algorithms.append("logistic_regression")
-        if options.do_DT == 'True':
-            do_DT = True
-            algorithms.append("decision_tree")
-        if options.do_RF == 'True':
-            do_RF = True
-            algorithms.append('random_forest')
-        if options.do_GB == 'True':
-            do_GB = True
-            algorithms.append('gradient_boosting')
-        if options.do_XGB == 'True':
-            do_XGB = True
-            algorithms.append('XGB')
-        if options.do_LGB == 'True':
-            do_LGB = True
-            algorithms.append('LGB')
-        if options.do_SVM == 'True':
-            do_SVM = True
-            algorithms.append('SVM')
-        if options.do_ANN == 'True':
-            do_ANN = True
-            algorithms.append('ANN')
-        if options.do_KN == 'True':
-            do_KN = True
-            algorithms.append('k_neighbors')
-        if options.do_eLCS == 'True':
-            do_eLCS = True
-            algorithms.append('eLCS')
-        if options.do_XCS == 'True':
-            do_XCS = True
-            algorithms.append('XCS')
-        if options.do_ExSTraCS == 'True':
-            do_ExSTraCS = True
-            algorithms.append('ExSTraCS')
 
     # Argument checks
     if not os.path.exists(options.output_path):
@@ -196,23 +88,92 @@ def main(argv):
     if not os.path.exists(options.output_path + '/' + options.experiment_name):
         raise Exception("Experiment must exist (from phase 1) before phase 5 can begin")
 
-    #Load variables specified earlier in the pipeline from metadata file
-    metadata = pd.read_csv(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv').values
-    class_label = metadata[0, 1]
-    instance_label = metadata[1, 1]
-    random_state = int(metadata[3,1])
-    cv_partitions = int(metadata[6,1])
-    filter_poor_features = metadata[16,1]
+    #Unpickle metadata from previous phase
+    file = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'rb')
+    metadata = pickle.load(file)
+    file.close()
+    #Load variables specified earlier in the pipeline from metadata
+    class_label = metadata['Class Label']
+    instance_label = metadata['Instance Label']
+    random_state = int(metadata['Random Seed'])
+    cv_partitions = int(metadata['CV Partitions'])
+    filter_poor_features = metadata['Filter Poor Features']
+    jupyterRun = metadata['Run From Jupyter Notebook']
 
     if options.do_resubmit: #Attempts to resolve optuna hyperparameter optimization hangup (i.e. when it runs indefinitely for a given random seed attempt)
         random_state = random.randint(1,1000)
+
+    #Create ML modeling algorithm information dictionary, given as ['algorithm used (set to true initially by default)','algorithm abreviation', 'color used for algorithm on figures']
+    ### Note that other named colors used by matplotlib can be found here: https://matplotlib.org/3.5.0/_images/sphx_glr_named_colors_003.png
+    ### Make sure new ML algorithm abbreviations and color designations are unique
+    algInfo = {}
+    algInfo['Naive Bayes'] = [True,'NB','grey']
+    algInfo['Logistic Regression'] = [True,'LR','black']
+    algInfo['Decision Tree'] = [True,'DT','yellow']
+    algInfo['Random Forest'] = [True,'RF','orange']
+    algInfo['Gradient Boosting'] = [True,'GB','bisque']
+    algInfo['Extreme Gradient Boosting'] = [True,'XGB','purple']
+    algInfo['Light Gradient Boosting'] = [True,'LGB','aqua']
+    algInfo['Support Vector Machine'] = [True,'SVM','blue']
+    algInfo['Artificial Neural Network'] = [True,'ANN','red']
+    algInfo['K-Nearest Neightbors'] = [True,'KNN','seagreen']
+    algInfo['eLCS'] = [True,'eLCS','firebrick']
+    algInfo['XCS'] = [True,'XCS','deepskyblue']
+    algInfo['ExSTraCS'] = [True,'ExSTraCS','lightcoral']
+    ### Add new algorithms here...
+
+    #Set up ML algorithm True/False use
+    if not eval(options.do_all): #If do all algorithms is false
+        for key in algInfo:
+            algInfo[key][0] = False #Set algorithm use to False
+
+    #Set algorithm use truth for each algorithm specified by user (i.e. if user specified True/False for a specific algorithm)
+    if not options.do_NB == 'None':
+        algInfo['Naive Bayes'][0] = eval(options.do_NB)
+    if not options.do_LR == 'None':
+        algInfo['Logistic Regression'][0] = eval(options.do_LR)
+    if not options.do_DT == 'None':
+        algInfo['Decision Tree'][0] = eval(options.do_DT)
+    if not options.do_RF == 'None':
+        algInfo['Random Forest'][0] = eval(options.do_RF)
+    if not options.do_GB == 'None':
+        algInfo['Gradient Boosting'][0] = eval(options.do_GB)
+    if not options.do_XGB == 'None':
+        algInfo['Extreme Gradient Boosting'][0] = eval(options.do_XGB)
+    if not options.do_LGB == 'None':
+        algInfo['Light Gradient Boosting'][0] = eval(options.do_LGB)
+    if not options.do_SVM == 'None':
+        algInfo['Support Vector Machine'][0] = eval(options.do_SVM)
+    if not options.do_ANN == 'None':
+        algInfo['Artificial Neural Network'][0] = eval(options.do_ANN)
+    if not options.do_KNN == 'None':
+        algInfo['K-Nearest Neightbors'][0] = eval(options.do_KNN)
+    if not options.do_eLCS == 'None':
+        algInfo['eLCS'][0] = eval(options.do_eLCS)
+    if not options.do_XCS == 'None':
+        algInfo['XCS'][0] = eval(options.do_XCS)
+    if not options.do_ExSTraCS == 'None':
+        algInfo['ExSTraCS'][0] = eval(options.do_ExSTraCS)
+    ### Add new algorithms here...
+
+    #Pickle the algorithm information dictionary for future use
+    pickle_out = open(options.output_path+'/'+options.experiment_name+'/'+"algInfo.pickle", 'wb')
+    pickle.dump(algInfo,pickle_out)
+    pickle_out.close()
+
+    #Make list of algorithms to be run (full names)
+    algorithms = []
+    for key in algInfo:
+        if algInfo[key][0]: #Algorithm is true
+            algorithms.append(key)
 
     if not options.do_check and not options.do_resubmit: #Run job submission
         dataset_paths = os.listdir(options.output_path + "/" + options.experiment_name)
         dataset_paths.remove('logs')
         dataset_paths.remove('jobs')
         dataset_paths.remove('jobsCompleted')
-        dataset_paths.remove('metadata.csv')
+        dataset_paths.remove('metadata.pickle')
+        dataset_paths.remove('algInfo.pickle')
         for dataset_directory_path in dataset_paths:
             full_path = options.output_path + "/" + options.experiment_name + "/" + dataset_directory_path
             if not os.path.exists(full_path+'/models'):
@@ -225,50 +186,53 @@ def main(argv):
                 train_file_path = full_path+'/CVDatasets/'+dataset_directory_path+"_CV_"+str(cvCount)+"_Train.csv"
                 test_file_path = full_path + '/CVDatasets/' + dataset_directory_path + "_CV_" + str(cvCount) + "_Test.csv"
                 for algorithm in algorithms:
+                    algAbrev = algInfo[algorithm][1]
                     if eval(options.run_parallel):
                         job_counter += 1
-                        submitClusterJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,options.output_path+'/'+options.experiment_name,cvCount,filter_poor_features,options.reserved_memory,options.maximum_memory,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.queue,options.use_uniform_FI,options.primary_metric,jupyterRun)
+                        submitClusterJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,options.output_path+'/'+options.experiment_name,cvCount,filter_poor_features,options.reserved_memory,options.maximum_memory,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.queue,options.use_uniform_FI,options.primary_metric,algAbrev,jupyterRun)
                     else:
-                        submitLocalJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.use_uniform_FI,options.primary_metric,jupyterRun)
+                        submitLocalJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.use_uniform_FI,options.primary_metric,algAbrev,jupyterRun)
 
-        # Update metadata
-        if metadata.shape[0] == 20: #Only update if metadata below hasn't been added before
-            with open(options.output_path + '/' + options.experiment_name + '/' + 'metadata.csv', mode='a', newline="") as file:
-                writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow(["NB", str(do_NB)])
-                writer.writerow(["LR", str(do_LR)])
-                writer.writerow(["DT", str(do_DT)])
-                writer.writerow(["RF", str(do_RF)])
-                writer.writerow(["GB",str(do_GB)])
-                writer.writerow(["XGB", str(do_XGB)])
-                writer.writerow(["LGB", str(do_LGB)])
-                writer.writerow(["SVM", str(do_SVM)])
-                writer.writerow(["ANN", str(do_ANN)])
-                writer.writerow(["KN", str(do_KN)])
-                writer.writerow(["eLCS", str(do_eLCS)])
-                writer.writerow(["XCS",str(do_XCS)])
-                writer.writerow(["ExSTraCS",str(do_ExSTraCS)])
-                writer.writerow(["primary metric",options.primary_metric])
-                writer.writerow(["training subsample for KN,ANN,SVM,and XGB",options.training_subsample])
-                writer.writerow(["uniform feature importance estimation (models)",options.use_uniform_FI])
-                writer.writerow(["hypersweep number of trials",options.n_trials])
-                writer.writerow(["hypersweep timeout",options.timeout])
-                writer.writerow(['do LCS sweep',options.do_lcs_sweep])
-                writer.writerow(['nu', options.nu])
-                writer.writerow(['training iterations', options.iterations])
-                writer.writerow(['N (rule population size)', options.N])
-                writer.writerow(["LCS hypersweep timeout",options.lcs_timeout])
-            file.close()
+        #Update metadata
+        metadata['Naive Bayes'] = str(algInfo['Naive Bayes'][0])
+        metadata['Logistic Regression'] = str(algInfo['Logistic Regression'][0])
+        metadata['Decision Tree'] = str(algInfo['Decision Tree'][0])
+        metadata['Random Forest'] = str(algInfo['Random Forest'][0])
+        metadata['Gradient Boosting'] = str(algInfo['Gradient Boosting'][0])
+        metadata['Extreme Gradient Boosting'] = str(algInfo['Extreme Gradient Boosting'][0])
+        metadata['Light Gradient Boosting'] = str(algInfo['Light Gradient Boosting'][0])
+        metadata['Support Vector Machine'] = str(algInfo['Support Vector Machine'][0])
+        metadata['Artificial Neural Network'] = str(algInfo['Artificial Neural Network'][0])
+        metadata['K-Nearest Neightbors'] = str(algInfo['K-Nearest Neightbors'][0])
+        metadata['eLCS'] = str(algInfo['eLCS'][0])
+        metadata['XCS'] = str(algInfo['XCS'][0])
+        metadata['ExSTraCS'] = str(algInfo['ExSTraCS'][0])
+        ### Add new algorithms here...
+        metadata['Primary Metric'] = options.primary_metric
+        metadata['Training Subsample for KNN,ANN,SVM,and XGB'] = options.training_subsample
+        metadata['Uniform Feature Importance Estimation (Models)'] = options.use_uniform_FI
+        metadata['Hyperparameter Sweep Number of Trials'] = options.n_trials
+        metadata['Hyperparameter Timeout'] = options.timeout
+        metadata['Export Hyperparameter Sweep Plots'] = options.export_hyper_sweep_plots
+        metadata['Do LCS Hyperparameter Sweep'] = options.do_lcs_sweep
+        metadata['nu'] = options.nu
+        metadata['Training Iterations'] = options.iterations
+        metadata['N (Rule Population Size)'] = options.N
+        metadata['LCS Hyperparameter Sweep Timeout'] = options.lcs_timeout
+        #Pickle the metadata for future use
+        pickle_out = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'wb')
+        pickle.dump(metadata,pickle_out)
+        pickle_out.close()
 
     elif options.do_check and not options.do_resubmit: #run job completion checks
-        abbrev = {'naive_bayes':'NB','logistic_regression':'LR','decision_tree':'DT','random_forest':'RF','gradient_boosting':'GB','XGB':'XGB','LGB':'LGB','ANN':'ANN','SVM':'SVM','k_neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
-
         datasets = os.listdir(options.output_path + "/" + options.experiment_name)
         datasets.remove('logs')
         datasets.remove('jobs')
         datasets.remove('jobsCompleted')
-        if 'metadata.csv' in datasets:
-            datasets.remove('metadata.csv')
+        if 'metadata.pickle' in datasets:
+            datasets.remove('metadata.pickle')
+        if 'algInfo.pickle' in datasets:
+            dataset_paths.remove('algInfo.pickle')
         if 'DatasetComparisons' in datasets:
             datasets.remove('DatasetComparisons')
 
@@ -276,7 +240,7 @@ def main(argv):
         for dataset in datasets:
             for cv in range(cv_partitions):
                 for algorithm in algorithms:
-                    phase5Jobs.append('job_model_' + dataset + '_' + str(cv) +'_' +abbrev[algorithm]+'.txt')
+                    phase5Jobs.append('job_model_' + dataset + '_' + str(cv) +'_' +algInfo[algorithm][1]+'.txt') #use algorithm abreviation for filenames
 
         for filename in glob.glob(options.output_path + "/" + options.experiment_name + '/jobsCompleted/job_model*'):
             ref = filename.split('/')[-1]
@@ -290,14 +254,14 @@ def main(argv):
         print()
 
     elif options.do_resubmit and not options.do_check: #resubmit any jobs that didn't finish in previous run (mix of job check and job submit)
-        abbrev = {'naive_bayes':'NB','logistic_regression':'LR','decision_tree':'DT','random_forest':'RF','gradient_boosting':'GB','XGB':'XGB','LGB':'LGB','ANN':'ANN','SVM':'SVM','k_neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
-
         datasets = os.listdir(options.output_path + "/" + options.experiment_name)
         datasets.remove('logs')
         datasets.remove('jobs')
         datasets.remove('jobsCompleted')
-        if 'metadata.csv' in datasets:
-            datasets.remove('metadata.csv')
+        if 'metadata.pickle' in datasets:
+            datasets.remove('metadata.pickle')
+        if 'algInfo.pickle' in datasets:
+            dataset_paths.remove('algInfo.pickle')
         if 'DatasetComparisons' in datasets:
             datasets.remove('DatasetComparisons')
 
@@ -310,43 +274,44 @@ def main(argv):
         for dataset in datasets:
             for cv in range(cv_partitions):
                 for algorithm in algorithms:
-                    targetFile = 'job_model_' + dataset + '_' + str(cv) +'_' +abbrev[algorithm]+'.txt'
+                    algAbrev = algInfo[algorithm][1]
+                    targetFile = 'job_model_' + dataset + '_' + str(cv) +'_' +algInfo[algorithm][1]+'.txt'
                     if targetFile not in phase5completed: #target for a re-submit
                         full_path = options.output_path + "/" + options.experiment_name + "/" + dataset
                         train_file_path = full_path+'/CVDatasets/'+dataset+"_CV_"+str(cv)+"_Train.csv"
                         test_file_path = full_path + '/CVDatasets/' + dataset + "_CV_" + str(cv) + "_Test.csv"
                         if eval(options.run_parallel):
                             job_counter += 1
-                            submitClusterJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,options.output_path+'/'+options.experiment_name,cv,filter_poor_features,options.reserved_memory,options.maximum_memory,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.queue,options.use_uniform_FI,options.primary_metric,jupyterRun)
+                            submitClusterJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,options.output_path+'/'+options.experiment_name,cv,filter_poor_features,options.reserved_memory,options.maximum_memory,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.queue,options.use_uniform_FI,options.primary_metric,algAbrev,jupyterRun)
                         else:
-                            submitLocalJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,cv,filter_poor_features,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.use_uniform_FI,options.primary_metric,jupyterRun)
+                            submitLocalJob(algorithm,train_file_path,test_file_path,full_path,options.n_trials,options.timeout,options.lcs_timeout,options.export_hyper_sweep_plots,instance_label,class_label,random_state,cv,filter_poor_features,options.do_lcs_sweep,options.nu,options.iterations,options.N,options.training_subsample,options.use_uniform_FI,options.primary_metric,algAbrev,jupyterRun)
     else:
         print("Run options in conflict. Do not request to run check and resubmit at the same time.")
 
     if not options.do_check:
         print(str(job_counter)+ " jobs submitted in Phase 5")
 
-def submitLocalJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,jupyterRun):
+def submitLocalJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,algAbrev,jupyterRun):
     """ Runs ModelJob.py locally, once for each combination of cv dataset (for each original target dataset) and ML modeling algorithm. These runs will be completed serially rather than in parallel. """
-    ModelJob.job(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,jupyterRun)
+    ModelJob.job(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,algAbrev,jupyterRun)
 
-def submitClusterJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,experiment_path,cvCount,filter_poor_features,reserved_memory,maximum_memory,do_lcs_sweep,nu,iterations,N,training_subsample,queue,use_uniform_FI,primary_metric,jupyterRun):
+def submitClusterJob(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,experiment_path,cvCount,filter_poor_features,reserved_memory,maximum_memory,do_lcs_sweep,nu,iterations,N,training_subsample,queue,use_uniform_FI,primary_metric,algAbrev,jupyterRun):
     """ Runs ModelJob.py once for each combination of cv dataset (for each original target dataset) and ML modeling algorithm. Runs in parallel on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
-    job_name = experiment_path+'/jobs/P5_'+str(algorithm)+'_'+str(cvCount)+'_'+job_ref+'_run.sh'
+    job_name = experiment_path+'/jobs/P5_'+str(algAbrev)+'_'+str(cvCount)+'_'+job_ref+'_run.sh'
     sh_file = open(job_name,'w')
     sh_file.write('#!/bin/bash\n')
     sh_file.write('#BSUB -q '+queue+'\n')
     sh_file.write('#BSUB -J '+job_ref+'\n')
     sh_file.write('#BSUB -R "rusage[mem='+str(reserved_memory)+'G]"'+'\n')
     sh_file.write('#BSUB -M '+str(maximum_memory)+'GB'+'\n')
-    sh_file.write('#BSUB -o ' + experiment_path+'/logs/P5_'+str(algorithm)+'_'+str(cvCount)+'_'+job_ref+'.o\n')
-    sh_file.write('#BSUB -e ' + experiment_path+'/logs/P5_'+str(algorithm)+'_'+str(cvCount)+'_'+job_ref+'.e\n')
+    sh_file.write('#BSUB -o ' + experiment_path+'/logs/P5_'+str(algAbrev)+'_'+str(cvCount)+'_'+job_ref+'.o\n')
+    sh_file.write('#BSUB -e ' + experiment_path+'/logs/P5_'+str(algAbrev)+'_'+str(cvCount)+'_'+job_ref+'.e\n')
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
     sh_file.write('python '+this_file_path+'/ModelJob.py '+algorithm+" "+train_file_path+" "+test_file_path+" "+full_path+" "+
                   str(n_trials)+" "+str(timeout)+" "+str(lcs_timeout)+" "+export_hyper_sweep_plots+" "+instance_label+" "+class_label+" "+
-                  str(random_state)+" "+str(cvCount)+" "+str(filter_poor_features)+" "+str(do_lcs_sweep)+" "+str(nu)+" "+str(iterations)+" "+str(N)+" "+str(training_subsample)+" "+str(use_uniform_FI)+" "+str(primary_metric)+" "+str(jupyterRun)+'\n')
+                  str(random_state)+" "+str(cvCount)+" "+str(filter_poor_features)+" "+str(do_lcs_sweep)+" "+str(nu)+" "+str(iterations)+" "+str(N)+" "+str(training_subsample)+" "+str(use_uniform_FI)+" "+str(primary_metric)+" "+str(algAbrev)+" "+str(jupyterRun)+'\n')
     sh_file.close()
     os.system('bsub < ' + job_name)
     pass

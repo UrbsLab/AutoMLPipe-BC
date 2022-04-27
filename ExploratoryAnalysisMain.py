@@ -33,6 +33,7 @@ import glob
 import ExploratoryAnalysisJob
 import time
 import csv
+import pickle
 
 def main(argv):
     #Parse arguments ---------------------------------------------------------------------------------------------------------------------------------
@@ -87,29 +88,36 @@ def main(argv):
         if file_count == 0: #Check that there was at least 1 dataset
             raise Exception("There must be at least one .txt or .csv dataset in data_path directory")
 
-        # Save metadata to file (Keeps a record of key run parameters across all phases of pipeline. Some parameters will be loaded from this file in later phases.)
-        with open(options.output_path+'/'+options.experiment_name+'/'+'metadata.csv',mode='w', newline="") as file:
-            writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(["DATA LABEL", "VALUE"])
-            writer.writerow(["class label",options.class_label])
-            writer.writerow(["instance label", options.instance_label])
-            writer.writerow(["match label", options.match_label])
-            writer.writerow(["random state",options.random_state])
-            writer.writerow(["categorical cutoff",options.categorical_cutoff])
-            writer.writerow(["statistical significance cutoff",options.sig_cutoff])
-            writer.writerow(["cv partitions",options.cv_partitions])
-            writer.writerow(["partition method",options.partition_method])
-            writer.writerow(["ignored features",options.ignore_features_path])
-            writer.writerow(["specified categorical variables",options.categorical_feature_path])
-        file.close()
+        #Create metadata dictionary object to keep track of pipeline run paramaters throughout phases
+        metadata = {}
+        metadata['Data Path'] = options.data_path
+        metadata['Output Path'] = options.output_path
+        metadata['Experiment Name'] = options.experiment_name
+        metadata['Class Label'] = options.class_label
+        metadata['Instance Label'] = options.instance_label
+        metadata['Ignored Features'] = options.ignore_features_path
+        metadata['Specified Categorical Features'] = options.categorical_feature_path
+        metadata['CV Partitions'] = options.cv_partitions
+        metadata['Partition Method'] = options.partition_method
+        metadata['Match Label'] = options.match_label
+        metadata['Categorical Cutoff'] = options.categorical_cutoff
+        metadata['Statistical Significance Cutoff'] = options.sig_cutoff
+        metadata['Export Feature Correlations'] = options.export_feature_correlations
+        metadata['Export Univariate Plots'] = options.export_univariate_plots
+        metadata['Random Seed'] = options.random_state
+        metadata['Run From Jupyter Notebook'] = jupyterRun
+        #Pickle the metadata for future use
+        pickle_out = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'wb')
+        pickle.dump(metadata,pickle_out)
+        pickle_out.close()
 
     else: #Instead of running job, checks whether previously run jobs were successfully completed
         datasets = os.listdir(options.output_path + "/" + options.experiment_name)
         datasets.remove('logs')
         datasets.remove('jobs')
         datasets.remove('jobsCompleted')
-        if 'metadata.csv' in datasets:
-            datasets.remove('metadata.csv')
+        if 'metadata.pickle' in datasets:
+            datasets.remove('metadata.pickle')
         if 'DatasetComparisons' in datasets:
             datasets.remove('DatasetComparisons')
         phase1Jobs = []

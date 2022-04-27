@@ -14,6 +14,7 @@ from datetime import datetime
 import os
 import re
 import sys
+import pickle
 
 def job(experiment_path):
 
@@ -25,7 +26,7 @@ def job(experiment_path):
     ds = os.listdir(experiment_path)
     experiment_name = experiment_path.split('/')[-1]
 
-    nonds = ['DatasetComparisons', 'jobs', 'jobsCompleted', 'logs','KeyFileCopy','metadata.csv',experiment_name+'_ML_Pipeline_Report.pdf']
+    nonds = ['DatasetComparisons', 'jobs', 'jobsCompleted', 'logs','KeyFileCopy','metadata.pickle','metadata.csv','algInfo.pickle',experiment_name+'_ML_Pipeline_Report.pdf']
     for i in nonds:
         if i in ds:
             ds.remove(i)
@@ -33,15 +34,17 @@ def job(experiment_path):
         ds.remove('.idea')
     ds = sorted(ds)
 
-    ars_df = pd.read_csv(experiment_path+ '/'+'metadata.csv')
+    #Unpickle metadata from previous phase
+    file = open(experiment_path+'/'+"metadata.pickle", 'rb')
+    metadata = pickle.load(file)
+    file.close()
+
+    #Turn metadata dictionary into text list
     ars_dic = []
-    for i in range(len(ars_df)):
-       if i >= 0:
-          ars_dic.append(ars_df.iloc[i, 0]+': ')
-          ars_dic.append(ars_df.iloc[i, 1])
-          ars_dic.append('\n')
-       else:
-          pass
+    for key in metadata:
+        ars_dic.append(str(key)+':')
+        ars_dic.append(str(metadata[key]))
+        ars_dic.append('\n')
 
     #Analysis Settings, Global Analysis Settings, ML Modeling Algorithms
     analy_report = FPDF('P', 'mm', 'A4')
@@ -51,22 +54,25 @@ def job(experiment_path):
 
     #ML Pipeline Analysis Report-------------------------------------------------------------------------------------------------------
     print("Starting Report")
-    ls1 = ars_dic[0:59] # Class - filter poor [0:55] 59
-    ls2 = ars_dic[59:98]  #ML modeling algorithms (NaiveB - ExSTraCS) [56:95] 60
-    ls3 = ars_dic[98:114] #primary metric - hypersweep timeout [94:111] 97
-    ls4 = ars_dic[114:129]  #LCS parameters (do LCS sweep - LCS hypersweep timeout) [110:125]
+    ls1 = ars_dic[0:87] # Class - filter poor [0:55] 59
+    ls2 = ars_dic[87:126]  #ML modeling algorithms (NaiveB - ExSTraCS) [56:95] 60
+    ls3 = ars_dic[126:141] #primary metric - hypersweep timeout [94:111] 97
+    ls4 = ars_dic[141:156]  #LCS parameters (do LCS sweep - LCS hypersweep timeout) [110:125]
+    ls5 = ars_dic[156:171]
     analy_report.set_font('Times', 'B', 12)
     analy_report.cell(w=180, h=8, txt='AutoMLPipe-BC Training Summary Report: '+time, ln=2, border=1, align='L')
+    topOfList = analy_report.y
     analy_report.y += 3
     analy_report.set_font(family='times', size=9)
-    analy_report.multi_cell(w = 90,h = 4,txt='Pipeline Settings:'+'\n'+'\n'+listToString(ls1)+' '+listToString(ls3), border=1, align='L')
+    analy_report.multi_cell(w = 90,h = 4,txt='Pipeline Settings:'+'\n'+'\n'+listToString(ls1)+' '+listToString(ls3)+' '+listToString(ls5), border=1, align='L')
+    bottomOfList = analy_report.y
     analy_report.x += 90
-    analy_report.y = analy_report.y - 104 #96
+    analy_report.y = topOfList + 3 #96
     analy_report.multi_cell(w = 90,h = 4,txt='ML Modeling Algorithms:'+'\n'+'\n'+listToString(ls2), border=1, align='L')
     analy_report.x += 90
     analy_report.y += 4
-    analy_report.multi_cell(w = 90,h = 4,txt='LCS Settings (ExSTraCS,eLCS,XCS):'+'\n'+listToString(ls4), border=1, align='L')
-    analy_report.y +=15 #10
+    analy_report.multi_cell(w = 90,h = 4,txt='LCS Settings (eLCS,XCS,ExSTraCS):'+'\n'+listToString(ls4), border=1, align='L')
+    analy_report.y = bottomOfList + 4
 
     listDatasets = ''
     i = 1

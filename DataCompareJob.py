@@ -17,6 +17,7 @@ from scipy import stats
 import copy
 import matplotlib.pyplot as plt
 import numpy as np
+import pickle
 
 def job(experiment_path,sig_cutoff,jupyterRun):
     """ Run all elements of data comparison once for the entire analysis pipeline: runs non-parametric statistical analysis
@@ -24,7 +25,9 @@ def job(experiment_path,sig_cutoff,jupyterRun):
     evaluation metric. Also compares the best overall model for each target dataset, for each evaluation metric."""
     # Get dataset paths for all completed dataset analyses in experiment folder
     datasets = os.listdir(experiment_path)
+    datasets.remove('metadata.pickle')
     datasets.remove('metadata.csv')
+    datasets.remove('algInfo.pickle')
     datasets.remove('jobsCompleted')
     try:
         datasets.remove('logs')
@@ -40,17 +43,20 @@ def job(experiment_path,sig_cutoff,jupyterRun):
     for dataset in datasets:
         full_path = experiment_path + "/" + dataset
         dataset_directory_paths.append(full_path)
+    #Unpickle algorithm information from previous phase
+    file = open(experiment_path+'/'+"algInfo.pickle", 'rb')
+    algInfo = pickle.load(file)
+    file.close()
     # Get ML modeling algorithms that were applied in analysis pipeline
     algorithms = []
-    name_to_abbrev = {'Naive Bayes':'NB','Logistic Regression':'LR','Decision Tree':'DT','Random Forest':'RF','Gradient Boosting':'GB','XGB':'XGB',
-                      'LGB':'LGB','SVM':'SVM','ANN':'ANN','K Neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
-    colors = {'Naive Bayes':'grey','Logistic Regression':'black','Decision Tree':'yellow','Random Forest':'orange','Gradient Boosting':'bisque','XGB':'purple','LGB':'aqua','SVM':'blue','ANN':'red','eLCS':'firebrick','XCS':'deepskyblue','K Neighbors':'seagreen','ExSTraCS':'lightcoral'}
+    name_to_abbrev = {}
+    colors = {}
+    for key in algInfo:
+        if algInfo[key][0]: # If that algorithm was used
+            algorithms.append(key)
+            name_to_abbrev[key] = (algInfo[key][1])
+            colors[key] = (algInfo[key][2])
     abbrev_to_name = dict([(value, key) for key, value in name_to_abbrev.items()])
-    for filepath in glob.glob(dataset_directory_paths[0] + '/models/pickledModels/*'):
-        filepath = str(filepath).replace('\\','/')
-        algo_name = abbrev_to_name[filepath.split('/')[-1].split('_')[0]]
-        if not algo_name in algorithms:
-            algorithms.append(algo_name)
     # Get list of metric names
     data = pd.read_csv(dataset_directory_paths[0] + '/model_evaluation/Summary_performance_mean.csv', sep=',')
     metrics = data.columns.values.tolist()[1:]

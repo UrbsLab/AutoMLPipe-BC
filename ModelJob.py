@@ -52,16 +52,16 @@ from sklearn.base import clone
 from sklearn.inspection import permutation_importance
 import optuna #hyperparameter optimization
 
-def job(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,jupyterRun):
+def job(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,algAbrev,jupyterRun):
     """ Specifies hardcoded (below) range of hyperparameter options selected for each ML algorithm and then runs the modeling method. Set up this way so that users can easily modify ML hyperparameter settings when running from the Jupyter Notebook. """
     if eval(jupyterRun):
         print('Running '+str(algorithm)+' on '+str(train_file_path))
     #Get hyperparameter grid
     param_grid = hyperparameters(random_state,do_lcs_sweep,nu,iterations,N)[algorithm]
-    runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,param_grid)
+    runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,param_grid,algAbrev)
 
 
-def runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,param_grid):
+def runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,param_grid,algAbrev):
     """ Run all elements of modeling: loading data, hyperparameter optimization, model training, and evaluation on hold out testing data.  Each ML algorithm has its own method below to handle these steps. """
     job_start_time = time.time() #for tracking phase runtime
     # Set random seeds for replicatability
@@ -70,43 +70,43 @@ def runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout
     #Load training and testing datasets separating features from outcome for scikit-learn-based modeling
     trainX,trainY,testX,testY = dataPrep(train_file_path,instance_label,class_label,test_file_path)
     #Run ml modeling algorithm specified-------------------------------------------------------------------------------------------------------------------------------------------------------------
-    abbrev = {'naive_bayes':'NB','logistic_regression':'LR','decision_tree':'DT','random_forest':'RF','gradient_boosting':'GB','XGB':'XGB','LGB':'LGB','SVM':'SVM','ANN':'ANN','k_neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
-    if algorithm == 'naive_bayes':
+    if algorithm == 'Naive Bayes':
         ret = run_NB_full(trainX, trainY, testX,testY, random_state,cvCount, param_grid,n_trials, timeout,export_hyper_sweep_plots,full_path,use_uniform_FI,primary_metric)
-    elif algorithm == 'logistic_regression':
+    elif algorithm == 'Logistic Regression':
         ret = run_LR_full(trainX,trainY,testX,testY, random_state, cvCount,param_grid,n_trials,timeout,export_hyper_sweep_plots,full_path,use_uniform_FI,primary_metric)
-    elif algorithm == 'decision_tree':
+    elif algorithm == 'Decision Tree':
         ret = run_DT_full(trainX, trainY, testX,testY, random_state,cvCount, param_grid,n_trials, timeout,export_hyper_sweep_plots,full_path,use_uniform_FI,primary_metric)
-    elif algorithm == 'random_forest':
+    elif algorithm == 'Random Forest':
         ret = run_RF_full(trainX, trainY, testX,testY, random_state,cvCount, param_grid,n_trials, timeout,export_hyper_sweep_plots, full_path,use_uniform_FI,primary_metric)
-    elif algorithm == 'gradient_boosting':
+    elif algorithm == 'Gradient Boosting':
         ret = run_GB_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,use_uniform_FI,primary_metric)
-    elif algorithm == 'XGB':
+    elif algorithm == 'Extreme Gradient Boosting':
         ret = run_XGB_full(trainX, trainY, testX,testY, random_state,cvCount, param_grid,n_trials, timeout,export_hyper_sweep_plots,full_path,training_subsample,use_uniform_FI,primary_metric)
-    elif algorithm == 'LGB':
+    elif algorithm == 'Light Gradient Boosting':
         ret = run_LGB_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,use_uniform_FI,primary_metric)
-    elif algorithm == 'SVM':
+    elif algorithm == 'Support Vector Machine':
         ret = run_SVM_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,training_subsample,use_uniform_FI,primary_metric)
-    elif algorithm == 'ANN':
+    elif algorithm == 'Artificial Neural Network':
         ret = run_ANN_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,training_subsample,use_uniform_FI,primary_metric)
-    elif algorithm == 'k_neighbors':
-        ret = run_KN_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,training_subsample,use_uniform_FI,primary_metric)
+    elif algorithm == 'K-Nearest Neightbors':
+        ret = run_KNN_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,training_subsample,use_uniform_FI,primary_metric)
     elif algorithm == 'eLCS':
         ret = run_eLCS_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, lcs_timeout,export_hyper_sweep_plots, full_path,use_uniform_FI,primary_metric)
     elif algorithm == 'XCS':
         ret = run_XCS_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, lcs_timeout,export_hyper_sweep_plots, full_path,use_uniform_FI,primary_metric)
     elif algorithm == 'ExSTraCS':
         ret = run_ExSTraCS_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, lcs_timeout,export_hyper_sweep_plots, full_path,filter_poor_features,instance_label,class_label,use_uniform_FI,primary_metric)
+    ### Add new algorithms here...
     #Pickle all evaluation metrics for ML model training and evaluation
     if not os.path.exists(full_path+'/model_evaluation/pickled_metrics'):
         os.mkdir(full_path+'/model_evaluation/pickled_metrics')
-    pickle.dump(ret, open(full_path + '/model_evaluation/pickled_metrics/' + abbrev[algorithm] + '_CV_' + str(cvCount) + "_metrics", 'wb'))
+    pickle.dump(ret, open(full_path + '/model_evaluation/pickled_metrics/' + algAbrev + '_CV_' + str(cvCount) + "_metrics.pickle", 'wb'))
     #Save runtime of ml algorithm training and evaluation
-    saveRuntime(full_path,job_start_time,abbrev,algorithm,cvCount)
+    saveRuntime(full_path,job_start_time,algAbrev,algorithm,cvCount)
     # Print phase completion
-    print(full_path.split('/')[-1] + " CV" + str(cvCount) + " "+abbrev[algorithm]+" training complete")
+    print(full_path.split('/')[-1] + " CV" + str(cvCount) + " "+algAbrev+" training complete")
     experiment_path = '/'.join(full_path.split('/')[:-1])
-    job_file = open(experiment_path + '/jobsCompleted/job_model_' + full_path.split('/')[-1] + '_' + str(cvCount) +'_' +abbrev[algorithm]+'.txt', 'w')
+    job_file = open(experiment_path + '/jobsCompleted/job_model_' + full_path.split('/')[-1] + '_' + str(cvCount) +'_' +algAbrev+'.txt', 'w')
     job_file.write('complete')
     job_file.close()
 
@@ -126,9 +126,9 @@ def dataPrep(train_file_path,instance_label,class_label,test_file_path):
     del test #memory cleanup
     return trainX,trainY,testX,testY
 
-def saveRuntime(full_path,job_start_time,abbrev,algorithm,cvCount):
+def saveRuntime(full_path,job_start_time,algAbrev,algorithm,cvCount):
     """ Save ML algorithm training and evaluation runtime for this phase."""
-    runtime_file = open(full_path + '/runtime/runtime_'+abbrev[algorithm]+'_CV'+str(cvCount)+'.txt', 'w')
+    runtime_file = open(full_path + '/runtime/runtime_'+algAbrev+'_CV'+str(cvCount)+'.txt', 'w')
     runtime_file.write(str(time.time() - job_start_time))
     runtime_file.close()
 
@@ -167,7 +167,7 @@ def run_NB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     clf = GaussianNB()
     model = clf.fit(x_train, y_train)
     #Save model
-    pickle.dump(model, open(full_path+'/models/pickledModels/NB_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/NB_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
     #Feature Importance Estimates
@@ -227,25 +227,9 @@ def run_LR_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/models/pickledModels/LR_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/LR_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
-    """
-    # Prediction evaluation on hold out testing data
-    y_pred = clf.predict(x_test)
-    #Calculate standard classificaction metrics
-    metricList = classEval(y_test, y_pred)
-    # Determine probabilities of class predictions for each test instance (this will be used much later in calculating an ROC curve)
-    probas_ = model.predict_proba(x_test)
-    # Compute ROC curve and AUC
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, probas_[:, 1])
-    roc_auc = auc(fpr, tpr)
-    # Compute Precision/Recall curve and AUC
-    prec, recall, thresholds = metrics.precision_recall_curve(y_test, probas_[:, 1])
-    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1] #reversed list orders
-    prec_rec_auc = auc(recall, prec)
-    ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
-    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -308,25 +292,9 @@ def run_DT_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/models/pickledModels/DT_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/DT_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
-    """
-    # Prediction evaluation on hold out testing data
-    y_pred = clf.predict(x_test)
-    #Calculate standard classificaction metrics
-    metricList = classEval(y_test, y_pred)
-    # Determine probabilities of class predictions for each test instance (this will be used much later in calculating an ROC curve)
-    probas_ = model.predict_proba(x_test)
-    # Compute ROC curve and area the curve
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, probas_[:, 1])
-    roc_auc = auc(fpr, tpr)
-    # Compute Precision/Recall curve and AUC
-    prec, recall, thresholds = metrics.precision_recall_curve(y_test, probas_[:, 1])
-    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
-    prec_rec_auc = auc(recall, prec)
-    ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
-    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -391,25 +359,9 @@ def run_RF_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/models/pickledModels/RF_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/RF_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
-    """
-    # Prediction evaluation on hold out testing data
-    y_pred = clf.predict(x_test)
-    #Calculate standard classificaction metrics
-    metricList = classEval(y_test, y_pred)
-    # Determine probabilities of class predictions for each test instance (this will be used much later in calculating an ROC curve)
-    probas_ = model.predict_proba(x_test)
-    # Compute ROC curve and area the curve
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, probas_[:, 1])
-    roc_auc = auc(fpr, tpr)
-    # Compute Precision/Recall curve and AUC
-    prec, recall, thresholds = metrics.precision_recall_curve(y_test, probas_[:, 1])
-    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
-    prec_rec_auc = auc(recall, prec)
-    ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
-    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -471,25 +423,9 @@ def run_GB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/models/pickledModels/GB_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/GB_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
-    """
-    # Prediction evaluation on hold out testing data
-    y_pred = clf.predict(x_test)
-    #Calculate standard classificaction metrics
-    metricList = classEval(y_test, y_pred)
-    # Determine probabilities of class predictions for each test instance (this will be used much later in calculating an ROC curve)
-    probas_ = model.predict_proba(x_test)
-    # Compute ROC curve and area the curve
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, probas_[:, 1])
-    roc_auc = auc(fpr, tpr)
-    # Compute Precision/Recall curve and AUC
-    prec, recall, thresholds = metrics.precision_recall_curve(y_test, probas_[:, 1])
-    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
-    prec_rec_auc = auc(recall, prec)
-    ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
-    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -572,25 +508,9 @@ def run_XGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/models/pickledModels/XGB_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/XGB_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
-    """
-    # Prediction evaluation on hold out testing data
-    y_pred = clf.predict(x_test)
-    #Calculate standard classificaction metrics
-    metricList = classEval(y_test, y_pred)
-    # Determine probabilities of class predictions for each test instance (this will be used much later in calculating an ROC curve)
-    probas_ = model.predict_proba(x_test)
-    # Compute ROC curve and area the curve
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, probas_[:, 1])
-    roc_auc = auc(fpr, tpr)
-    # Compute Precision/Recall curve and AUC
-    prec, recall, thresholds = metrics.precision_recall_curve(y_test, probas_[:, 1])
-    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1] #reverse order
-    prec_rec_auc = auc(recall, prec)
-    ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
-    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -663,25 +583,9 @@ def run_LGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/models/pickledModels/LGB_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/LGB_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
-    """
-    # Prediction evaluation on hold out testing data
-    y_pred = clf.predict(x_test)
-    #Calculate standard classificaction metrics
-    metricList = classEval(y_test, y_pred)
-    # Determine probabilities of class predictions for each test instance (this will be used much later in calculating an ROC curve)
-    probas_ = model.predict_proba(x_test)
-    # Compute ROC curve and area the curve
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, probas_[:, 1])
-    roc_auc = auc(fpr, tpr)
-    # Compute Precision/Recall curve and AUC
-    prec, recall, thresholds = metrics.precision_recall_curve(y_test, probas_[:, 1])
-    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
-    prec_rec_auc = auc(recall, prec)
-    ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
-    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -749,25 +653,9 @@ def run_SVM_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/models/pickledModels/SVM_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/SVM_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
-    """
-    # Prediction evaluation on hold out testing data
-    y_pred = clf.predict(x_test)
-    #Calculate standard classificaction metrics
-    metricList = classEval(y_test, y_pred)
-    # Determine probabilities of class predictions for each test instance (this will be used much later in calculating an ROC curve)
-    probas_ = model.predict_proba(x_test)
-    # Compute ROC curve and area the curve
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, probas_[:, 1])
-    roc_auc = auc(fpr, tpr)
-    # Compute Precision/Recall curve and AUC
-    prec, recall, thresholds = metrics.precision_recall_curve(y_test, probas_[:, 1])
-    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
-    prec_rec_auc = auc(recall, prec)
-    ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
-    """
     # Feature Importance Estimates (SVM can only automatically obtain feature importance estimates (coef_) for linear kernel)
     results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
     fi = results.importances_mean
@@ -847,32 +735,16 @@ def run_ANN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/models/pickledModels/ANN_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/ANN_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
-    """
-    # Prediction evaluation on hold out testing data
-    y_pred = clf.predict(x_test)
-    #Calculate standard classificaction metrics
-    metricList = classEval(y_test, y_pred)
-    # Determine probabilities of class predictions for each test instance (this will be used much later in calculating an ROC curve)
-    probas_ = model.predict_proba(x_test)
-    # Compute ROC curve and area the curve
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, probas_[:, 1])
-    roc_auc = auc(fpr, tpr)
-    # Compute Precision/Recall curve and AUC
-    prec, recall, thresholds = metrics.precision_recall_curve(y_test, probas_[:, 1])
-    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
-    prec_rec_auc = auc(recall, prec)
-    ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
-    """
     # Feature Importance Estimates
     results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
     fi = results.importances_mean
     return [metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, fi, probas_]
 
 #K-Neighbors Classifier ####################################################################################################################################
-def objective_KN(trial, est, x_train, y_train, randSeed, hype_cv, param_grid, scoring_metric):
+def objective_KNN(trial, est, x_train, y_train, randSeed, hype_cv, param_grid, scoring_metric):
     """ Prepares K Nearest Neighbor hyperparameter variables for Optuna run hyperparameter optimization. """
     params = {
         'n_neighbors': trial.suggest_int('n_neighbors', param_grid['n_neighbors'][0], param_grid['n_neighbors'][1]),
@@ -881,7 +753,7 @@ def objective_KN(trial, est, x_train, y_train, randSeed, hype_cv, param_grid, sc
         'metric': trial.suggest_categorical('metric', param_grid['metric'])}
     return hyper_eval(est, x_train, y_train, randSeed, hype_cv, params, scoring_metric)
 
-def run_KN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,timeout,do_plot,full_path,training_subsample,use_uniform_FI,primary_metric):
+def run_KNN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,timeout,do_plot,full_path,training_subsample,use_uniform_FI,primary_metric):
     """ Run K Nearest Neighbors Classifier hyperparameter optimization, model training, evaluation, and model feature importance estimation. """
     #Check whether hyperparameters are fixed (i.e. no hyperparameter sweep required) or whether a set/range of values were specified for any hyperparameter (conduct hyperparameter sweep)
     isSingle = True
@@ -894,7 +766,7 @@ def run_KN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         for train_index, _ in sss.split(x_train,y_train):
             x_train = x_train[train_index]
             y_train = y_train[train_index]
-        print('For KN, training sample reduced to '+str(x_train.shape[0])+' instances')
+        print('For KNN, training sample reduced to '+str(x_train.shape[0])+' instances')
     #Specify algorithm for hyperparameter optimization
     est = KNeighborsClassifier()
     if not isSingle: #Run hyperparameter sweep
@@ -902,11 +774,11 @@ def run_KN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         sampler = optuna.samplers.TPESampler(seed=randSeed)  # Make the sampler behave in a deterministic way.
         study = optuna.create_study(direction='maximize', sampler=sampler)
         optuna.logging.set_verbosity(optuna.logging.CRITICAL)
-        study.optimize(lambda trial: objective_KN(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
+        study.optimize(lambda trial: objective_KNN(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
             fig = optuna.visualization.plot_parallel_coordinate(study)
-            fig.write_image(full_path+'/models/KN_ParamOptimization_'+str(i)+'.png')
+            fig.write_image(full_path+'/models/KNN_ParamOptimization_'+str(i)+'.png')
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial
@@ -917,36 +789,20 @@ def run_KN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,
         # Specify model with optimized hyperparameters
         est = KNeighborsClassifier()
         clf = est.set_params(**best_trial.params)
-        export_best_params(full_path + '/models/KN_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/KNN_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
     else: #Specify hyperparameter values (no sweep)
         params = copy.deepcopy(param_grid)
         for key, value in param_grid.items():
             params[key] = value[0]
         clf = est.set_params(**params)
-        export_best_params(full_path + '/models/KN_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+        export_best_params(full_path + '/models/KNN_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/models/pickledModels/KN_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/KNN_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
-    """
-    # Prediction evaluation on hold out testing data
-    y_pred = clf.predict(x_test)
-    #Calculate standard classificaction metrics
-    metricList = classEval(y_test, y_pred)
-    # Determine probabilities of class predictions for each test instance (this will be used much later in calculating an ROC curve)
-    probas_ = model.predict_proba(x_test)
-    # Compute ROC curve and area the curve
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, probas_[:, 1])
-    roc_auc = auc(fpr, tpr)
-    # Compute Precision/Recall curve and AUC
-    prec, recall, thresholds = metrics.precision_recall_curve(y_test, probas_[:, 1])
-    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
-    prec_rec_auc = auc(recall, prec)
-    ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
-    """
     # Feature Importance Estimates
     results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
     fi = results.importances_mean
@@ -1000,25 +856,9 @@ def run_eLCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trial
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/models/pickledModels/eLCS_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/eLCS_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
-    """
-    # Prediction evaluation on hold out testing data
-    y_pred = clf.predict(x_test)
-    #Calculate standard classificaction metrics
-    metricList = classEval(y_test, y_pred)
-    # Determine probabilities of class predictions for each test instance (this will be used much later in calculating an ROC curve)
-    probas_ = model.predict_proba(x_test)
-    # Compute ROC curve and area the curve
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, probas_[:, 1])
-    roc_auc = auc(fpr, tpr)
-    # Compute Precision/Recall curve and AUC
-    prec, recall, thresholds = metrics.precision_recall_curve(y_test, probas_[:, 1])
-    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
-    prec_rec_auc = auc(recall, prec)
-    ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
-    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -1075,25 +915,9 @@ def run_XCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/models/pickledModels/XCS_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/XCS_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
-    """
-    # Prediction evaluation on hold out testing data
-    y_pred = clf.predict(x_test)
-    #Calculate standard classificaction metrics
-    metricList = classEval(y_test, y_pred)
-    # Determine probabilities of class predictions for each test instance (this will be used much later in calculating an ROC curve)
-    probas_ = model.predict_proba(x_test)
-    # Compute ROC curve and area the curve
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, probas_[:, 1])
-    roc_auc = auc(fpr, tpr)
-    # Compute Precision/Recall curve and AUC
-    prec, recall, thresholds = metrics.precision_recall_curve(y_test, probas_[:, 1])
-    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
-    prec_rec_auc = auc(recall, prec)
-    ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
-    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -1130,7 +954,7 @@ def get_FI_subset_ExSTraCS(full_path,i,instance_label,class_label,filter_poor_fe
             header.remove(instance_label)
         header.remove(class_label)
         #Load orignal dataset multisurf scores
-        scoreInfo = full_path+ "/"+algorithmlabel+"/pickledForPhase4/"+str(i)
+        scoreInfo = full_path+ "/"+algorithmlabel+"/pickledForPhase4/"+str(i)+'.pickle'
         file = open(scoreInfo, 'rb')
         rawData = pickle.load(file)
         file.close()
@@ -1140,7 +964,7 @@ def get_FI_subset_ExSTraCS(full_path,i,instance_label,class_label,filter_poor_fe
             scores.append(scoreDict[each])
     else: #obtain feature importances scores for all features (i.e. no feature selection was conducted)
         #Load orignal dataset multisurf scores
-        scoreInfo = full_path+ "/"+algorithmlabel+"/pickledForPhase4/"+str(i)
+        scoreInfo = full_path+ "/"+algorithmlabel+"/pickledForPhase4/"+str(i)+'.pickle'
         file = open(scoreInfo, 'rb')
         rawData = pickle.load(file)
         file.close()
@@ -1192,25 +1016,9 @@ def run_ExSTraCS_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_t
     #Train final model using whole training dataset and 'best' hyperparameters
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
-    pickle.dump(model, open(full_path+'/models/pickledModels/ExSTraCS_'+str(i), 'wb'))
+    pickle.dump(model, open(full_path+'/models/pickledModels/ExSTraCS_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
-    """
-    # Prediction evaluation on hold out testing data
-    y_pred = clf.predict(x_test)
-    #Calculate standard classificaction metrics
-    metricList = classEval(y_test, y_pred)
-    # Determine probabilities of class predictions for each test instance (this will be used much later in calculating an ROC curve)
-    probas_ = model.predict_proba(x_test)
-    # Compute ROC curve and area the curve
-    fpr, tpr, thresholds = metrics.roc_curve(y_test, probas_[:, 1])
-    roc_auc = auc(fpr, tpr)
-    # Compute Precision/Recall curve and AUC
-    prec, recall, thresholds = metrics.precision_recall_curve(y_test, probas_[:, 1])
-    prec, recall, thresholds = prec[::-1], recall[::-1], thresholds[::-1]
-    prec_rec_auc = auc(recall, prec)
-    ave_prec = metrics.average_precision_score(y_test, probas_[:, 1])
-    """
     # Feature Importance Estimates
     if eval(use_uniform_FI):
         results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
@@ -1264,7 +1072,7 @@ def classEval(y_true, y_pred):
         lrm = (1-re)/float(sp)
     return [bac, ac, f1, re, sp, pr, tp, tn, fp, fn, npv, lrp, lrm]
 
-def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N):
+def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N): #### Add new algorithm hyperparameters here using same formatting...
     """ Hardcodes valid hyperparamter sweep ranges (specific to binary classification) for each machine learning algorithm.
     When run in the associated jupyer notebook, user can adjust these ranges directly.  Here a user would need to edit the codebase
     to adjust the hyperparameter range as they are not included as run parameters of the pipeline (for simplicity). These hyperparameter
@@ -1312,9 +1120,11 @@ def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N):
     param_grid_ANN = {'n_layers': [1, 3],'layer_size': [1, 100],'activation': ['identity', 'logistic', 'tanh', 'relu'],
                       'learning_rate': ['constant', 'invscaling', 'adaptive'],'momentum': [.1, .9],
                       'solver': ['sgd', 'adam'],'batch_size': ['auto'],'alpha': [0.0001, 0.05],'max_iter': [200],'random_state':[random_state]}
-    # KN - (note: computationally expensive for large instance spaces) -------------------------------------------------------------
-    param_grid_KN = {'n_neighbors': [1, 100], 'weights': ['uniform', 'distance'], 'p': [1, 5],
+    # KNN - (note: computationally expensive for large instance spaces) -------------------------------------------------------------
+    param_grid_KNN = {'n_neighbors': [1, 100], 'weights': ['uniform', 'distance'], 'p': [1, 5],
                      'metric': ['euclidean', 'minkowski']}
+
+    # ------------------------------------------------------------------------------------------------------------------------------------------------
     if eval(do_lcs_sweep): #Contuct hyperparameter sweep of LCS algorithms (can be computationally expensive)
         # eLCS
         param_grid_eLCS = {'learning_iterations': [100000,200000,500000],'N': [1000,2000,5000],'nu': [1,10],
@@ -1332,20 +1142,21 @@ def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N):
         param_grid_XCS = {'learning_iterations': [iterations], 'N': [N], 'nu': [nu], 'random_state': [random_state]}
         # ExSTraCS
         param_grid_ExSTraCS = {'learning_iterations': [iterations], 'N': [N], 'nu': [nu], 'random_state': [random_state], 'rule_compaction': ['None']} #'QRF'
-    param_grid['naive_bayes'] = {}
-    param_grid['logistic_regression'] = param_grid_LR
-    param_grid['decision_tree'] = param_grid_DT
-    param_grid['random_forest'] = param_grid_RF
-    param_grid['gradient_boosting'] = param_grid_GB
-    param_grid['XGB'] = param_grid_XGB
-    param_grid['LGB'] = param_grid_LGB
-    param_grid['SVM'] = param_grid_SVM
-    param_grid['ANN'] = param_grid_ANN
-    param_grid['k_neighbors'] = param_grid_KN
+    param_grid['Naive Bayes'] = {}
+    param_grid['Logistic Regression'] = param_grid_LR
+    param_grid['Decision Tree'] = param_grid_DT
+    param_grid['Random Forest'] = param_grid_RF
+    param_grid['Gradient Boosting'] = param_grid_GB
+    param_grid['Extreme Gradient Boosting'] = param_grid_XGB
+    param_grid['Light Gradient Boosting'] = param_grid_LGB
+    param_grid['Support Vector Machine'] = param_grid_SVM
+    param_grid['Artificial Neural Network'] = param_grid_ANN
+    param_grid['K-Nearest Neightbors'] = param_grid_KNN
     param_grid['eLCS'] = param_grid_eLCS
     param_grid['XCS'] = param_grid_XCS
     param_grid['ExSTraCS'] = param_grid_ExSTraCS
+    ### Add new algorithms here...
     return param_grid
 
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],int(sys.argv[5]),int(sys.argv[6]),int(sys.argv[7]),sys.argv[8],sys.argv[9],sys.argv[10],int(sys.argv[11]),int(sys.argv[12]),sys.argv[13],sys.argv[14],int(sys.argv[15]),int(sys.argv[16]),int(sys.argv[17]),int(sys.argv[18]),sys.argv[19],sys.argv[20],sys.argv[21])
+    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],int(sys.argv[5]),int(sys.argv[6]),int(sys.argv[7]),sys.argv[8],sys.argv[9],sys.argv[10],int(sys.argv[11]),int(sys.argv[12]),sys.argv[13],sys.argv[14],int(sys.argv[15]),int(sys.argv[16]),int(sys.argv[17]),int(sys.argv[18]),sys.argv[19],sys.argv[20],sys.argv[21],sys.argv[22])

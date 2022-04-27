@@ -32,8 +32,9 @@ from sklearn import metrics
 from scipy import interp,stats
 from statistics import mean,stdev
 
-def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,do_LR,do_DT,do_RF,do_NB,do_XGB,do_LGB,do_SVM,do_ANN,do_ExSTraCS,do_eLCS,do_XCS,do_GB,do_KN,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots,export_feature_correlations,jupyterRun,multi_impute):
+def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots,export_feature_correlations,jupyterRun,multi_impute):
     train_name = full_path.split('/')[-1] #original training data name
+    experiment_path = '/'.join(full_path.split('/')[:-1])
     apply_name = datasetFilename.split('/')[-1].split('.')[0]
     #Load Replication Dataset
     repData = pd.read_csv(datasetFilename, na_values='NA', sep = ",")
@@ -67,7 +68,7 @@ def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,
     if not os.path.exists(full_path+"/applymodel/"+apply_name+'/'+'model_evaluation'+'/'+'pickled_metrics'):
         os.mkdir(full_path+"/applymodel/"+apply_name+'/'+'model_evaluation'+'/'+'pickled_metrics')
     #Load previously identified list of categorical variables and create an index list to identify respective columns
-    file = open(full_path + '/exploratory/categorical_variables','rb')
+    file = open(full_path + '/exploratory/categorical_variables.pickle','rb')
     categorical_variables = pickle.load(file)
     #ExploratoryAnalysis - basic data cleaning
     repData = ExploratoryAnalysisJob.removeRowsColumns(repData,class_label,[])
@@ -116,91 +117,26 @@ def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,
             cvRepData = cvRepData.drop(instance_label,axis=1)
         cvRepDataX = cvRepData.drop(class_label,axis=1).values
         cvRepDataY = cvRepData[class_label].values
+        #Unpickle algorithm info from training phases of pipeline
+        algFile = open(experiment_path+'/'+"algInfo.pickle", 'rb')
+        algInfo = pickle.load(algFile)
+        algFile.close()
+        algorithms = []
+        abbrev = {}
+        colors = {}
+        for key in algInfo:
+            if algInfo[key][0]: # If that algorithm was used
+                algorithms.append(key)
+                abbrev[key] = (algInfo[key][1])
+                colors[key] = (algInfo[key][2])
         #For all previously trained algorithms, load pickled model and apply prepared replication dataset
         evalDict = {}
-        algorithms = []
-        if eval(do_NB):
-            algorithm = 'NB'
-            algorithms.append('Naive Bayes')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
+        for algorithm in algorithms:
+            algAbrev = abbrev[algorithm]
+            ret = evalModel(full_path,algAbrev,cvRepDataX,cvRepDataY,cvCount)
             evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_LR):
-            algorithm = 'LR'
-            algorithms.append('Logistic Regression')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_DT):
-            algorithm = 'DT'
-            algorithms.append('Decision Tree')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_RF):
-            algorithm = 'RF'
-            algorithms.append('Random Forest')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_GB):
-            algorithm = 'GB'
-            algorithms.append('Gradient Boosting')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_XGB):
-            algorithm = 'XGB'
-            algorithms.append('XGB')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_LGB):
-            algorithm = 'LGB'
-            algorithms.append('LGB')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_SVM):
-            algorithm = 'SVM'
-            algorithms.append('SVM')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_ANN):
-            algorithm = 'ANN'
-            algorithms.append('ANN')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_KN):
-            algorithm = 'KN'
-            algorithms.append('K Neighbors')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_eLCS):
-            algorithm = 'eLCS'
-            algorithms.append('eLCS')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_XCS):
-            algorithm = 'XCS'
-            algorithms.append('XCS')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
-        if eval(do_ExSTraCS):
-            algorithm = 'ExSTraCS'
-            algorithms.append('ExSTraCS')
-            ret = evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount)
-            evalDict[algorithm] = ret
-            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algorithm + '_CV_' + str(cvCount) + "_metrics", 'wb')) #includes everything from training except feature importance values
+            pickle.dump(ret, open(full_path +"/applymodel/"+apply_name+'/model_evaluation/pickled_metrics/' + algAbrev + '_CV_' + str(cvCount) + "_metrics.pickle", 'wb')) #includes everything from training except feature importance values
         masterList.append(evalDict) #update master list with evalDict for this CV model
-    #Summarize top_results
-    abbrev = {'Naive Bayes':'NB','Logistic Regression':'LR','Decision Tree':'DT','Random Forest':'RF','Gradient Boosting':'GB','XGB':'XGB','LGB':'LGB','SVM':'SVM','ANN':'ANN','K Neighbors':'KN','eLCS':'eLCS','XCS':'XCS','ExSTraCS':'ExSTraCS'}
-    colors = {'Naive Bayes':'grey','Logistic Regression':'black','Decision Tree':'yellow','Random Forest':'orange','Gradient Boosting':'bisque','XGB':'purple','LGB':'aqua','SVM':'blue','ANN':'red','K Neighbors':'seagreen','eLCS':'firebrick','XCS':'deepskyblue','ExSTraCS':'lightcoral'}
     result_table,metric_dict = primaryStats(algorithms,cv_partitions,full_path,apply_name,instance_label,class_label,abbrev,colors,plot_ROC,plot_PRC,jupyterRun,masterList,repData)
     StatsJob.doPlotROC(result_table,colors,full_path+'/applymodel/'+apply_name,jupyterRun)
     doPlotPRC(result_table,colors,full_path,apply_name,instance_label,class_label,jupyterRun,repData) #can't use existing method since we need to recalculate 'no skill' line
@@ -216,7 +152,7 @@ def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,
         StatsJob.wilcoxonRank(full_path+'/applymodel/'+apply_name,metrics,algorithms,metric_dict,kruskal_summary,sig_cutoff)
 
 def scaleRepData(full_path,cvCount,instance_label,class_label,cvRepData,all_train_feature_list):
-    scaleInfo = full_path+'/scale_impute/scaler_cv'+str(cvCount) #Corresponding pickle file name with scalingInfo
+    scaleInfo = full_path+'/scale_impute/scaler_cv'+str(cvCount)+'.pickle' #Corresponding pickle file name with scalingInfo
     infile = open(scaleInfo,'rb')
     scaler = pickle.load(infile)
     infile.close()
@@ -239,7 +175,7 @@ def scaleRepData(full_path,cvCount,instance_label,class_label,cvRepData,all_trai
 def imputeRepData(full_path,cvCount,instance_label,class_label,cvRepData,all_train_feature_list,multi_impute):
     cvRepData.shape
     #Impute categorical features (i.e. those included in the mode_dict)
-    imputeCatInfo = full_path+'/scale_impute/categorical_imputer_cv'+str(cvCount) #Corresponding pickle file name with scalingInfo
+    imputeCatInfo = full_path+'/scale_impute/categorical_imputer_cv'+str(cvCount)+'.pickle' #Corresponding pickle file name with scalingInfo
     infile = open(imputeCatInfo,'rb')
     mode_dict = pickle.load(infile)
     infile.close()
@@ -247,7 +183,7 @@ def imputeRepData(full_path,cvCount,instance_label,class_label,cvRepData,all_tra
         if c in mode_dict: #was the given feature identified as and treated as categorical during training?
             cvRepData[c].fillna(mode_dict[c], inplace=True)
 
-    imputeOridinalInfo = full_path+'/scale_impute/ordinal_imputer_cv'+str(cvCount) #Corresponding pickle file name with scalingInfo
+    imputeOridinalInfo = full_path+'/scale_impute/ordinal_imputer_cv'+str(cvCount)+'.pickle' #Corresponding pickle file name with scalingInfo
     if eval(multi_impute): #multiple imputation of quantitative features
         infile = open(imputeOridinalInfo,'rb')
         imputer = pickle.load(infile)
@@ -274,8 +210,8 @@ def imputeRepData(full_path,cvCount,instance_label,class_label,cvRepData,all_tra
                 cvRepData[c].fillna(median_dict[c], inplace=True)
     return impute_rep_df
 
-def evalModel(full_path,algorithm,cvRepDataX,cvRepDataY,cvCount):
-    modelInfo = full_path+'/models/pickledModels/'+algorithm+'_'+str(cvCount) #Corresponding pickle file name with scalingInfo
+def evalModel(full_path,algAbrev,cvRepDataX,cvRepDataY,cvCount):
+    modelInfo = full_path+'/models/pickledModels/'+algAbrev+'_'+str(cvCount)+'.pickle' #Corresponding pickle file name with scalingInfo
     infile = open(modelInfo,'rb')
     model = pickle.load(infile)
     infile.close()
@@ -325,7 +261,7 @@ def primaryStats(algorithms,cv_partitions,full_path,apply_name,instance_label,cl
         aveprecs = []
         #Gather statistics over all CV partitions
         for cvCount in range(0,cv_partitions):
-            results = masterList[cvCount][abbrev[algorithm]] #grabs evalDict for a specific algorithm entry (with data values)
+            results = masterList[cvCount][algorithm] #grabs evalDict for a specific algorithm entry (with data values)
             metricList = results[0]
             fpr = results[1]
             tpr = results[2]
@@ -465,4 +401,4 @@ def doPlotPRC(result_table,colors,full_path,apply_name,instance_label,class_labe
         plt.close('all')
 
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],int(sys.argv[5]),float(sys.argv[6]),int(sys.argv[7]),sys.argv[8],sys.argv[9],sys.argv[10],sys.argv[11],sys.argv[12],sys.argv[13],sys.argv[14],sys.argv[15],sys.argv[16],sys.argv[17],sys.argv[18],sys.argv[19],sys.argv[20],sys.argv[21],sys.argv[22],sys.argv[23],sys.argv[24],sys.argv[25],sys.argv[26],sys.argv[27],sys.argv[28],sys.argv[29],sys.argv[30],sys.argv[31])
+    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],int(sys.argv[5]),float(sys.argv[6]),int(sys.argv[7]),sys.argv[8],sys.argv[9],sys.argv[10],sys.argv[11],sys.argv[12],sys.argv[13],sys.argv[14],sys.argv[15],sys.argv[16],sys.argv[17],sys.argv[18])

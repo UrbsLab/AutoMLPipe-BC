@@ -37,6 +37,8 @@ def main(argv):
     # Get dataset paths for all completed dataset analyses in experiment folder
     datasets = os.listdir(experiment_path)
     datasets.remove('metadata.csv')
+    datasets.remove('metadata.pickle')
+    datasets.remove('algInfo.pickle')
     try:
         datasets.remove('jobsCompleted')
     except:

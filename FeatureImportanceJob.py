@@ -105,7 +105,7 @@ def pickleScores(experiment_path,dataset_name,outname,scores,scoreDict,score_sor
     #Save Scores to pickled file for later use
     if not os.path.exists(experiment_path + '/' + dataset_name + "/feature_selection/"+outname+"/pickledForPhase4"):
         os.mkdir(experiment_path + '/' + dataset_name + "/feature_selection/"+outname+"/pickledForPhase4")
-    outfile = open(experiment_path + '/' + dataset_name + "/feature_selection/"+outname+"/pickledForPhase4/"+str(cvCount),'wb')
+    outfile = open(experiment_path + '/' + dataset_name + "/feature_selection/"+outname+"/pickledForPhase4/"+str(cvCount)+'.pickle','wb')
     pickle.dump([scores,scoreDict,score_sorted_features],outfile)
     outfile.close()
 

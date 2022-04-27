@@ -50,7 +50,7 @@ def job(cv_train_path,cv_test_path,experiment_path,scale_data,impute_data,overwr
     del data_train #memory cleanup
     del data_test #memory cleanup
     #Load previously identified list of categorical variables and create an index list to identify respective columns
-    file = open(experiment_path + '/' + dataset_name + '/exploratory/categorical_variables','rb')
+    file = open(experiment_path + '/' + dataset_name + '/exploratory/categorical_variables.pickle','rb')
     categorical_variables = pickle.load(file)
     #Impute Missing Values in training and testing data if specified by user
     if eval(impute_data):
@@ -125,7 +125,7 @@ def imputeCVData(categorical_variables,x_train,x_test,random_state,experiment_pa
         if c in categorical_variables:
             x_test[c].fillna(mode_dict[c], inplace=True)
     #Save impute map for downstream use.
-    outfile = open(experiment_path + '/' + dataset_name + '/scale_impute/categorical_imputer_cv' + str(cvCount),'wb')
+    outfile = open(experiment_path + '/' + dataset_name + '/scale_impute/categorical_imputer_cv' + str(cvCount)+'.pickle','wb')
     pickle.dump(mode_dict, outfile)
     outfile.close()
 
@@ -135,7 +135,7 @@ def imputeCVData(categorical_variables,x_train,x_test,random_state,experiment_pa
         x_train = imputer.transform(x_train)
         x_test = imputer.transform(x_test)
         #Save impute map for downstream use.
-        outfile = open(experiment_path + '/' + dataset_name + '/scale_impute/ordinal_imputer_cv' + str(cvCount),'wb')
+        outfile = open(experiment_path + '/' + dataset_name + '/scale_impute/ordinal_imputer_cv' + str(cvCount)+'.pickle','wb')
         pickle.dump(imputer, outfile)
         outfile.close()
     else: #Impute quantitative features (x) with simple mean imputation
@@ -149,7 +149,7 @@ def imputeCVData(categorical_variables,x_train,x_test,random_state,experiment_pa
             if not c in categorical_variables:
                 x_test[c].fillna(median_dict[c], inplace=True)
         #Save impute map for downstream use.
-        outfile = open(experiment_path + '/' + dataset_name + '/scale_impute/ordinal_imputer_cv' + str(cvCount),'wb')
+        outfile = open(experiment_path + '/' + dataset_name + '/scale_impute/ordinal_imputer_cv' + str(cvCount)+'.pickle','wb')
         pickle.dump(median_dict, outfile)
         outfile.close()
 
@@ -168,7 +168,7 @@ def dataScaling(x_train,x_test,experiment_path,dataset_name,cvCount):
     # Scale features (x) using fit scalar in corresponding testing dataset
     x_test = pd.DataFrame(scaler.transform(x_test), columns=x_test.columns)
     #Save scalar for future use
-    outfile = open(experiment_path + '/' + dataset_name + '/scale_impute/scaler_cv'+str(cvCount), 'wb')
+    outfile = open(experiment_path + '/' + dataset_name + '/scale_impute/scaler_cv'+str(cvCount)+'.pickle', 'wb')
     pickle.dump(scaler, outfile)
     outfile.close()
     return x_train, x_test

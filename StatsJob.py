@@ -39,7 +39,7 @@ def job(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_pa
         print('Running Statistics Summary for '+str(data_name))
     #Unpickle algorithm information from previous phase
     file = open(experiment_path+'/'+"algInfo.pickle", 'rb')
-    algInfo = pickle.load(file) 
+    algInfo = pickle.load(file)
     file.close()
     #Translate metric name from scikitlearn standard (currently balanced accuracy is hardcoded for use in generating FI plots due to no-skill normalization)
     metric_term_dict = {'balanced_accuracy': 'Balanced Accuracy','accuracy': 'Accuracy','f1': 'F1_Score','recall': 'Sensitivity (Recall)','precision': 'Precision (PPV)','roc_auc': 'ROC_AUC'}
@@ -299,7 +299,7 @@ def primaryStats(algorithms,original_headers,cv_partitions,full_path,data_name,i
                 plt.close('all')
 
         #Export and save all CV metric stats for each individual algorithm  -----------------------------------------------------------------------------
-        results = {'Balanced Accuracy': s_bac, 'Accuracy': s_ac, 'F1_Score': s_f1, 'Sensitivity (Recall)': s_re, 'Specificity': s_sp,'Precision (PPV)': s_pr, 'TP': s_tp, 'TN': s_tn, 'FP': s_fp, 'FN': s_fn, 'NPV': s_npv, 'LR+': s_lrp, 'LR-': s_lrm, 'ROC_AUC': aucs,'PRC_AUC': praucs, 'PRC_APS': aveprecs}
+        results = {'Balanced Accuracy': s_bac, 'Accuracy': s_ac, 'F1 Score': s_f1, 'Sensitivity (Recall)': s_re, 'Specificity': s_sp,'Precision (PPV)': s_pr, 'TP': s_tp, 'TN': s_tn, 'FP': s_fp, 'FN': s_fn, 'NPV': s_npv, 'LR+': s_lrp, 'LR-': s_lrm, 'ROC AUC': aucs,'PRC AUC': praucs, 'PRC APS': aveprecs}
         dr = pd.DataFrame(results)
         filepath = full_path+'/model_evaluation/'+abbrev[algorithm]+"_performance.csv"
         dr.to_csv(filepath, header=True, index=False)

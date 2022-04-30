@@ -92,6 +92,7 @@ def runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout
         ret = run_ANN_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,training_subsample,use_uniform_FI,primary_metric)
     elif algorithm == 'K-Nearest Neightbors':
         ret = run_KNN_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,training_subsample,use_uniform_FI,primary_metric)
+    #Experimental ML modeling algorithms (developed by our research group)
     elif algorithm == 'eLCS':
         ret = run_eLCS_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, lcs_timeout,export_hyper_sweep_plots, full_path,use_uniform_FI,primary_metric)
     elif algorithm == 'XCS':
@@ -810,6 +811,7 @@ def run_KNN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     fi = results.importances_mean
     return [metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, fi, probas_]
 
+#Experimental ML modeling algorithms (developed by our research group)
 #eLCS (educational learning Classifier System) ##################################################################################################################################
 def objective_eLCS(trial, est, x_train, y_train, randSeed, hype_cv, param_grid, scoring_metric):
     """ Prepares Eductional Learning Classifier System hyperparameter variables for Optuna run hyperparameter optimization. """

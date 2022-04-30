@@ -88,6 +88,7 @@ def main(argv):
         dataset_paths.remove('jobsCompleted')
         dataset_paths.remove('metadata.pickle')
         dataset_paths.remove('algInfo.pickle')
+
         for dataset_directory_path in dataset_paths:
             full_path = options.output_path + "/" + options.experiment_name + "/" + dataset_directory_path
             if eval(options.run_parallel):
@@ -108,7 +109,7 @@ def main(argv):
 
         #Now that primary pipeline phases are complete generate a human readable version of metadata
         df = pd.DataFrame.from_dict(metadata, orient ='index')
-        df.to_csv(output_path+'/'+experiment_name+'/'+'metadata.csv',index=True)
+        df.to_csv(options.output_path+'/'+options.experiment_name+'/'+'metadata.csv',index=True)
 
     else: #run job completion checks
         datasets = os.listdir(options.output_path + "/" + options.experiment_name)
@@ -121,7 +122,9 @@ def main(argv):
             datasets.remove('algInfo.pickle')
         if 'DatasetComparisons' in datasets:
             datasets.remove('DatasetComparisons')
-
+        if 'metadata.csv' in datasets:
+            datasets.remove('metadata.csv')
+            
         phase6Jobs = []
         for dataset in datasets:
             phase6Jobs.append('job_stats_'+dataset+'.txt')

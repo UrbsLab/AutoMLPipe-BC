@@ -53,6 +53,7 @@ def main(argv):
     parser.add_argument('--do-SVM', dest='do_SVM', type=str, help='run support vector machine modeling',default='None')
     parser.add_argument('--do-ANN', dest='do_ANN', type=str, help='run artificial neural network modeling',default='None')
     parser.add_argument('--do-KNN', dest='do_KNN', type=str, help='run k-nearest neighbors classifier modeling',default='None')
+    #Experimental ML modeling algorithms (developed by our research group)
     parser.add_argument('--do-eLCS', dest='do_eLCS', type=str, help='run eLCS modeling (a basic supervised-learning learning classifier system)',default='None')
     parser.add_argument('--do-XCS', dest='do_XCS', type=str, help='run XCS modeling (a supervised-learning-only implementation of the best studied learning classifier system)',default='None')
     parser.add_argument('--do-ExSTraCS', dest='do_ExSTraCS', type=str, help='run ExSTraCS modeling (a learning classifier system designed for biomedical data mining)',default='None')
@@ -236,6 +237,8 @@ def main(argv):
             datasets.remove('algInfo.pickle')
         if 'DatasetComparisons' in datasets:
             datasets.remove('DatasetComparisons')
+        if 'metadata.csv' in datasets:
+            datasets.remove('metadata.csv')
 
         phase5Jobs = []
         for dataset in datasets:
@@ -265,6 +268,8 @@ def main(argv):
             dataset_paths.remove('algInfo.pickle')
         if 'DatasetComparisons' in datasets:
             datasets.remove('DatasetComparisons')
+        if 'metadata.csv' in datasets:
+            datasets.remove('metadata.csv')
 
         #start by making list of finished jobs instead of all jobs then step through loop
         phase5completed = []

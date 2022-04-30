@@ -25,11 +25,17 @@ def job(experiment_path,sig_cutoff,jupyterRun):
     evaluation metric. Also compares the best overall model for each target dataset, for each evaluation metric."""
     # Get dataset paths for all completed dataset analyses in experiment folder
     datasets = os.listdir(experiment_path)
+    removeList = ['metadata.pickle','metadata.csv','algInfo.pickle','jobsCompleted','logs','jobs','HCC_PipeTest_Paper_ML_Pipeline_Report.pdf','DatasetComparisons']
+    for text in removeList:
+        if text in datasets:
+            datasets.remove(text)
+    """
     datasets.remove('metadata.pickle')
     datasets.remove('metadata.csv')
     datasets.remove('algInfo.pickle')
-    datasets.remove('jobsCompleted')
     try:
+        datasets.remove('jobsCompleted')
+        datasets.remove('HCC_PipeTest_Paper_ML_Pipeline_Report.pdf')
         datasets.remove('logs')
         datasets.remove('jobs')
     except:
@@ -38,6 +44,7 @@ def job(experiment_path,sig_cutoff,jupyterRun):
         datasets.remove('DatasetComparisons') #If it has been run previously (overwrite)
     except:
         pass
+    """
     datasets = sorted(datasets) #ensures consistent ordering of datasets and assignment of temporary identifier
     dataset_directory_paths = []
     for dataset in datasets:
@@ -80,9 +87,9 @@ def job(experiment_path,sig_cutoff,jupyterRun):
     #Generate boxplots comparing average algorithm performance (for a given metric) across all dataset comparisons
     if eval(jupyterRun):
         print('Generate Boxplots Comparing Dataset Performance...')
-        dataCompareBPAll(experiment_path,metrics,dataset_directory_paths,algorithms,colors,jupyterRun)
-        #Generate boxplots comparing a specific algorithm's CV performance (for AUC_ROC or AUC_PRC) across all dataset comparisons
-        dataCompareBP(experiment_path,metrics,dataset_directory_paths,algorithms,name_to_abbrev,jupyterRun)
+    dataCompareBPAll(experiment_path,metrics,dataset_directory_paths,algorithms,colors,jupyterRun)
+    #Generate boxplots comparing a specific algorithm's CV performance (for AUC_ROC or AUC_PRC) across all dataset comparisons
+    dataCompareBP(experiment_path,metrics,dataset_directory_paths,algorithms,name_to_abbrev,jupyterRun)
     print("Phase 7 complete")
 
 def kruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff):
@@ -433,7 +440,7 @@ def dataCompareBPAll(experiment_path,metrics,dataset_directory_paths,algorithms,
 
 def dataCompareBP(experiment_path,metrics,dataset_directory_paths,algorithms,name_to_abbrev,jupyterRun):
     """ Generate a boxplot comparing average algorithm performance (for a given target metric) across all target datasets to be compared."""
-    metricList = ['ROC_AUC','PRC_AUC'] #Hard coded
+    metricList = ['ROC AUC','PRC AUC'] #Hard coded
     if not os.path.exists(experiment_path+'/DatasetComparisons/dataCompBoxplots'):
         os.mkdir(experiment_path+'/DatasetComparisons/dataCompBoxplots')
     for algorithm in algorithms:

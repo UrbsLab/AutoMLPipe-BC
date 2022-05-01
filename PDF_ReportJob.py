@@ -312,12 +312,17 @@ def job(experiment_path,training,rep_data_path,data_path):
         analy_report.multi_cell(w = 0, h = 4, txt='Datasets: '+'\n'+listDatasets, border=1, align='L')
         analy_report.y += 5
 
+        success = False
         try:
             #Kruskall Wallis Table
             #A table can take at most 4 datasets to fit comfortably with these settings
             kw_ds = pd.read_csv(experiment_path+'/DatasetComparisons/'+'BestCompare_KruskalWallis.csv',sep=',',index_col=0)
             kw_ds = kw_ds.round(4)
+            success = True
+        except:
+            pass
 
+        if success:
             #Process
             for i in range(len(ds)):
                 kw_ds = kw_ds.drop('Std_D'+str(i+1),1)
@@ -350,14 +355,14 @@ def job(experiment_path,training,rep_data_path,data_path):
                 table1 = table1.to_numpy()
                 for row in table1:
                     for datum in row:
-                        analy_report.cell(col_width, th, str(datum), border=1)
+                        analy_report.cell(col_width_list[col_count], th, str(datum), border=1)
                         col_count +=1
                     col_count = 0
                     analy_report.ln(th) #critical
                 analy_report.y += 5
 
                 col_count = 0
-                table1 = kw_ds.iloc[: , 8:16] #10:18
+                table1 = kw_ds.iloc[: , 8:14] #10:18
                 met = kw_ds.iloc[:,0]
                 met2 = kw_ds.iloc[:,1]
                 table1 = pd.concat([met,met2, table1], axis=1)
@@ -372,7 +377,7 @@ def job(experiment_path,training,rep_data_path,data_path):
 
                 if len(ds) > 6: #8
                     col_count = 0
-                    table1 = kw_ds.iloc[: , 16:22] #18:26
+                    table1 = kw_ds.iloc[: , 14:20] #18:26
                     met = kw_ds.iloc[:,0]
                     met2 = kw_ds.iloc[:,1]
                     table1 = pd.concat([met,met2,table1], axis=1)
@@ -386,7 +391,7 @@ def job(experiment_path,training,rep_data_path,data_path):
                     analy_report.y += 5
 
                 if len(ds) > 9:
-                    table1 = kw_ds.iloc[: , 22:28]
+                    table1 = kw_ds.iloc[: , 20:26]
                     met = kw_ds.iloc[:,0]
                     met2 = kw_ds.iloc[:,1]
                     table1 = pd.concat([met,met2,table1], axis=1)
@@ -403,8 +408,7 @@ def job(experiment_path,training,rep_data_path,data_path):
                     analy_report.x = 0
                     analy_report.y = 260
                     analy_report.cell(0, 4, 'Warning: Additional dataset results could not be displayed', 1, align="C")
-        except:
-            pass
+
         footer(analy_report)
 
     #LAST PAGE - Create Runtime Summary Page---------------------------------------
@@ -435,7 +439,7 @@ def pubUnivariate(analy_report,experiment_path,ds,page,resultLimit,pageCount):
     """ Generates single page of univariate analysis results. Automatically moves to another page when runs out of space. Maximum of 4 dataset results to a page. """
     datasetCount = len(ds)
     dataStart = page*resultLimit
-    countLimit = page*resultLimit+resultLimit
+    countLimit = (page*resultLimit)+resultLimit
     analy_report.add_page(orientation='P')
     analy_report.set_font('Times', 'B', 12)
     if pageCount > 1:
@@ -443,7 +447,7 @@ def pubUnivariate(analy_report,experiment_path,ds,page,resultLimit,pageCount):
     else:
         analy_report.cell(w=180, h = 8, txt='Univariate Analysis of Each Dataset (Top 10 Features for Each)', border=1, align='L', ln=2)
     for n in range(dataStart,datasetCount):
-        if n > countLimit: #Stops generating page when dataset count limit reached
+        if n >= countLimit: #Stops generating page when dataset count limit reached
             break
         analy_report.y += 2
         sig_df = pd.read_csv(experiment_path+'/'+ds[n]+'/exploratory/univariate_analyses/Univariate_Significance.csv')
@@ -466,7 +470,7 @@ def pubUnivariate(analy_report,experiment_path,ds,page,resultLimit,pageCount):
 def pubModelStats(analy_report,experiment_path,ds,page,resultLimit,pageCount,training,train_name):
     datasetCount = len(ds)
     dataStart = page*resultLimit
-    countLimit = page*resultLimit+resultLimit
+    countLimit = (page*resultLimit)+resultLimit
     #Create PDF and Set Options
     analy_report.set_margins(left=1, top=1, right=1, )
     analy_report.add_page()
@@ -476,7 +480,7 @@ def pubModelStats(analy_report,experiment_path,ds,page,resultLimit,pageCount,tra
     else:
         analy_report.cell(w=0, h = 8, txt='Average Model Prediction Statistics (Rounded to 3 Decimal Points)', border=1, align='L', ln=2)
     for n in range(dataStart,datasetCount):
-        if n > countLimit: #Stops generating page when dataset count limit reached
+        if n >= countLimit: #Stops generating page when dataset count limit reached
             break
         analy_report.y += 4
         analy_report.set_font('Times', 'B', 10)
@@ -554,7 +558,7 @@ def pubRuntime(analy_report,experiment_path,ds,page,resultLimit,pageCount):
     col_width = 40 #maximum column width
     datasetCount = len(ds)
     dataStart = page*resultLimit
-    countLimit = page*resultLimit+resultLimit
+    countLimit = (page*resultLimit)+resultLimit
     analy_report.add_page(orientation='P')
     analy_report.set_font('Times', 'B', 12)
     if pageCount > 1:
@@ -566,7 +570,7 @@ def pubRuntime(analy_report,experiment_path,ds,page,resultLimit,pageCount):
     analy_report.y += 2
     left = True
     for n in range(dataStart,datasetCount):
-        if n > countLimit: #Stops generating page when dataset count limit reached
+        if n >= countLimit: #Stops generating page when dataset count limit reached
             break
         lastY = analy_report.y
         lastX = analy_report.x
@@ -593,7 +597,7 @@ def pubRuntime(analy_report,experiment_path,ds,page,resultLimit,pageCount):
             left = False
         else:
             analy_report.x = 1
-            analy_report.y = lastY+60
+            analy_report.y = lastY+63
             left = True
     footer(analy_report)
 

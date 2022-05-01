@@ -78,8 +78,11 @@ def main(argv):
         shutil.rmtree(experiment_path+'/'+'jobsCompleted')
     except:
         pass
-
-
+    #Remake folders (empty) incase user wants to rerun scripts like pdf report from command line
+    os.mkdir(experiment_path+'/jobsCompleted')
+    os.mkdir(experiment_path+'/jobs')
+    os.mkdir(experiment_path+'/logs')
+    
     #Delete target files within each dataset subfolder
     for dataset in datasets:
         #Delete individual runtime files (save runtime summary generated in phase 6)

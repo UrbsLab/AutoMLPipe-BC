@@ -108,6 +108,10 @@ pip install xgboost
 ```
 pip install lightgbm
 ```
+* CatBoost (1.0.5)
+```
+pip install catboost
+```
 * scikit-learn compatible version of eLCS, an educational learning classifier system (1.2.2)
 ```
 pip install scikit-eLCS

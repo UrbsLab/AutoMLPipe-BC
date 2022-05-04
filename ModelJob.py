@@ -6,7 +6,7 @@ Creation Date: 6/1/2021
 License: GPL 3.0
 Description: Phase 5 of AutoMLPipe-BC - This 'Job' script is called by ModelMain.py and runs machine learning modeling using respective training datasets.
             This pipeline currently includes the following 13 ML modeling algorithms for binary classification:
-            * Naive Bayes, Logistic Regression, Decision Tree, Random Forest, Gradient Boosting, XGBoost, LGBoost, Support Vector Machine (SVM), Artificial Neural Network (ANN),
+            * Naive Bayes, Logistic Regression, Decision Tree, Random Forest, Gradient Boosting, XGBoost, LGBoost, CatBoost, Support Vector Machine (SVM), Artificial Neural Network (ANN),
             * k Nearest Neighbors (k-NN), Educational Learning Classifier System (eLCS), X Classifier System (XCS), and the Extended Supervised Tracking and Classifying System (ExSTraCS)
             This phase includes hyperparameter optimization of all algorithms (other than naive bayes), model training, model feature importance estimation (using internal algorithm
             estimations, if available, or via permutation feature importance), and performance evaluation on hold out testing data. This script runs for a single combination of a
@@ -30,6 +30,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 import xgboost as xgb
 import lightgbm as lgb
+import catboost as cgb
 from sklearn.svm import SVC
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -86,6 +87,8 @@ def runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout
         ret = run_XGB_full(trainX, trainY, testX,testY, random_state,cvCount, param_grid,n_trials, timeout,export_hyper_sweep_plots,full_path,training_subsample,use_uniform_FI,primary_metric)
     elif algorithm == 'Light Gradient Boosting':
         ret = run_LGB_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,use_uniform_FI,primary_metric)
+    elif algorithm == 'Category Gradient Boosting':
+        ret = run_CGB_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,use_uniform_FI,primary_metric)
     elif algorithm == 'Support Vector Machine':
         ret = run_SVM_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,training_subsample,use_uniform_FI,primary_metric)
     elif algorithm == 'Artificial Neural Network':
@@ -587,6 +590,69 @@ def run_LGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     model = clf.fit(x_train, y_train)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/LGB_'+str(i)+'.pickle', 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    # Feature Importance Estimates
+    if eval(use_uniform_FI):
+        results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
+        fi = results.importances_mean
+    else:
+        fi = clf.feature_importances_
+    return [metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, fi, probas_]
+
+#CatBoost #########################################################################################################################################
+def objective_CGB(trial, est, x_train, y_train, randSeed, hype_cv, param_grid, scoring_metric):
+    """ Prepares Catboost hyperparameter variables for Optuna run hyperparameter optimization. """
+    params = {'learning_rate': trial.suggest_loguniform('learning_rate',param_grid['learning_rate']),
+              'iterations': trial.suggest_int('iterations',param_grid['iterations']),
+              'depth': trial.suggest_int('depth',param_grid['depth']),
+              'l2_leaf_reg': trial.suggest_int('l2_leaf_reg',param_grid['l2_leaf_reg']),
+              'loss_function': trial.suggest_categorical('loss_function',param_grid['loss_function']),
+              'random_seed' : trial.suggest_categorical('random_seed',param_grid['random_seed'])}
+
+    return hyper_eval(est, x_train, y_train, randSeed, hype_cv, params, scoring_metric)
+  
+def run_CGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,timeout,do_plot,full_path,use_uniform_FI,primary_metric):
+    """ Run CGBoost hyperparameter optimization, model training, evaluation, and model feature importance estimation. """
+    #Check whether hyperparameters are fixed (i.e. no hyperparameter sweep required) or whether a set/range of values were specified for any hyperparameter (conduct hyperparameter sweep)
+    isSingle = True
+    for key, value in param_grid.items():
+        if len(value) > 1:
+            isSingle = False
+    #Specify algorithm for hyperparameter optimization
+    est = cgb.CatBoostClassifier()
+    if not isSingle: #Run hyperparameter sweep
+        #Apply Optuna-----------------------------------------
+        sampler = optuna.samplers.TPESampler(seed=randSeed)  # Make the sampler behave in a deterministic way.
+        study = optuna.create_study(direction='maximize', sampler=sampler)
+        optuna.logging.set_verbosity(optuna.logging.CRITICAL)
+        study.optimize(lambda trial: objective_CGB(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
+        #Export hyperparameter optimization search visualization if specified by user
+        if eval(do_plot):
+            fig = optuna.visualization.plot_parallel_coordinate(study)
+            fig.write_image(full_path+'/models/CGB_ParamOptimization_'+str(i)+'.png')
+        #Print results and hyperparamter values for best hyperparameter sweep trial
+        print('Best trial:')
+        best_trial = study.best_trial
+        print('  Value: ', best_trial.value)
+        print('  Params: ')
+        for key, value in best_trial.params.items():
+            print('    {}: {}'.format(key, value))
+        # Specify model with optimized hyperparameters
+        est = CGB.CatBoostClassifier()
+        clf = est.set_params(**best_trial.params)
+        export_best_params(full_path + '/models/CGB_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+    else: #Specify hyperparameter values (no sweep)
+        params = copy.deepcopy(param_grid)
+        for key, value in param_grid.items():
+            params[key] = value[0]
+        clf = est.set_params(**params)
+        export_best_params(full_path + '/models/CGB_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+    print(clf) #Print basic classifier info/hyperparmeters for verification
+    #Train final model using whole training dataset and 'best' hyperparameters
+    model = clf.fit(x_train, y_train)
+    # Save model with pickle so it can be applied in the future
+    pickle.dump(model, open(full_path+'/models/pickledModels/CGB_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
     metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
     # Feature Importance Estimates
@@ -1117,6 +1183,9 @@ def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N): #### Add new alg
                       'num_leaves': [2, 256],'max_depth': [1, 30],'lambda_l1': [1e-8, 10.0],'lambda_l2': [1e-8, 10.0],
                       'feature_fraction': [0.4, 1.0],'bagging_fraction': [0.4, 1.0],'bagging_freq': [1, 7],
                       'min_child_samples': [5, 100],'n_estimators': [10, 1000],'num_threads':[1],'random_state':[random_state]}
+    # CatBoost - (note: )----------------
+    param_grid_CGB = {'learning_rate':[.0001, 0.3],'iterations':[10,1000],'depth':[1,10],'l2_leaf_reg': [1,9],
+                      'loss_function': ['Logloss'], 'random_seed': [random_state]}
     # SVM - (note: computationally expensive for large instance spaces)------------------------------------------------------------
     param_grid_SVM = {'kernel': ['linear', 'poly', 'rbf'],'C': [0.1, 1000],'gamma': ['scale'],'degree': [1, 6],
                       'probability': [True],'class_weight': [None, 'balanced'],'random_state':[random_state]}
@@ -1153,6 +1222,7 @@ def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N): #### Add new alg
     param_grid['Gradient Boosting'] = param_grid_GB
     param_grid['Extreme Gradient Boosting'] = param_grid_XGB
     param_grid['Light Gradient Boosting'] = param_grid_LGB
+    param_grid['Category Gradient Boosting'] = param_grid_CGB
     param_grid['Support Vector Machine'] = param_grid_SVM
     param_grid['Artificial Neural Network'] = param_grid_ANN
     param_grid['K-Nearest Neightbors'] = param_grid_KNN

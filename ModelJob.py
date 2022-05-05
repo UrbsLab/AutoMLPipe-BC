@@ -110,7 +110,7 @@ def runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout
     #Save runtime of ml algorithm training and evaluation
     saveRuntime(full_path,job_start_time,algAbrev,algorithm,cvCount)
     # Print phase completion
-    print(full_path.split('/')[-1] + " CV" + str(cvCount) + " "+algAbrev+" training complete")
+    print(full_path.split('/')[-1] + " [CV_" + str(cvCount) + "] ("+algAbrev+") training complete. ------------------------------------")
     experiment_path = '/'.join(full_path.split('/')[:-1])
     job_file = open(experiment_path + '/jobsCompleted/job_model_' + full_path.split('/')[-1] + '_' + str(cvCount) +'_' +algAbrev+'.txt', 'w')
     job_file.write('complete')
@@ -146,7 +146,7 @@ def hyper_eval(est, x_train, y_train, randSeed, hype_cv, params, scoring_metric)
     for a in ['random_state','seed']:
         if hasattr(model,a):
             setattr(model,a,randSeed)
-    performance = np.mean(cross_val_score(model,x_train,y_train,cv=cv,scoring=scoring_metric ))
+    performance = np.mean(cross_val_score(model,x_train,y_train,cv=cv,scoring=scoring_metric,verbose=0))
     return performance
 
 def modelEvaluation(clf,model,x_test,y_test):
@@ -603,15 +603,16 @@ def run_LGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
 #CatBoost #########################################################################################################################################
 def objective_CGB(trial, est, x_train, y_train, randSeed, hype_cv, param_grid, scoring_metric):
     """ Prepares Catboost hyperparameter variables for Optuna run hyperparameter optimization. """
-    params = {'learning_rate': trial.suggest_loguniform('learning_rate',param_grid['learning_rate']),
-              'iterations': trial.suggest_int('iterations',param_grid['iterations']),
-              'depth': trial.suggest_int('depth',param_grid['depth']),
-              'l2_leaf_reg': trial.suggest_int('l2_leaf_reg',param_grid['l2_leaf_reg']),
+    params = {'learning_rate': trial.suggest_loguniform('learning_rate',param_grid['learning_rate'][0],param_grid['learning_rate'][1]),
+              'iterations': trial.suggest_int('iterations',param_grid['iterations'][0],param_grid['iterations'][1]),
+              'depth': trial.suggest_int('depth',param_grid['depth'][0],param_grid['depth'][1]),
+              'l2_leaf_reg': trial.suggest_int('l2_leaf_reg',param_grid['l2_leaf_reg'][0],param_grid['l2_leaf_reg'][1]),
               'loss_function': trial.suggest_categorical('loss_function',param_grid['loss_function']),
               'random_seed' : trial.suggest_categorical('random_seed',param_grid['random_seed'])}
 
     return hyper_eval(est, x_train, y_train, randSeed, hype_cv, params, scoring_metric)
-  
+
+
 def run_CGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,timeout,do_plot,full_path,use_uniform_FI,primary_metric):
     """ Run CGBoost hyperparameter optimization, model training, evaluation, and model feature importance estimation. """
     #Check whether hyperparameters are fixed (i.e. no hyperparameter sweep required) or whether a set/range of values were specified for any hyperparameter (conduct hyperparameter sweep)
@@ -620,7 +621,7 @@ def run_CGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         if len(value) > 1:
             isSingle = False
     #Specify algorithm for hyperparameter optimization
-    est = cgb.CatBoostClassifier()
+    est = cgb.CatBoostClassifier(verbose=0)
     if not isSingle: #Run hyperparameter sweep
         #Apply Optuna-----------------------------------------
         sampler = optuna.samplers.TPESampler(seed=randSeed)  # Make the sampler behave in a deterministic way.
@@ -639,7 +640,7 @@ def run_CGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         for key, value in best_trial.params.items():
             print('    {}: {}'.format(key, value))
         # Specify model with optimized hyperparameters
-        est = CGB.CatBoostClassifier()
+        est = cgb.CatBoostClassifier()
         clf = est.set_params(**best_trial.params)
         export_best_params(full_path + '/models/CGB_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
     else: #Specify hyperparameter values (no sweep)
@@ -650,7 +651,7 @@ def run_CGB_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         export_best_params(full_path + '/models/CGB_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
     print(clf) #Print basic classifier info/hyperparmeters for verification
     #Train final model using whole training dataset and 'best' hyperparameters
-    model = clf.fit(x_train, y_train)
+    model = clf.fit(x_train, y_train, verbose=0)
     # Save model with pickle so it can be applied in the future
     pickle.dump(model, open(full_path+'/models/pickledModels/CGB_'+str(i)+'.pickle', 'wb'))
     #Evaluate model
@@ -1154,46 +1155,56 @@ def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N): #### Add new alg
     learning classifier system algorithms. """
     param_grid = {}
     # Naive Bayes - Has no hyperparameters
-    # Logistic Regression (note: can take a longer while in larger instance spaces)-----------------------------------
+    # Logistic Regression (Note: can take longer to run in data with larger instance spaces)
+    # https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
     param_grid_LR = {'penalty': ['l2', 'l1'],'C': [1e-5, 1e5],'dual': [True, False],
                      'solver': ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'],
                      'class_weight': [None, 'balanced'],'max_iter': [10, 1000],
                      'random_state':[random_state]}
-    # Decision Tree --------------------------------------------------------------------------------------------------
+    # Decision Tree
+    # https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html?highlight=decision%20tree%20classifier#sklearn.tree.DecisionTreeClassifier
     param_grid_DT = {'criterion': ['gini', 'entropy'],'splitter': ['best', 'random'],'max_depth': [1, 30],
                      'min_samples_split': [2, 50],'min_samples_leaf': [1, 50],'max_features': [None, 'auto', 'log2'],
                      'class_weight': [None, 'balanced'],
                      'random_state':[random_state]}
-    # Random Forest -------------------------------------------------------------------------------------------------
+    # Random Forest
+    # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html?highlight=random%20forest#sklearn.ensemble.RandomForestClassifier
     param_grid_RF = {'n_estimators': [10, 1000],'criterion': ['gini', 'entropy'],'max_depth': [1, 30],
                      'min_samples_split': [2, 50],'min_samples_leaf': [1, 50],'max_features': [None, 'auto', 'log2'],
                      'bootstrap': [True],'oob_score': [False, True],'class_weight': [None, 'balanced'],
                      'random_state':[random_state]}
-    # Gradient Boosting ---------------------------------------------------------------------------------------------
+    # Gradient Boosting Trees
+    # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html?highlight=gradient%20boosting#sklearn.ensemble.GradientBoostingClassifier
     param_grid_GB = {'n_estimators': [10, 1000],'loss': ['deviance', 'exponential'], 'learning_rate': [.0001, 0.3], 'min_samples_leaf': [1, 50],
                      'min_samples_split': [2, 50], 'max_depth': [1, 30],'random_state':[random_state]}
-    # XG Boost - (note: somewhat computationally expensive for large instance spaces. Also, class weight balance is included as option internally)
+    # XG Boost (Note: Not great for large instance spaces (limited completion) and class weight balance is included as option internally
+    # https://xgboost.readthedocs.io/en/latest/parameter.html
     param_grid_XGB = {'booster': ['gbtree'],'objective': ['binary:logistic'],'verbosity': [0],'reg_lambda': [1e-8, 1.0],
                       'alpha': [1e-8, 1.0],'eta': [1e-8, 1.0],'gamma': [1e-8, 1.0],'max_depth': [1, 30],
                       'grow_policy': ['depthwise', 'lossguide'],'n_estimators': [10, 1000],'min_samples_split': [2, 50],
                       'min_samples_leaf': [1, 50],'subsample': [0.5, 1.0],'min_child_weight': [0.1, 10],
                       'colsample_bytree': [0.1, 1.0],'nthread':[1],'random_state':[random_state]}
-    # LG Boost - (note: class weight balance is included as option internally (still takes a while on large instance spaces))----------------
+    # LG Boost (Note: class weight balance is included as option internally (still takes a while on large instance spaces))
+    # https://lightgbm.readthedocs.io/en/latest/Parameters.html
     param_grid_LGB = {'objective': ['binary'],'metric': ['binary_logloss'],'verbosity': [-1],'boosting_type': ['gbdt'],
                       'num_leaves': [2, 256],'max_depth': [1, 30],'lambda_l1': [1e-8, 10.0],'lambda_l2': [1e-8, 10.0],
                       'feature_fraction': [0.4, 1.0],'bagging_fraction': [0.4, 1.0],'bagging_freq': [1, 7],
                       'min_child_samples': [5, 100],'n_estimators': [10, 1000],'num_threads':[1],'random_state':[random_state]}
-    # CatBoost - (note: )----------------
-    param_grid_CGB = {'learning_rate':[.0001, 0.3],'iterations':[10,1000],'depth':[1,10],'l2_leaf_reg': [1,9],
+    # CatBoost - (Note this is newly added, and further optimization to this configuration is possible)
+    # https://catboost.ai/en/docs/references/training-parameters/
+    param_grid_CGB = {'learning_rate':[.0001, 0.3],'iterations':[10,500],'depth':[1,10],'l2_leaf_reg': [1,9],
                       'loss_function': ['Logloss'], 'random_seed': [random_state]}
-    # SVM - (note: computationally expensive for large instance spaces)------------------------------------------------------------
+    # Support Vector Machine (Note: Very slow in large instance spaces)
+    # https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC
     param_grid_SVM = {'kernel': ['linear', 'poly', 'rbf'],'C': [0.1, 1000],'gamma': ['scale'],'degree': [1, 6],
                       'probability': [True],'class_weight': [None, 'balanced'],'random_state':[random_state]}
-    # ANN - (note: computationally expensive for large instances spaces)------------------------------------------------------------
+    # Artificial Neural Network (Note: Slow in large instances spaces, and poor performer in small instance spaces)
+    # https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html?highlight=artificial%20neural%20network
     param_grid_ANN = {'n_layers': [1, 3],'layer_size': [1, 100],'activation': ['identity', 'logistic', 'tanh', 'relu'],
                       'learning_rate': ['constant', 'invscaling', 'adaptive'],'momentum': [.1, .9],
                       'solver': ['sgd', 'adam'],'batch_size': ['auto'],'alpha': [0.0001, 0.05],'max_iter': [200],'random_state':[random_state]}
-    # KNN - (note: computationally expensive for large instance spaces) -------------------------------------------------------------
+    # K-Nearest Neighbor Classifier (Note: Runs slowly in data with large instance space)
+    # https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html?highlight=kneighborsclassifier#sklearn.neighbors.KNeighborsClassifier
     param_grid_KNN = {'n_neighbors': [1, 100], 'weights': ['uniform', 'distance'], 'p': [1, 5],
                      'metric': ['euclidean', 'minkowski']}
 

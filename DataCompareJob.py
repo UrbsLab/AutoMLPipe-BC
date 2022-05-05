@@ -29,22 +29,6 @@ def job(experiment_path,sig_cutoff,jupyterRun):
     for text in removeList:
         if text in datasets:
             datasets.remove(text)
-    """
-    datasets.remove('metadata.pickle')
-    datasets.remove('metadata.csv')
-    datasets.remove('algInfo.pickle')
-    try:
-        datasets.remove('jobsCompleted')
-        datasets.remove('HCC_PipeTest_Paper_ML_Pipeline_Report.pdf')
-        datasets.remove('logs')
-        datasets.remove('jobs')
-    except:
-        pass
-    try:
-        datasets.remove('DatasetComparisons') #If it has been run previously (overwrite)
-    except:
-        pass
-    """
     datasets = sorted(datasets) #ensures consistent ordering of datasets and assignment of temporary identifier
     dataset_directory_paths = []
     for dataset in datasets:
@@ -90,7 +74,12 @@ def job(experiment_path,sig_cutoff,jupyterRun):
     dataCompareBPAll(experiment_path,metrics,dataset_directory_paths,algorithms,colors,jupyterRun)
     #Generate boxplots comparing a specific algorithm's CV performance (for AUC_ROC or AUC_PRC) across all dataset comparisons
     dataCompareBP(experiment_path,metrics,dataset_directory_paths,algorithms,name_to_abbrev,jupyterRun)
+    # Print phase completion
     print("Phase 7 complete")
+    job_file = open(experiment_path + '/jobsCompleted/job_data_compare' + '.txt', 'w')
+    job_file.write('complete')
+    job_file.close()
+
 
 def kruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff):
     """ For each algorithm apply non-parametric Kruskal Wallis one-way ANOVA on ranks. Determines if there is a statistically significant difference in performance between original target datasets across CV runs.

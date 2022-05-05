@@ -151,6 +151,12 @@ def job(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,
         StatsJob.mannWhitneyU(full_path+'/applymodel/'+apply_name,metrics,algorithms,metric_dict,kruskal_summary,sig_cutoff)
         StatsJob.wilcoxonRank(full_path+'/applymodel/'+apply_name,metrics,algorithms,metric_dict,kruskal_summary,sig_cutoff)
 
+    # Print phase completion
+    print(apply_name + " phase 9 complete")
+    job_file = open(experiment_path + '/jobsCompleted/job_apply_' + apply_name + '.txt', 'w')
+    job_file.write('complete')
+    job_file.close()
+
 def scaleRepData(full_path,cvCount,instance_label,class_label,cvRepData,all_train_feature_list):
     scaleInfo = full_path+'/scale_impute/scaler_cv'+str(cvCount)+'.pickle' #Corresponding pickle file name with scalingInfo
     infile = open(scaleInfo,'rb')

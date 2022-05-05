@@ -4,7 +4,7 @@ Authors: Ryan J. Urbanowicz, Richard Zhang, Wilson Zhang
 Institution: University of Pensylvania, Philadelphia PA
 Creation Date: 6/1/2021
 License: GPL 3.0
-Description: Phase 8 of AutoMLPipe-BC (Optional)- This 'Main' script manages Phase 8 run parameters, and submits job to run locally (to run serially) or on a linux computing
+Description: Phase 8 and 10 of AutoMLPipe-BC (Optional)- This 'Main' script manages Phase 8 and 10 run parameters, and submits job to run locally (to run serially) or on a linux computing
              cluster (parallelized). This script runs PDF_ReportJob.py which generates a formatted PDF summary report of key pipeline results.
              All 'Main' scripts in this pipeline have the potential to be extended by users to submit jobs to other parallel computing frameworks (e.g. cloud computing).
 Warnings: Designed to be run following the completion of either AutoMLPipe-BC Phase 6 (StatsMain.py), and or Phase 7 (DataCompareMain.py).
@@ -19,6 +19,7 @@ import re
 import sys
 import argparse
 import time
+import glob
 
 def main(argv):
     #Parse arguments
@@ -37,6 +38,7 @@ def main(argv):
     parser.add_argument('--queue',dest='queue',type=str,help='specify name of parallel computing queue (uses our research groups queue by default)',default="i2c2_normal")
     parser.add_argument('--res-mem', dest='reserved_memory', type=int, help='reserved memory for the job (in Gigabytes)',default=4)
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
+    parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')
 
     options = parser.parse_args(argv[1:])
     job_counter = 0
@@ -47,13 +49,33 @@ def main(argv):
         if options.rep_data_path == 'None' or options.data_path == 'None':
             raise Exception('Replication and Dataset paths must be specified as arguments to generate PDF summary on new data analysis!')
 
-    if eval(options.run_parallel):
-        job_counter += 1
-        submitClusterJob(experiment_path,options.training,options.rep_data_path,options.data_path,options.reserved_memory,options.maximum_memory,options.queue)
-    else:
-        submitLocalJob(experiment_path,options.training,options.rep_data_path,options.data_path)
+    if not options.do_check: #Run job submission
+        if eval(options.run_parallel):
+            job_counter += 1
+            submitClusterJob(experiment_path,options.training,options.rep_data_path,options.data_path,options.reserved_memory,options.maximum_memory,options.queue)
+        else:
+            submitLocalJob(experiment_path,options.training,options.rep_data_path,options.data_path)
 
-    print(str(job_counter)+ " job submitted in Phase 8")
+    else: #run job completion checks
+        if options.training == 'True': # Make pdf summary for training analysis
+            for filename in glob.glob(options.output_path + "/" + options.experiment_name+'/jobsCompleted/job_data_pdf_training*'):
+                if filename.split('/')[-1] == 'job_data_pdf_training.txt':
+                    print("Phase 8 Job Completed")
+                else:
+                    print("Phase 8 Job Not Completed")
+        else: #Make pdf summary for application analysis
+            train_name = options.data_path.split('/')[-1].split('.')[0]
+            for filename in glob.glob(options.output_path + "/" + options.experiment_name+'/jobsCompleted/job_data_pdf_apply_'+str(train_name)+'*'):
+                if filename.split('/')[-1] == 'job_data_pdf_apply_'+str(train_name)+'.txt':
+                    print("Phase 10 Job Completed")
+                else:
+                    print("Phase 10 Job Not Completed")
+
+    if not options.do_check:
+        if options.training == 'True':
+            print(str(job_counter)+ " job submitted in Phase 8")
+        else:
+            print(str(job_counter)+ " job submitted in Phase 10")
 
 def submitLocalJob(experiment_path):
     """ Runs PDF_ReportJob.py locally, once. """

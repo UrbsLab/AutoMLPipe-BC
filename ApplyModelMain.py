@@ -68,17 +68,6 @@ def main(argv):
     jupyterRun = metadata['Run From Jupyter Notebook']
     primary_metric = metadata['Primary Metric']
 
-    #Update metadata this will alter the relevant metadata so that it is specific to the 'apply' analysis being run.
-    metadata['Export Feature Correlations'] = options.export_feature_correlations
-    metadata['Export ROC Plot'] = options.plot_ROC
-    metadata['Export PRC Plot'] = options.plot_PRC
-    metadata['Export Metric Boxplots'] = options.plot_metric_boxplots
-    metadata['Match Label'] = options.match_label
-    #Pickle the metadata for future use
-    pickle_out = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'wb')
-    pickle.dump(metadata,pickle_out)
-    pickle_out.close()
-
     # Argument checks
     if not os.path.exists(options.output_path):
         raise Exception("Output path must exist (from phase 1-5) before model application can begin")
@@ -87,38 +76,66 @@ def main(argv):
 
     full_path = options.output_path + "/" + options.experiment_name + "/" + data_name #location of folder containing models respective training dataset
 
-    if not os.path.exists(full_path+"/applymodel"):
-        os.mkdir(full_path+"/applymodel")
+    if not options.do_check: #Run job submission
+        #Update metadata this will alter the relevant metadata so that it is specific to the 'apply' analysis being run.
+        metadata['Export Feature Correlations'] = options.export_feature_correlations
+        metadata['Export ROC Plot'] = options.plot_ROC
+        metadata['Export PRC Plot'] = options.plot_PRC
+        metadata['Export Metric Boxplots'] = options.plot_metric_boxplots
+        metadata['Match Label'] = options.match_label
+        #Pickle the metadata for future use
+        pickle_out = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'wb')
+        pickle.dump(metadata,pickle_out)
+        pickle_out.close()
 
-    if not eval(jupyterRun):
-        if not os.path.exists(options.output_path + "/" + options.experiment_name +'/jobs'):
-            os.mkdir(options.output_path + "/" + options.experiment_name +'/jobs')
-        if not os.path.exists(options.output_path + "/" + options.experiment_name +'/logs'):
-            os.mkdir(options.output_path + "/" + options.experiment_name +'/logs')
+        if not os.path.exists(full_path+"/applymodel"):
+            os.mkdir(full_path+"/applymodel")
 
-    #Determine file extension of datasets in target folder:
-    file_count = 0
-    unique_datanames = []
-    for datasetFilename in glob.glob(options.rep_data_path+'/*'):
-        file_extension = datasetFilename.split('/')[-1].split('.')[-1]
-        apply_name = datasetFilename.split('/')[-1].split('.')[0] #Save unique dataset names so that analysis is run only once if there is both a .txt and .csv version of dataset with same name.
-        if not os.path.exists(full_path+"/applymodel/"+apply_name):
-            os.mkdir(full_path+"/applymodel/"+apply_name)
+        if not eval(jupyterRun):
+            if not os.path.exists(options.output_path + "/" + options.experiment_name +'/jobs'):
+                os.mkdir(options.output_path + "/" + options.experiment_name +'/jobs')
+            if not os.path.exists(options.output_path + "/" + options.experiment_name +'/logs'):
+                os.mkdir(options.output_path + "/" + options.experiment_name +'/logs')
 
-        if file_extension == 'txt' or file_extension == 'csv':
-            if apply_name not in unique_datanames:
-                unique_datanames.append(apply_name)
-                if eval(options.run_parallel):
-                    job_counter += 1
-                    submitClusterJob(options.reserved_memory,options.maximum_memory,options.queue,experiment_path,datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,primary_metric,options.data_path,options.match_label,options.plot_ROC,options.plot_PRC,options.plot_metric_boxplots,options.export_feature_correlations,jupyterRun,multi_impute)
-                else:
-                    submitLocalJob(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,primary_metric,options.data_path,options.match_label,options.plot_ROC,options.plot_PRC,options.plot_metric_boxplots,options.export_feature_correlations,jupyterRun,multi_impute)
-                file_count += 1
+        #Determine file extension of datasets in target folder:
+        file_count = 0
+        unique_datanames = []
+        for datasetFilename in glob.glob(options.rep_data_path+'/*'):
+            file_extension = datasetFilename.split('/')[-1].split('.')[-1]
+            apply_name = datasetFilename.split('/')[-1].split('.')[0] #Save unique dataset names so that analysis is run only once if there is both a .txt and .csv version of dataset with same name.
+            if not os.path.exists(full_path+"/applymodel/"+apply_name):
+                os.mkdir(full_path+"/applymodel/"+apply_name)
 
-    if file_count == 0: #Check that there was at least 1 dataset
-        raise Exception("There must be at least one .txt or .csv dataset in rep_data_path directory")
+            if file_extension == 'txt' or file_extension == 'csv':
+                if apply_name not in unique_datanames:
+                    unique_datanames.append(apply_name)
+                    if eval(options.run_parallel):
+                        job_counter += 1
+                        submitClusterJob(options.reserved_memory,options.maximum_memory,options.queue,experiment_path,datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,primary_metric,options.data_path,options.match_label,options.plot_ROC,options.plot_PRC,options.plot_metric_boxplots,options.export_feature_correlations,jupyterRun,multi_impute)
+                    else:
+                        submitLocalJob(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,primary_metric,options.data_path,options.match_label,options.plot_ROC,options.plot_PRC,options.plot_metric_boxplots,options.export_feature_correlations,jupyterRun,multi_impute)
+                    file_count += 1
 
-    print(str(job_counter)+ " jobs submitted in Phase 10")
+        if file_count == 0: #Check that there was at least 1 dataset
+            raise Exception("There must be at least one .txt or .csv dataset in rep_data_path directory")
+
+    else: #run job completion checks
+        phase9Jobs = []
+        for datasetFilename in glob.glob(options.rep_data_path+'/*'):
+            apply_name = datasetFilename.split('/')[-1].split('.')[0] #Save unique dataset names so that analysis is run only once if there is both a .txt and .csv version of dataset with same name.
+            phase9Jobs.append('job_apply_'+str(apply_name))
+        for filename in glob.glob(options.output_path + "/" + options.experiment_name+'/jobsCompleted/job_apply*'):
+            ref = filename.split('/')[-1].split('.')[0]
+            phase9Jobs.remove(ref)
+        for job in phase9Jobs:
+            print(job)
+        if len(phase9Jobs) == 0:
+            print("All Phase 9 Jobs Completed")
+        else:
+            print("Above Phase 9 Jobs Not Completed")
+
+    if not options.do_check:
+        print(str(job_counter)+ " jobs submitted in Phase 9")
 
 def submitLocalJob(datasetFilename,full_path,class_label,instance_label,categorical_cutoff,sig_cutoff,cv_partitions,scale_data,impute_data,primary_metric,data_path,match_label,plot_ROC,plot_PRC,plot_metric_boxplots,export_feature_correlations,jupyterRun,multi_impute):
     """ Runs ApplyModelJob.py on each dataset in dataset_path locally. These runs will be completed serially rather than in parallel. """

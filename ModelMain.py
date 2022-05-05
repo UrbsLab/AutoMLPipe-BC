@@ -50,7 +50,7 @@ def main(argv):
     parser.add_argument('--do-GB', dest='do_GB', type=str, help='run gradient boosting modeling',default='None')
     parser.add_argument('--do-XGB', dest='do_XGB', type=str, help='run XGBoost modeling',default='None')
     parser.add_argument('--do-LGB', dest='do_LGB', type=str, help='run LGBoost modeling',default='None')
-    parser.add_argument('--do-CGB'), dest='do_CGB', type=str,help='run CatBoost modeling',default='None')
+    parser.add_argument('--do-CGB', dest='do_CGB', type=str,help='run CatBoost modeling',default='None')
     parser.add_argument('--do-SVM', dest='do_SVM', type=str, help='run support vector machine modeling',default='None')
     parser.add_argument('--do-ANN', dest='do_ANN', type=str, help='run artificial neural network modeling',default='None')
     parser.add_argument('--do-KNN', dest='do_KNN', type=str, help='run k-nearest neighbors classifier modeling',default='None')
@@ -116,7 +116,7 @@ def main(argv):
     algInfo['Gradient Boosting'] = [True,'GB','bisque']
     algInfo['Extreme Gradient Boosting'] = [True,'XGB','purple']
     algInfo['Light Gradient Boosting'] = [True,'LGB','aqua']
-    algoInfo['Category Gradient Bosting'] = [True,'CGB','lawngreen']
+    algInfo['Category Gradient Boosting'] = [True,'CGB','lawngreen']
     algInfo['Support Vector Machine'] = [True,'SVM','blue']
     algInfo['Artificial Neural Network'] = [True,'ANN','red']
     algInfo['K-Nearest Neightbors'] = [True,'KNN','seagreen']

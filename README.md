@@ -112,6 +112,10 @@ pip install lightgbm
 ```
 pip install catboost
 ```
+* GPLearn ()
+```
+pip install gplearn
+```
 * scikit-learn compatible version of eLCS, an educational learning classifier system (1.2.2)
 ```
 pip install scikit-eLCS
@@ -195,7 +199,7 @@ The base code for AutoMLPipe-BC is organized into a series of script phases desi
 
 * Phase 8: [Optional] Generate PDF Training Summary Report
   * Generates a pre-formatted PDF including all pipeline run parameters, basic dataset information, and key exploratory analyses, ML modeling results, statistical comparisons, and runtime. Will properly format on analyses that include up to 20 datasets (aim to expand this in the future).
-  * \[Code]: PDF_ReportTrainMain.py and PDF_ReportTrainJob.py
+  * \[Code]: PDF_ReportMain.py and PDF_ReportJob.py
   * \[Runtime]: Moderately fast
 
 * Phase 9: [Optional] Apply Models to Replication Data
@@ -210,7 +214,7 @@ The base code for AutoMLPipe-BC is organized into a series of script phases desi
 
 * Phase 10: [Optional] Generate PDF 'Apply Replication' Summary Report
   * Generates a pre-formatted PDF including all pipeline run parameters, basic dataset information, and key exploratory analyses, ML modeling results, and statistics.
-  * \[Code]: PDF_ReportApplyMain.py and PDF_ReportApplyJob.py
+  * \[Code]: PDF_ReportMain.py and PDF_ReportJob.py
   * \[Runtime]: Moderately fast
 
 * Phase 11: [Optional] File Cleanup
@@ -252,11 +256,11 @@ python StatsMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-pa
 
 python DataCompareMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
 
-python PDF_ReportTrainMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
+python PDF_ReportMain.py --out-path /myoutputpath/output --exp-name hcc_test --run-parallel False
 
 python ApplyModelMain.py --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv --run-parallel False
 
-python PDF_ReportApplyMain.py --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv --run-parallel False
+python PDF_ReportMain.py --training False --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv --run-parallel False
 
 python FileCleanup.py --out-path /myoutputpath/output --exp-name hcc_test
 ```
@@ -278,11 +282,11 @@ python StatsMain.py --out-path /myoutputpath/output --exp-name hcc_test
 
 python DataCompareMain.py --out-path /myoutputpath/output --exp-name hcc_test
 
-python PDF_ReportTrainMain.py --out-path /myoutputpath/output --exp-name hcc_test
+python PDF_ReportMain.py --out-path /myoutputpath/output --exp-name hcc_test
 
 python ApplyModelMain.py --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
 
-python PDF_ReportApplyMain.py --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
+python PDF_ReportMain.py --training False --out-path /myoutputpath/output --exp-name hcc_test --rep-data-path /myrepdatapath/TestRep  --data-path /mydatapath/TestData/hcc-data_example.csv
 
 python FileCleanup.py --out-path /myoutputpath/output --exp-name hcc_test
 ```
@@ -411,6 +415,7 @@ Run parameters for ModelMain.py:
 | --do-GB | run gradient boosting modeling | None |
 | --do-XGB | run XGBoost modeling | None |
 | --do-LGB | run LGBoost modeling | None |
+| --do-CGB | run Catboost modeling | None |
 | --do-SVM | run support vector machine modeling | None |
 | --do-ANN | run artificial neural network modeling | None |
 | --do-KNN | run k-nearest neighbors classifier modeling | None |
@@ -488,18 +493,21 @@ Run parameters for DataCompareMain.py:
 | --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
+| -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
 ### Phase 8: [Optional] Generate PDF Training Summary Report
 Run parameters for PDF_ReportTrainMain.py:
 
 | Argument | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
+| --training | Indicate True or False for whether to generate pdf summary for pipeline training or followup application analysis to new dataset | True |
 | --out-path | path to output directory | MANDATORY |
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |
 | --run-parallel | if run parallel | True |
 | --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
+| -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
 ### Phase 9: [Optional] Apply Models to Replication Data
 Run parameters for ApplyModelMain.py:
@@ -519,12 +527,14 @@ Run parameters for ApplyModelMain.py:
 | --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
+| -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
 ### Phase 10: [Optional] Generate PDF 'Apply Replication' Summary Report
 Run parameters for PDF_ReportApplyMain.py:
 
 | Argument | Description | Default Value |
 |:-------- |:---------------------  | ----------- |
+| --training | Indicate True or False for whether to generate pdf summary for pipeline training or followup application analysis to new dataset | True |
 | --out-path | path to output directory | MANDATORY |
 | --exp-name | name of experiment output folder (no spaces) | MANDATORY |
 | --rep-path | path to directory containing replication or hold-out testing datasets (must have at least all features with same labels as in original training dataset) | MANDATORY |
@@ -533,6 +543,7 @@ Run parameters for PDF_ReportApplyMain.py:
 | --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |
 | --max-mem | maximum memory before the job is automatically terminated | 15 |
+| -c | Boolean: Specify whether to check for existence of all output files | Stores False |
 
 ### Phase 11: [Optional] File Cleanup
 Run parameters for FileCleanup.py:

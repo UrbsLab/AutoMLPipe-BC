@@ -69,11 +69,11 @@ def job(experiment_path,training,rep_data_path,data_path):
     #PDF page dimension reference - page width = 210 and page height down to start of footer = 285 (these are estimates)
     #FRONT PAGE - Summary of Pipeline settings-------------------------------------------------------------------------------------------------------
     print("Starting Report")
-    ls1 = ars_dic[0:87] # Class - filter poor [0:55] 59
-    ls2 = ars_dic[87:126]  #ML modeling algorithms (NaiveB - ExSTraCS) [56:95] 60
-    ls3 = ars_dic[126:141] #primary metric - hypersweep timeout [94:111] 97
-    ls4 = ars_dic[141:156]  #LCS parameters (do LCS sweep - LCS hypersweep timeout) [110:125]
-    ls5 = ars_dic[156:171]
+    ls1 = ars_dic[0:87] # Class - filter poor [0:87]
+    ls2 = ars_dic[87:129]   # ML modeling algorithms (NaiveB - ExSTraCS) [87:126]
+    ls3 = ars_dic[129:144]  # primary metric - hypersweep timeout [126:141]
+    ls4 = ars_dic[144:159]  # LCS parameters (do LCS sweep - LCS hypersweep timeout) [141:156]
+    ls5 = ars_dic[159:174]  # [156:171]
     analy_report.set_font('Times', 'B', 12)
     analy_report.cell(w=180, h=8, txt='AutoMLPipe-BC Training Summary Report: '+time, ln=2, border=1, align='L')
     analy_report.y += 2 #Margin below page header
@@ -427,13 +427,27 @@ def job(experiment_path,training,rep_data_path,data_path):
         if eval(training):
             fileName = str(experiment_name)+'_ML_Pipeline_Report.pdf'
             analy_report.output(experiment_path+'/'+fileName)
+            # Print phase completion
+            print("Phase 8 complete")
+            job_file = open(experiment_path + '/jobsCompleted/job_data_pdf_training.txt', 'w')
+            job_file.write('complete')
+            job_file.close()
         else:
             fileName = str(experiment_name)+'_ML_Pipeline_Apply_Report.pdf'
             analy_report.output(experiment_path+'/'+train_name+'/applymodel/'+ds[n]+'/'+fileName)
-        print('PDF Generation Complete')
+            # Print phase completion
+            print("Phase 10 complete")
+            job_file = open(experiment_path + '/jobsCompleted/job_data_pdf_apply_'+str(train_name) +'.txt', 'w')
+            job_file.write('complete')
+            job_file.close()
     except:
         print('Pdf Output Failed')
 
+    # Print phase completion
+    print("Phase 7 complete")
+    job_file = open(experiment_path + '/jobsCompleted/job_data_compare' + '.txt', 'w')
+    job_file.write('complete')
+    job_file.close()
 
 def pubUnivariate(analy_report,experiment_path,ds,page,resultLimit,pageCount):
     """ Generates single page of univariate analysis results. Automatically moves to another page when runs out of space. Maximum of 4 dataset results to a page. """

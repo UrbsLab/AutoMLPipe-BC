@@ -25,6 +25,7 @@ import time
 import DataCompareJob
 import pandas as pd
 import pickle
+import glob
 
 def main(argv):
     # Parse arguments
@@ -36,25 +37,33 @@ def main(argv):
     parser.add_argument('--queue',dest='queue',type=str,help='specify name of parallel computing queue (uses our research groups queue by default)',default="i2c2_normal")
     parser.add_argument('--res-mem', dest='reserved_memory', type=int, help='reserved memory for the job (in Gigabytes)',default=4)
     parser.add_argument('--max-mem', dest='maximum_memory', type=int, help='maximum memory before the job is automatically terminated',default=15)
+    parser.add_argument('-c','--do-check',dest='do_check', help='Boolean: Specify whether to check for existence of all output files.', action='store_true')
 
     options = parser.parse_args(argv[1:])
     job_counter = 0
+    if not options.do_check: #Run job submission
+        #Unpickle metadata from previous phase
+        file = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'rb')
+        metadata = pickle.load(file)
+        file.close()
+        #Load variables specified earlier in the pipeline from metadata
+        sig_cutoff = metadata['Statistical Significance Cutoff']
+        jupyterRun = metadata['Run From Jupyter Notebook']
 
-    #Unpickle metadata from previous phase
-    file = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'rb')
-    metadata = pickle.load(file)
-    file.close()
-    #Load variables specified earlier in the pipeline from metadata
-    sig_cutoff = metadata['Statistical Significance Cutoff']
-    jupyterRun = metadata['Run From Jupyter Notebook']
+        if eval(options.run_parallel):
+            job_counter += 1
+            submitClusterJob(options.output_path+'/'+options.experiment_name,options.reserved_memory,options.maximum_memory,options.queue,sig_cutoff,jupyterRun)
+        else:
+            submitLocalJob(options.output_path+'/'+options.experiment_name,sig_cutoff,jupyterRun)
+    else: #run job completion checks
+        for filename in glob.glob(options.output_path + "/" + options.experiment_name+'/jobsCompleted/job_data_compare*'):
+            if filename.split('/')[-1] == 'job_data_compare.txt':
+                print("Phase 7 Job Completed")
+            else:
+                print("Phase 7 Job Not Completed")
 
-    if eval(options.run_parallel):
-        job_counter += 1
-        submitClusterJob(options.output_path+'/'+options.experiment_name,options.reserved_memory,options.maximum_memory,options.queue,sig_cutoff,jupyterRun)
-    else:
-        submitLocalJob(options.output_path+'/'+options.experiment_name,sig_cutoff,jupyterRun)
-
-    print(str(job_counter)+ " job submitted in Phase 7")
+    if not options.do_check:
+        print(str(job_counter)+ " job submitted in Phase 7")
 
 def submitLocalJob(experiment_path,sig_cutoff,jupyterRun):
     """ Runs DataCompareJob.py locally, once. """

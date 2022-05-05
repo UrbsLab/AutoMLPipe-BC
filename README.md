@@ -1,12 +1,12 @@
 # AutoMLPipe-BC Summary
-AutoMLPipe-BC is an automated, rigorous, and largely scikit-learn based machine learning (ML) analysis pipeline for binary classification. Adopts current best practices to avoid bias, optimize performance, ensure replicatability, capture complex associations (e.g. interactions and heterogeneity), and enhance interpretability. Includes (1) exploratory analysis, (2) data cleaning, (3) partitioning, (4) scaling, (5) imputation, (6) filter-based feature selection, (7) collective feature selection, (8) modeling with 'Optuna' hyperparameter optimization across 13 implemented ML algorithms (including three rule-based machine learning algorithms: ExSTraCS, XCS, and eLCS), (9) testing evaluations with 16 classification metrics, model feature importance estimation, (10) automatically saves all results, models, and publication-ready plots (including proposed composite feature importance plots), (11) non-parametric statistical comparisons across ML algorithms and analyzed datasets, and (12) automatically generated PDF summary reports.
+AutoMLPipe-BC is an automated, rigorous, and largely scikit-learn based machine learning (ML) analysis pipeline for binary classification. Adopts current best practices to avoid bias, optimize performance, ensure replicatability, capture complex associations (e.g. interactions and heterogeneity), and enhance interpretability. Includes (1) exploratory analysis, (2) data cleaning, (3) partitioning, (4) scaling, (5) imputation, (6) filter-based feature selection, (7) collective feature selection, (8) modeling with 'Optuna' hyperparameter optimization across 15 implemented ML algorithms (including three rule-based machine learning algorithms: ExSTraCS, XCS, and eLCS), (9) testing evaluations with 16 classification metrics, model feature importance estimation, (10) automatically saves all results, models, and publication-ready plots (including proposed composite feature importance plots), (11) non-parametric statistical comparisons across ML algorithms and analyzed datasets, and (12) automatically generated PDF summary reports.
 
 We have recently submitted a publication introducting and applying this pipeline. We will have a preprint posted for citation soon.
 
 # Overview
 This AutoML tool empowers anyone with a basic understanding of python to easily run a comprehensive and customizable machine learning analysis. Unlike most other AutoML tools, AutoMLPipe-BC was designed as a framework to rigorously apply and compare a variety of ML modeling algorithms and collectively learn from them as opposed to simply identifying a best performing model and/or attempting to evolutionarily optimize the analysis pipeline itself. Instead, its design focused on automating (1) application of best practices in data science and ML for binary classification, (2) avoiding potential sources of bias (e.g. by conducting data transformations, imputation, and feature selection within distinct CV partitions), (3) providing transparency in the modeling and evaluation of models, (4) the detection and characterization of complex patterns of association (e.g. interactions and heterogeneity), (5) generation of publication-ready plots/figures, and (6) generation of a PDF summary report for quick interpretation. Overall, the goal of this pipeline is to provide an interpretable framework to learn from the data as well as the strengths and weaknesses of the ML algorithms or as a baseline to compare other AutoML strategies.
 
-The following 13 ML modeling algorithms are currently included as options: 1. Naive Bayes (NB), 2. Logistic Regression (LR), 3. Decision Tree (DT), 4. Random Forest (RF), 5. Gradient Boosting (GB), 6. XGBoost (XGB), 7. LGBoost (LGB), 8. Support Vector Machine (SVM), 9. Artificial Neural Network (ANN), 10. K-Nearest Neighbors (k-NN), 11. Eductional Learning Classifier System (eLCS), 12. 'X' Classifier System (XCS), and 13. Extended Supervised Tracking and Classifying System (ExSTraCS). Classification-relevant hyperparameter values and ranges have been included for the (Optuna-driven) automated hyperparameter sweep.
+The following 15 ML modeling algorithms are currently included as options: 1. Naive Bayes (NB), 2. Logistic Regression (LR), 3. Decision Tree (DT), 4. Random Forest (RF), 5. Gradient Boosting (GB), 6. XGBoost (XGB), 7. LGBoost (LGB), 8. CatBoost (CGB), 9. Support Vector Machine (SVM), 10. Artificial Neural Network (ANN), 11. K-Nearest Neighbors (k-NN), 12. Genetic Programming, 13. Eductional Learning Classifier System (eLCS), 14. 'X' Classifier System (XCS), and 15. Extended Supervised Tracking and Classifying System (ExSTraCS). Classification-relevant hyperparameter values and ranges have been included for the (Optuna-driven) automated hyperparameter sweep.
 
 This pipeline does NOT: (1) conduct feature engineering, or feature construction, (2) conduct feature encoding (e.g. apply one-hot-encoding to categorical features, or numerically encode text-based feature values), (3) account for bias in data collection, or (4) conduct anything beyond simple data cleaning (i.e. it only removes instances with no class label, or where all features are missing). These elements should be conducted externally at the discretion of the user.
 
@@ -112,7 +112,7 @@ pip install lightgbm
 ```
 pip install catboost
 ```
-* GPLearn ()
+* GPLearn (0.4.2)
 ```
 pip install gplearn
 ```
@@ -419,6 +419,7 @@ Run parameters for ModelMain.py:
 | --do-SVM | run support vector machine modeling | None |
 | --do-ANN | run artificial neural network modeling | None |
 | --do-KNN | run k-nearest neighbors classifier modeling | None |
+| --do-GP | run genetic programming symbolic classifier modeling | None |
 | --do-eLCS | run eLCS modeling (a basic supervised-learning learning classifier system) | None |
 | --do-XCS | run XCS modeling (a supervised-learning-only implementation of the best studied learning classifier system) | None |
 | --do-ExSTraCS | run ExSTraCS modeling (a learning classifier system designed for biomedical data mining) | None |
@@ -476,6 +477,7 @@ Run parameters for StatsMain.py:
 | --plot-box | Plot box plot summaries comparing algorithms for each metric | True |
 | --plot-FI_box | Plot feature importance boxplots and histograms for each algorithm | True |
 | --top-features| Number of top features to illustrate in figures | 20 |
+| --model-viz| Directly visualize either DT or GP models if trained | True |
 | --run-parallel | if run parallel | True |
 | --queue | specify name of parallel computing queue (uses our research groups queue by default) | i2c2_normal |
 | --res-mem | reserved memory for the job (in Gigabytes) | 4 |
@@ -566,3 +568,20 @@ One known issue is that the Optuna hyperparameter optimization does not have a w
 First, try to kill the given job(s) and use the -r command for ModelMain.py.  When using this command, a different random seed will automatically which can resolve the run completion, but will impact perfect reproducibility of the results.
 
 Second, go into the code in ModelJob.py and limit the hyperparameter ranges specified (or do this directly in the jupyter notebook if running from there).  Specifically eliminate possible hyperparameter combinations that might lead the hyperparameter sweep to run for a very long time (i.e. way beyond the 'timeout' parameter).
+
+# Development Notes
+Have ideas on how to improve this pipeline? We welcome suggestions, contributions, and collaborations.
+
+## Planned Extensions
+* Support multiclass and quantitative endpoints
+* Shapley value calculation and visualizations
+* Improved modularization of code for adding new ML modeling algorithms
+* Create ensemble model from all trained models which can then be evaluated on hold out replication data
+
+## Solicited Feedback  
+In particular we welcome suggestions on improving this pipeline with respect to:
+* Other key ML modeling algorithms (for classification) that should be included
+* The range of hyperparmeters and associated values used for each ML modeling algorithms
+* Other key data/results visualizations
+* Support to easily run this pipeline on cloud computing platforms such as AWS, Azure, or Google Cloud.
+* Support to utilize this pipeline within Docker

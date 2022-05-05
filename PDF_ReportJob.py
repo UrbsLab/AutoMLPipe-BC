@@ -70,10 +70,10 @@ def job(experiment_path,training,rep_data_path,data_path):
     #FRONT PAGE - Summary of Pipeline settings-------------------------------------------------------------------------------------------------------
     print("Starting Report")
     ls1 = ars_dic[0:87] # Class - filter poor [0:87]
-    ls2 = ars_dic[87:129]   # ML modeling algorithms (NaiveB - ExSTraCS) [87:126]
-    ls3 = ars_dic[129:144]  # primary metric - hypersweep timeout [126:141]
-    ls4 = ars_dic[144:159]  # LCS parameters (do LCS sweep - LCS hypersweep timeout) [141:156]
-    ls5 = ars_dic[159:174]  # [156:171]
+    ls2 = ars_dic[87:132]   # ML modeling algorithms (NaiveB - ExSTraCS) [87:132]
+    ls3 = ars_dic[132:147]  # primary metric - hypersweep timeout [132:147]
+    ls4 = ars_dic[147:162]  # LCS parameters (do LCS sweep - LCS hypersweep timeout) [147:162]
+    ls5 = ars_dic[162:180]  # [162:180]
     analy_report.set_font('Times', 'B', 12)
     analy_report.cell(w=180, h=8, txt='AutoMLPipe-BC Training Summary Report: '+time, ln=2, border=1, align='L')
     analy_report.y += 2 #Margin below page header

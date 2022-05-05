@@ -54,6 +54,7 @@ def main(argv):
     parser.add_argument('--do-SVM', dest='do_SVM', type=str, help='run support vector machine modeling',default='None')
     parser.add_argument('--do-ANN', dest='do_ANN', type=str, help='run artificial neural network modeling',default='None')
     parser.add_argument('--do-KNN', dest='do_KNN', type=str, help='run k-nearest neighbors classifier modeling',default='None')
+    parser.add_argument('--do-GP', dest='do_GP', type=str, help='run genetic programming symbolic classifier modeling',default='None')
     #Experimental ML modeling algorithms (developed by our research group)
     parser.add_argument('--do-eLCS', dest='do_eLCS', type=str, help='run eLCS modeling (a basic supervised-learning learning classifier system)',default='None')
     parser.add_argument('--do-XCS', dest='do_XCS', type=str, help='run XCS modeling (a supervised-learning-only implementation of the best studied learning classifier system)',default='None')
@@ -111,18 +112,19 @@ def main(argv):
     algInfo = {}
     algInfo['Naive Bayes'] = [True,'NB','grey']
     algInfo['Logistic Regression'] = [True,'LR','black']
-    algInfo['Decision Tree'] = [True,'DT','yellow']
-    algInfo['Random Forest'] = [True,'RF','orange']
-    algInfo['Gradient Boosting'] = [True,'GB','bisque']
-    algInfo['Extreme Gradient Boosting'] = [True,'XGB','purple']
-    algInfo['Light Gradient Boosting'] = [True,'LGB','aqua']
-    algInfo['Category Gradient Boosting'] = [True,'CGB','lawngreen']
-    algInfo['Support Vector Machine'] = [True,'SVM','blue']
+    algInfo['Decision Tree'] = [True,'DT','blue']
+    algInfo['Random Forest'] = [True,'RF','cyan']
+    algInfo['Gradient Boosting'] = [True,'GB','teal']
+    algInfo['Extreme Gradient Boosting'] = [True,'XGB','darkblue']
+    algInfo['Light Gradient Boosting'] = [True,'LGB','lightblue']
+    algInfo['Category Gradient Boosting'] = [True,'CGB','dodgerblue']
+    algInfo['Support Vector Machine'] = [True,'SVM','orange']
     algInfo['Artificial Neural Network'] = [True,'ANN','red']
-    algInfo['K-Nearest Neightbors'] = [True,'KNN','seagreen']
-    algInfo['eLCS'] = [True,'eLCS','firebrick']
-    algInfo['XCS'] = [True,'XCS','deepskyblue']
-    algInfo['ExSTraCS'] = [True,'ExSTraCS','lightcoral']
+    algInfo['K-Nearest Neightbors'] = [True,'KNN','yellow']
+    algInfo['Genetic Programming'] = [True,'GP','purple']
+    algInfo['eLCS'] = [True,'eLCS','green']
+    algInfo['XCS'] = [True,'XCS','olive']
+    algInfo['ExSTraCS'] = [True,'ExSTraCS','lawngreen']
     ### Add new algorithms here...
 
     #Set up ML algorithm True/False use
@@ -153,6 +155,8 @@ def main(argv):
         algInfo['Artificial Neural Network'][0] = eval(options.do_ANN)
     if not options.do_KNN == 'None':
         algInfo['K-Nearest Neightbors'][0] = eval(options.do_KNN)
+    if not options.do_GP == 'None':
+        algInfo['Genetic Programming'][0] = eval(options.do_GP)
     if not options.do_eLCS == 'None':
         algInfo['eLCS'][0] = eval(options.do_eLCS)
     if not options.do_XCS == 'None':
@@ -174,11 +178,11 @@ def main(argv):
 
     if not options.do_check and not options.do_resubmit: #Run job submission
         dataset_paths = os.listdir(options.output_path + "/" + options.experiment_name)
-        dataset_paths.remove('logs')
-        dataset_paths.remove('jobs')
-        dataset_paths.remove('jobsCompleted')
-        dataset_paths.remove('metadata.pickle')
-        dataset_paths.remove('algInfo.pickle')
+        removeList = ['metadata.pickle','metadata.csv','algInfo.pickle','jobsCompleted','logs','jobs','DatasetComparisons']
+        for text in removeList:
+            if text in dataset_paths:
+                dataset_paths.remove(text)
+
         for dataset_directory_path in dataset_paths:
             full_path = options.output_path + "/" + options.experiment_name + "/" + dataset_directory_path
             if not os.path.exists(full_path+'/models'):
@@ -211,6 +215,7 @@ def main(argv):
         metadata['Support Vector Machine'] = str(algInfo['Support Vector Machine'][0])
         metadata['Artificial Neural Network'] = str(algInfo['Artificial Neural Network'][0])
         metadata['K-Nearest Neightbors'] = str(algInfo['K-Nearest Neightbors'][0])
+        metadata['Genetic Programming'] = str(algInfo['Genetic Programming'][0])
         metadata['eLCS'] = str(algInfo['eLCS'][0])
         metadata['XCS'] = str(algInfo['XCS'][0])
         metadata['ExSTraCS'] = str(algInfo['ExSTraCS'][0])

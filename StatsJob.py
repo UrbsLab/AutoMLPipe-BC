@@ -26,8 +26,13 @@ import csv
 from statistics import mean,stdev
 import pickle
 import copy
+#For tree vizualizations
+import graphviz
+from sklearn import tree
+from subprocess import call
+from IPython.display import display_pdf
 
-def job(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,plot_metric_boxplots,primary_metric,top_model_features,sig_cutoff,jupyterRun):
+def job(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,scale_data,plot_metric_boxplots,primary_metric,top_model_features,sig_cutoff,model_viz,jupyterRun):
     """ Run all elements of stats summary and analysis for one one the original phase 1 datasets: summaries of average and standard deviations for all metrics and modeling algorithms,
     ROC and PRC plots (comparing CV performance in the same ML algorithm and comparing average performance between ML algorithms), model feature importance averages over CV runs,
     boxplots comparing ML algorithms for each metric, Kruskal Wallis and Mann Whitney statistical comparsions between ML algorithms, model feature importance boxplots for each
@@ -103,6 +108,30 @@ def job(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_pa
     weightedFracLists = weightFracFI(fracLists,weights)
     #Generate Normalized, Fractionated, and Weighted Compount FI plot
     composite_FI_plot(weightedFracLists, algorithms, list(colors.values()), all_feature_listToViz, 'Norm_Frac_Weight',full_path,jupyterRun, 'Normalized, Fractioned, and Weighted Feature Importance')
+    # Generate Direct Model Visualizations for DT and GP if either trained
+    if eval(model_viz):
+        if 'Decision Tree' in algorithms:
+            for cvCount in range(0,int(cv_partitions)):
+                graph = generateTreePlot(experiment_path,data_name,algInfo['Decision Tree'][1],cvCount,scale_data,class_label,instance_label)
+                if eval(jupyterRun):
+                    print("---------------------------------------")
+                    print("Decision Tree: "+data_name+"- CV Dataset "+str(cvCount))
+                    print("---------------------------------------")
+                    graph
+                    vizfile = full_path+'/model_evaluation/DT_Viz/decisionTree_'+str(cvCount)+'.pdf'
+                    with open(vizfile,"rb") as f:
+                        display_pdf(f.read(),raw=True)
+        if 'Genetic Programming' in algorithms:
+            for cvCount in range(0,int(cv_partitions)):
+                graph = generateGPPlot(experiment_path,data_name,algInfo['Genetic Programming'][1],cvCount,scale_data,class_label,instance_label)
+                if eval(jupyterRun):
+                    print("---------------------------------------")
+                    print("Genetic Programming: "+data_name+"- CV Dataset "+str(cvCount))
+                    print("---------------------------------------")
+                    graph
+                    vizfile = full_path+'/model_evaluation/GP_Viz/GPTree_'+str(cvCount)+'.pdf'
+                    with open(vizfile,"rb") as f:
+                        display_pdf(f.read(),raw=True)
     #Export phase runtime
     saveRuntime(full_path,job_start_time)
     #Parse all pipeline runtime files into a single runtime report
@@ -799,5 +828,101 @@ def parseRuntime(full_path,algorithms,abbrev):
             writer.writerow(([algorithm,dict[abbrev[algorithm]]]))
         writer.writerow(["Stats Summary",dict['Stats']])
 
+    #Methods for Decision Tree Visualization -------------------
+def unscaleTree(dotFilePath,original_headers,train_feature_list,scaler):
+    """ Takes a dot file goes in and finds feature names next to associated cutoff values. Then inverse scales these cutoff
+    values using previously pickled scaler. Scaling is reversed by multiplying by '.scale_' and adding '.mean_' from scaler.
+    These new values replace the old ones and the dot file is resaved with these changes."""
+    my_file = open(dotFilePath)
+    file_list = my_file.readlines()
+    my_file.close()
+    new_file_list = []
+    for each in file_list: #Each line of file
+        for feature in original_headers: #check each feature name
+            if ('"'+str(feature)) in each:
+                #Separate string by spaces
+                stringList = each.split(' ')
+                #Find chunk with \nentropy
+                i = 0
+                purityText = None
+                for chunk in stringList:
+                    if '\\nentropy' in chunk:
+                        purityText = '\\nentropy'
+                        #Isolate numerical value
+                        targetValue = float(chunk.replace('\\nentropy',''))
+                        break
+                    elif '\\ngini' in chunk:
+                        purityText = '\\ngini'
+                        #Isolate numerical value
+                        targetValue = float(chunk.replace('\\ngini',''))
+                        break
+                    i += 1
+                #Get index of target feature name in original feature ordering
+                feature_index = original_headers.index(feature)
+                #Inverse scale based on specific feature scale index (mean and std)
+                originalValue = (targetValue*scaler.scale_[feature_index]) + scaler.mean_[feature_index]
+                #Replace numerical value in original dot file with inverse scaled 'original' value
+                stringList[i] = str(originalValue)+purityText
+                #Rebuild string
+                each =  " ".join(stringList)
+        new_file_list.append(each)
+    my_file = open(dotFilePath, "w")
+    new_file_contents = "".join(new_file_list)
+    my_file.write(new_file_contents)
+    my_file.close()
+
+def generateTreePlot(experiment_path,data_name,algorithm,cvCount,scale_data,class_label,instance_label):
+    """ Takes all steps to generate a single decision tree visualization (for a given original dataset/cv training model).
+    Includes option to inverse scale all feature values in tree decision boundaries (to their original value range, pre-scaling)"""
+    #Pickle load target model
+    modelInfo = experiment_path+"/"+data_name+'/models/pickledModels/'+algorithm+'_'+str(cvCount)+'.pickle' #Corresponding pickle file name with scalingInfo
+    infile = open(modelInfo,'rb')
+    model = pickle.load(infile)
+    infile.close()
+    #Pickle load target model
+    if eval(scale_data):
+        #Scalar is in original data order and is specified for all features (pre-feature selection)
+        scaleInfo = experiment_path+"/"+data_name+'/scale_impute/scaler_cv'+str(cvCount)+'.pickle' #Corresponding pickle file name with scalingInfo
+        infile = open(scaleInfo,'rb')
+        scaler = pickle.load(infile)
+        infile.close()
+    #Load feature names in their original order (corresponding to scaler order)
+    original_headers = pd.read_csv(experiment_path+"/"+data_name+"/exploratory/OriginalFeatureNames.csv",sep=',').columns.values.tolist() #Get Original Headers
+    #Load feature names for CV training dataset used to train model (features sorted alphabetically)
+    cv_train_path = experiment_path+"/"+data_name+"/CVDatasets/"+data_name+'_CV_'+str(cvCount)+'_Train.csv'
+    cv_train_data = pd.read_csv(cv_train_path, na_values='NA', sep = ",")
+    #Get List of features in cv dataset (if feature selection took place this may only include a subset of original training data features)
+    train_feature_list = list(cv_train_data.columns.values)
+    train_feature_list.remove(class_label)
+    try:
+        train_feature_list.remove(instance_label)
+    except:
+        pass
+    #Generate Tree dot file
+    tree_path = experiment_path+'/'+data_name+'/model_evaluation/DT_Viz/'
+    tree.export_graphviz(model, out_file=tree_path+"decisionTree_"+str(cvCount)+'.dot', feature_names=train_feature_list, class_names=True, filled=True)
+    if eval(scale_data):
+        # Revert tree decision boundary values back to pre-scaled values for interpretability
+        unscaleTree(tree_path+"decisionTree_"+str(cvCount)+'.dot',original_headers,train_feature_list,scaler)
+    # Generate Tree visualization
+    graph = graphviz.Source.from_file(tree_path+"decisionTree_"+str(cvCount)+'.dot')
+    #graph.format = "png" #Add this line to generate png files rather than pdfs.
+    graph.render(tree_path+"decisionTree_"+str(cvCount))
+    return graph
+
+def generateGPPlot(experiment_path,data_name,algorithm,cvCount,scale_data,class_label,instance_label):
+    """ Takes all steps to generate a single genetic programming tree. https://gplearn.readthedocs.io/en/stable/examples.html """
+    #Pickle load target model
+    modelInfo = experiment_path+"/"+data_name+'/models/pickledModels/'+algorithm+'_'+str(cvCount)+'.pickle' #Corresponding pickle file name with scalingInfo
+    infile = open(modelInfo,'rb')
+    model = pickle.load(infile)
+    infile.close()
+    #Generate GP tree visualization
+    tree_path = experiment_path+'/'+data_name+'/model_evaluation/GP_Viz/'
+    dot_data = model._program.export_graphviz()
+    graph = graphviz.Source(dot_data)
+    graph.render(tree_path+"GPTree_"+str(cvCount))
+    return graph
+
 if __name__ == '__main__':
-    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],int(sys.argv[7]),sys.argv[8],sys.argv[9],int(sys.argv[10]),float(sys.argv[11]),sys.argv[12])
+    job(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],int(sys.argv[7]),sys.argv[8],sys.argv[9],sys.argv[10],int(sys.argv[11]),float(sys.argv[12]),sys.argv[13],sys.argv[14])

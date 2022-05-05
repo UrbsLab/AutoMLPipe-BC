@@ -34,6 +34,8 @@ import catboost as cgb
 from sklearn.svm import SVC
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from gplearn.genetic import SymbolicClassifier
+#import gplearn as gp
 from skeLCS import eLCS
 from skXCS import XCS
 from skExSTraCS import ExSTraCS
@@ -59,8 +61,14 @@ def job(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_
     algorithm = algorithm.replace("_", " ")
     if eval(jupyterRun):
         print('Running '+str(algorithm)+' on '+str(train_file_path))
+    #Get header names for current CV dataset for use later in GP tree visulaization
+    data_name = full_path.split('/')[-1]
+    feature_names = pd.read_csv(full_path+'/CVDatasets/'+data_name+'_CV_'+str(cvCount)+'_Test.csv').columns.values.tolist()
+    if instance_label != 'None':
+        feature_names.remove(instance_label)
+    feature_names.remove(class_label)
     #Get hyperparameter grid
-    param_grid = hyperparameters(random_state,do_lcs_sweep,nu,iterations,N)[algorithm]
+    param_grid = hyperparameters(random_state,do_lcs_sweep,nu,iterations,N,feature_names)[algorithm]
     runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout,lcs_timeout,export_hyper_sweep_plots,instance_label,class_label,random_state,cvCount,filter_poor_features,do_lcs_sweep,nu,iterations,N,training_subsample,use_uniform_FI,primary_metric,param_grid,algAbrev)
 
 
@@ -95,6 +103,8 @@ def runModel(algorithm,train_file_path,test_file_path,full_path,n_trials,timeout
         ret = run_ANN_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,training_subsample,use_uniform_FI,primary_metric)
     elif algorithm == 'K-Nearest Neightbors':
         ret = run_KNN_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,training_subsample,use_uniform_FI,primary_metric)
+    elif algorithm == 'Genetic Programming':
+        ret = run_GP_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, timeout,export_hyper_sweep_plots, full_path,training_subsample,use_uniform_FI,primary_metric)
     #Experimental ML modeling algorithms (developed by our research group)
     elif algorithm == 'eLCS':
         ret = run_eLCS_full(trainX, trainY, testX, testY, random_state, cvCount, param_grid, n_trials, lcs_timeout,export_hyper_sweep_plots, full_path,use_uniform_FI,primary_metric)
@@ -878,6 +888,75 @@ def run_KNN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
     fi = results.importances_mean
     return [metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, fi, probas_]
 
+#Genetic Programming (Symbolic classification) ####################################################################################################################################
+def objective_GP(trial, est, x_train, y_train, randSeed, hype_cv, param_grid, scoring_metric):
+    """ Prepares genetic programming hyperparameter variables for Optuna run hyperparameter optimization. """
+    params = {'population_size': trial.suggest_int('population_size', param_grid['population_size'][0], param_grid['population_size'][1]),
+              'generations': trial.suggest_int('generations', param_grid['generations'][0], param_grid['generations'][1]),
+              'tournament_size': trial.suggest_int('tournament_size', param_grid['tournament_size'][0], param_grid['tournament_size'][1]),
+              'init_method': trial.suggest_categorical('init_method', param_grid['init_method']),
+              'function_set': trial.suggest_categorical('function_set', param_grid['function_set']),
+              'parsimony_coefficient': trial.suggest_float('parsimony_coefficient', param_grid['parsimony_coefficient'][0], param_grid['parsimony_coefficient'][1]),
+              'feature_names': trial.suggest_categorical('feature_names', param_grid['feature_names']),
+              'low_memory': trial.suggest_categorical('low_memory', param_grid['low_memory']),
+              'random_state' : trial.suggest_categorical('random_state',param_grid['random_state'])}
+    return hyper_eval(est, x_train, y_train, randSeed, hype_cv, params, scoring_metric)
+
+def run_GP_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials,timeout,do_plot,full_path,training_subsample,use_uniform_FI,primary_metric):
+    """ Run Genetic Programming Symbolic Classifier hyperparameter optimization, model training, evaluation, and model feature importance estimation. """
+    #Check whether hyperparameters are fixed (i.e. no hyperparameter sweep required) or whether a set/range of values were specified for any hyperparameter (conduct hyperparameter sweep)
+    isSingle = True
+    for key, value in param_grid.items():
+        if len(value) > 1:
+            isSingle = False
+    #Utilize a subset of training instances to reduce runtime on a very large dataset
+    if training_subsample > 0 and training_subsample < x_train.shape[0]:
+        sss = StratifiedShuffleSplit(n_splits=1, train_size=int(training_subsample), random_state=randSeed)
+        for train_index, _ in sss.split(x_train,y_train):
+            x_train = x_train[train_index]
+            y_train = y_train[train_index]
+        print('For GP, training sample reduced to '+str(x_train.shape[0])+' instances')
+    #Specify algorithm for hyperparameter optimization
+    est = SymbolicClassifier()
+    if not isSingle: #Run hyperparameter sweep
+        #Apply Optuna-----------------------------------------
+        sampler = optuna.samplers.TPESampler(seed=randSeed)  # Make the sampler behave in a deterministic way.
+        study = optuna.create_study(direction='maximize', sampler=sampler)
+        optuna.logging.set_verbosity(optuna.logging.CRITICAL)
+        study.optimize(lambda trial: objective_GP(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
+        #Export hyperparameter optimization search visualization if specified by user #Currently because some hyperparameters are lists, this breaks the visualization
+        #if eval(do_plot):
+        #    fig = optuna.visualization.plot_parallel_coordinate(study)
+        #    fig.write_image(full_path+'/models/GP_ParamOptimization_'+str(i)+'.png')
+        #Print results and hyperparamter values for best hyperparameter sweep trial
+        print('Best trial:')
+        best_trial = study.best_trial
+        print('  Value: ', best_trial.value)
+        print('  Params: ')
+        for key, value in best_trial.params.items():
+            print('    {}: {}'.format(key, value))
+        # Specify model with optimized hyperparameters
+        est = SymbolicClassifier()
+        clf = est.set_params(**best_trial.params)
+        export_best_params(full_path + '/models/GP_bestparams' + str(i) + '.csv', best_trial.params) #Export final model hyperparamters to csv file
+    else: #Specify hyperparameter values (no sweep)
+        params = copy.deepcopy(param_grid)
+        for key, value in param_grid.items():
+            params[key] = value[0]
+        clf = est.set_params(**params)
+        export_best_params(full_path + '/models/GP_usedparams' + str(i) + '.csv', params) #Export final model hyperparamters to csv file
+    print(clf) #Print basic classifier info/hyperparmeters for verification
+    #Train final model using whole training dataset and 'best' hyperparameters
+    model = clf.fit(x_train, y_train)
+    # Save model with pickle so it can be applied in the future
+    pickle.dump(model, open(full_path+'/models/pickledModels/GP_'+str(i)+'.pickle', 'wb'))
+    #Evaluate model
+    metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, probas_ = modelEvaluation(clf,model,x_test,y_test)
+    # Feature Importance Estimates
+    results = permutation_importance(model, x_train, y_train, n_repeats=10,random_state=randSeed, scoring=primary_metric)
+    fi = results.importances_mean
+    return [metricList, fpr, tpr, roc_auc, prec, recall, prec_rec_auc, ave_prec, fi, probas_]
+
 #Experimental ML modeling algorithms (developed by our research group)
 #eLCS (educational learning Classifier System) ##################################################################################################################################
 def objective_eLCS(trial, est, x_train, y_train, randSeed, hype_cv, param_grid, scoring_metric):
@@ -1143,7 +1222,7 @@ def classEval(y_true, y_pred):
         lrm = (1-re)/float(sp)
     return [bac, ac, f1, re, sp, pr, tp, tn, fp, fn, npv, lrp, lrm]
 
-def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N): #### Add new algorithm hyperparameters here using same formatting...
+def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N,feature_names): #### Add new algorithm hyperparameters here using same formatting...
     """ Hardcodes valid hyperparamter sweep ranges (specific to binary classification) for each machine learning algorithm.
     When run in the associated jupyer notebook, user can adjust these ranges directly.  Here a user would need to edit the codebase
     to adjust the hyperparameter range as they are not included as run parameters of the pipeline (for simplicity). These hyperparameter
@@ -1207,7 +1286,11 @@ def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N): #### Add new alg
     # https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html?highlight=kneighborsclassifier#sklearn.neighbors.KNeighborsClassifier
     param_grid_KNN = {'n_neighbors': [1, 100], 'weights': ['uniform', 'distance'], 'p': [1, 5],
                      'metric': ['euclidean', 'minkowski']}
-
+    # Genetic Programming Symbolic Classifier
+    # https://gplearn.readthedocs.io/en/stable/reference.html
+    param_grid_GP = {'population_size': [100, 1000], 'generations': [10, 500], 'tournament_size': [3, 50],'init_method': ['grow', 'full','half and half'],
+                     'function_set': [['add', 'sub', 'mul', 'div'], ['add', 'sub', 'mul', 'div', 'sqrt', 'log', 'abs', 'neg', 'inv', 'max', 'min'], ['add', 'sub', 'mul', 'div', 'sqrt', 'log', 'abs', 'neg', 'inv', 'max', 'min','sin','cos','tan']],
+                     'parsimony_coefficient': [0.001,0.01],'feature_names': [feature_names], 'low_memory': [True],'random_state': [random_state]}
     # ------------------------------------------------------------------------------------------------------------------------------------------------
     if eval(do_lcs_sweep): #Contuct hyperparameter sweep of LCS algorithms (can be computationally expensive)
         # eLCS
@@ -1237,6 +1320,7 @@ def hyperparameters(random_state,do_lcs_sweep,nu,iterations,N): #### Add new alg
     param_grid['Support Vector Machine'] = param_grid_SVM
     param_grid['Artificial Neural Network'] = param_grid_ANN
     param_grid['K-Nearest Neightbors'] = param_grid_KNN
+    param_grid['Genetic Programming'] = param_grid_GP
     param_grid['eLCS'] = param_grid_eLCS
     param_grid['XCS'] = param_grid_XCS
     param_grid['ExSTraCS'] = param_grid_ExSTraCS

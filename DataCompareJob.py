@@ -25,7 +25,7 @@ def job(experiment_path,sig_cutoff,jupyterRun):
     evaluation metric. Also compares the best overall model for each target dataset, for each evaluation metric."""
     # Get dataset paths for all completed dataset analyses in experiment folder
     datasets = os.listdir(experiment_path)
-    removeList = ['metadata.pickle','metadata.csv','algInfo.pickle','jobsCompleted','logs','jobs','HCC_PipeTest_Paper_ML_Pipeline_Report.pdf','DatasetComparisons']
+    removeList = ['metadata.pickle','metadata.csv','algInfo.pickle','jobsCompleted','logs','jobs','DatasetComparisons']
     for text in removeList:
         if text in datasets:
             datasets.remove(text)

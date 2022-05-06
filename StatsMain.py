@@ -38,7 +38,7 @@ def main(argv):
     parser.add_argument('--plot-box', dest='plot_metric_boxplots', type=str,help='Plot box plot summaries comparing algorithms for each metric', default='True')
     parser.add_argument('--plot-FI_box', dest='plot_FI_box', type=str,help='Plot feature importance boxplots and histograms for each algorithm', default='True')
     parser.add_argument('--top-features', dest='top_model_features', type=int,help='number of top features to illustrate in figures', default=40)
-    parser.add_argument('--model-viz', dest='model_viz', type=int,help='Directly visualize either DT or GP models if trained', default='True')
+    parser.add_argument('--model-viz', dest='model_viz', type=str,help='Directly visualize either DT or GP models if trained', default='True')
     #Lostistical arguments
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")
     parser.add_argument('--queue',dest='queue',type=str,help='specify name of parallel computing queue (uses our research groups queue by default)',default="i2c2_normal")
@@ -73,15 +73,14 @@ def main(argv):
     if not options.do_check: #Run job submission
         # Iterate through datasets
         dataset_paths = os.listdir(options.output_path + "/" + options.experiment_name)
-        dataset_paths.remove('logs')
-        dataset_paths.remove('jobs')
-        dataset_paths.remove('jobsCompleted')
-        dataset_paths.remove('metadata.pickle')
-        dataset_paths.remove('algInfo.pickle')
+        removeList = ['metadata.pickle','metadata.csv','algInfo.pickle','jobsCompleted','logs','jobs','DatasetComparisons']
+        for text in removeList:
+            if text in dataset_paths:
+                dataset_paths.remove(text)
 
         for dataset_directory_path in dataset_paths:
             full_path = options.output_path + "/" + options.experiment_name + "/" + dataset_directory_path
-            
+
             #Create folders for DT and GP vizualizations
             if eval(do_DT) and not os.path.exists(full_path+'/model_evaluation/DT_Viz'):
                 os.mkdir(full_path+'/model_evaluation/DT_Viz')

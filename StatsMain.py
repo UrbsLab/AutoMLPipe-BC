@@ -38,7 +38,6 @@ def main(argv):
     parser.add_argument('--plot-box', dest='plot_metric_boxplots', type=str,help='Plot box plot summaries comparing algorithms for each metric', default='True')
     parser.add_argument('--plot-FI_box', dest='plot_FI_box', type=str,help='Plot feature importance boxplots and histograms for each algorithm', default='True')
     parser.add_argument('--top-features', dest='top_model_features', type=int,help='number of top features to illustrate in figures', default=40)
-    parser.add_argument('--model-viz', dest='model_viz', type=str,help='Directly visualize either DT or GP models if trained', default='True')
     #Lostistical arguments
     parser.add_argument('--run-parallel',dest='run_parallel',type=str,help='if run parallel',default="True")
     parser.add_argument('--queue',dest='queue',type=str,help='specify name of parallel computing queue (uses our research groups queue by default)',default="i2c2_normal")
@@ -89,16 +88,15 @@ def main(argv):
 
             if eval(options.run_parallel):
                 job_counter += 1
-                submitClusterJob(full_path,options.plot_ROC,options.plot_PRC,options.plot_FI_box,class_label,instance_label,options.output_path+'/'+options.experiment_name,cv_partitions,scale_data,options.reserved_memory,options.maximum_memory,options.queue,options.plot_metric_boxplots,primary_metric,options.top_model_features,sig_cutoff,options.model_viz,jupyterRun)
+                submitClusterJob(full_path,options.plot_ROC,options.plot_PRC,options.plot_FI_box,class_label,instance_label,options.output_path+'/'+options.experiment_name,cv_partitions,scale_data,options.reserved_memory,options.maximum_memory,options.queue,options.plot_metric_boxplots,primary_metric,options.top_model_features,sig_cutoff,jupyterRun)
             else:
-                submitLocalJob(full_path,options.plot_ROC,options.plot_PRC,options.plot_FI_box,class_label,instance_label,cv_partitions,scale_data,options.plot_metric_boxplots,primary_metric,options.top_model_features,sig_cutoff,options.model_viz,jupyterRun)
+                submitLocalJob(full_path,options.plot_ROC,options.plot_PRC,options.plot_FI_box,class_label,instance_label,cv_partitions,scale_data,options.plot_metric_boxplots,primary_metric,options.top_model_features,sig_cutoff,jupyterRun)
 
         metadata['Export ROC Plot'] = options.plot_ROC
         metadata['Export PRC Plot'] = options.plot_PRC
         metadata['Export Metric Boxplots'] = options.plot_metric_boxplots
         metadata['Export Feature Importance Boxplots'] = options.plot_FI_box
         metadata['Top Model Features To Display'] = options.top_model_features
-        metadata['Directly Vizualize DT or GP Models'] = options.model_viz
 
         #Pickle the metadata for future use
         pickle_out = open(options.output_path+'/'+options.experiment_name+'/'+"metadata.pickle", 'wb')
@@ -140,11 +138,11 @@ def main(argv):
     if not options.do_check:
         print(str(job_counter)+ " jobs submitted in Phase 6")
 
-def submitLocalJob(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,scale_data,plot_metric_boxplots,primary_metric,top_model_features,sig_cutoff,model_viz,jupyterRun):
+def submitLocalJob(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,scale_data,plot_metric_boxplots,primary_metric,top_model_features,sig_cutoff,jupyterRun):
     """ Runs StatsJob.py locally, once for each of the original target datasets (all CV datasets analyzed at once). These runs will be completed serially rather than in parallel. """
-    StatsJob.job(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,scale_data,plot_metric_boxplots,primary_metric,top_model_features,sig_cutoff,model_viz,jupyterRun)
+    StatsJob.job(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,cv_partitions,scale_data,plot_metric_boxplots,primary_metric,top_model_features,sig_cutoff,jupyterRun)
 
-def submitClusterJob(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,experiment_path,cv_partitions,scale_data,reserved_memory,maximum_memory,queue,plot_metric_boxplots,primary_metric,top_model_features,sig_cutoff,model_viz,jupyterRun):
+def submitClusterJob(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instance_label,experiment_path,cv_partitions,scale_data,reserved_memory,maximum_memory,queue,plot_metric_boxplots,primary_metric,top_model_features,sig_cutoff,jupyterRun):
     """ Runs StatsJob.py once for each of the original target datasets (all CV datasets analyzed at once). Runs in parallel on a linux-based computing cluster that uses an IBM Spectrum LSF for job scheduling."""
     job_ref = str(time.time())
     job_name = experiment_path + '/jobs/P6_' + job_ref + '_run.sh'
@@ -158,7 +156,7 @@ def submitClusterJob(full_path,plot_ROC,plot_PRC,plot_FI_box,class_label,instanc
     sh_file.write('#BSUB -e ' + experiment_path+'/logs/P6_'+job_ref+'.e\n')
 
     this_file_path = os.path.dirname(os.path.realpath(__file__))
-    sh_file.write('python '+this_file_path+'/StatsJob.py '+full_path+" "+plot_ROC+" "+plot_PRC+" "+plot_FI_box+" "+class_label+" "+instance_label+" "+str(cv_partitions)+" "+scale_data+" "+str(plot_metric_boxplots)+" "+str(primary_metric)+" "+str(top_model_features)+" "+str(sig_cutoff)+" " + str(model_viz)+" "+str(jupyterRun)+'\n')
+    sh_file.write('python '+this_file_path+'/StatsJob.py '+full_path+" "+plot_ROC+" "+plot_PRC+" "+plot_FI_box+" "+class_label+" "+instance_label+" "+str(cv_partitions)+" "+scale_data+" "+str(plot_metric_boxplots)+" "+str(primary_metric)+" "+str(top_model_features)+" "+str(sig_cutoff)+" "+str(jupyterRun)+'\n')
     sh_file.close()
     os.system('bsub < ' + job_name)
     pass

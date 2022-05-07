@@ -110,17 +110,17 @@ def main(argv):
     ### Note that other named colors used by matplotlib can be found here: https://matplotlib.org/3.5.0/_images/sphx_glr_named_colors_003.png
     ### Make sure new ML algorithm abbreviations and color designations are unique
     algInfo = {}
-    algInfo['Naive Bayes'] = [True,'NB','grey']
-    algInfo['Logistic Regression'] = [True,'LR','black']
-    algInfo['Decision Tree'] = [True,'DT','blue']
-    algInfo['Random Forest'] = [True,'RF','cyan']
-    algInfo['Gradient Boosting'] = [True,'GB','teal']
-    algInfo['Extreme Gradient Boosting'] = [True,'XGB','darkblue']
-    algInfo['Light Gradient Boosting'] = [True,'LGB','lightblue']
-    algInfo['Category Gradient Boosting'] = [True,'CGB','dodgerblue']
+    algInfo['Naive Bayes'] = [True,'NB','silver']
+    algInfo['Logistic Regression'] = [True,'LR','dimgrey']
+    algInfo['Decision Tree'] = [True,'DT','yellow']
+    algInfo['Random Forest'] = [True,'RF','blue']
+    algInfo['Gradient Boosting'] = [True,'GB','cornflowerblue']
+    algInfo['Extreme Gradient Boosting'] = [True,'XGB','cyan']
+    algInfo['Light Gradient Boosting'] = [True,'LGB','pink']
+    algInfo['Category Gradient Boosting'] = [True,'CGB','magenta']
     algInfo['Support Vector Machine'] = [True,'SVM','orange']
     algInfo['Artificial Neural Network'] = [True,'ANN','red']
-    algInfo['K-Nearest Neightbors'] = [True,'KNN','yellow']
+    algInfo['K-Nearest Neightbors'] = [True,'KNN','chocolate']
     algInfo['Genetic Programming'] = [True,'GP','purple']
     algInfo['eLCS'] = [True,'eLCS','green']
     algInfo['XCS'] = [True,'XCS','olive']
@@ -238,17 +238,10 @@ def main(argv):
 
     elif options.do_check and not options.do_resubmit: #run job completion checks
         datasets = os.listdir(options.output_path + "/" + options.experiment_name)
-        datasets.remove('logs')
-        datasets.remove('jobs')
-        datasets.remove('jobsCompleted')
-        if 'metadata.pickle' in datasets:
-            datasets.remove('metadata.pickle')
-        if 'algInfo.pickle' in datasets:
-            datasets.remove('algInfo.pickle')
-        if 'DatasetComparisons' in datasets:
-            datasets.remove('DatasetComparisons')
-        if 'metadata.csv' in datasets:
-            datasets.remove('metadata.csv')
+        removeList = removeList = ['metadata.pickle','metadata.csv','algInfo.pickle','jobsCompleted','logs','jobs','DatasetComparisons','UsefulNotebooks']
+        for text in removeList:
+            if text in datasets:
+                datasets.remove(text)
 
         phase5Jobs = []
         for dataset in datasets:
@@ -269,17 +262,10 @@ def main(argv):
 
     elif options.do_resubmit and not options.do_check: #resubmit any jobs that didn't finish in previous run (mix of job check and job submit)
         datasets = os.listdir(options.output_path + "/" + options.experiment_name)
-        datasets.remove('logs')
-        datasets.remove('jobs')
-        datasets.remove('jobsCompleted')
-        if 'metadata.pickle' in datasets:
-            datasets.remove('metadata.pickle')
-        if 'algInfo.pickle' in datasets:
-            dataset_paths.remove('algInfo.pickle')
-        if 'DatasetComparisons' in datasets:
-            datasets.remove('DatasetComparisons')
-        if 'metadata.csv' in datasets:
-            datasets.remove('metadata.csv')
+        removeList = removeList = ['metadata.pickle','metadata.csv','algInfo.pickle','jobsCompleted','logs','jobs','DatasetComparisons','UsefulNotebooks']
+        for text in removeList:
+            if text in datasets:
+                datasets.remove(text)
 
         #start by making list of finished jobs instead of all jobs then step through loop
         phase5completed = []

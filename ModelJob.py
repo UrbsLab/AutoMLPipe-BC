@@ -784,8 +784,11 @@ def run_ANN_full(x_train, y_train, x_test, y_test,randSeed,i,param_grid,n_trials
         study.optimize(lambda trial: objective_ANN(trial, est, x_train, y_train, randSeed, 3, param_grid, primary_metric),n_trials=n_trials, timeout=timeout, catch=(ValueError,))
         #Export hyperparameter optimization search visualization if specified by user
         if eval(do_plot):
-            fig = optuna.visualization.plot_parallel_coordinate(study)
-            fig.write_image(full_path+'/models/ANN_ParamOptimization_'+str(i)+'.png')
+            try:
+                fig = optuna.visualization.plot_parallel_coordinate(study)
+                fig.write_image(full_path+'/models/ANN_ParamOptimization_'+str(i)+'.png')
+            except:
+                pass
         #Print results and hyperparamter values for best hyperparameter sweep trial
         print('Best trial:')
         best_trial = study.best_trial

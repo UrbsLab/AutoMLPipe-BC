@@ -25,7 +25,8 @@ def job(experiment_path,sig_cutoff,jupyterRun):
     evaluation metric. Also compares the best overall model for each target dataset, for each evaluation metric."""
     # Get dataset paths for all completed dataset analyses in experiment folder
     datasets = os.listdir(experiment_path)
-    removeList = ['metadata.pickle','metadata.csv','algInfo.pickle','jobsCompleted','logs','jobs','DatasetComparisons']
+    experiment_name = experiment_path.split('/')[-1] #Name of experiment folder
+    removeList = removeList = ['metadata.pickle','metadata.csv','algInfo.pickle','jobsCompleted','logs','jobs','DatasetComparisons','UsefulNotebooks',experiment_name+'_ML_Pipeline_Report.pdf']
     for text in removeList:
         if text in datasets:
             datasets.remove(text)
@@ -79,7 +80,6 @@ def job(experiment_path,sig_cutoff,jupyterRun):
     job_file = open(experiment_path + '/jobsCompleted/job_data_compare' + '.txt', 'w')
     job_file.write('complete')
     job_file.close()
-
 
 def kruscallWallis(experiment_path,datasets,algorithms,metrics,dataset_directory_paths,name_to_abbrev,sig_cutoff):
     """ For each algorithm apply non-parametric Kruskal Wallis one-way ANOVA on ranks. Determines if there is a statistically significant difference in performance between original target datasets across CV runs.

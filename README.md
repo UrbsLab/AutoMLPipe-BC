@@ -1,3 +1,8 @@
+# Important Note  
+AutoMLPipe-BC is the first stable version of our AutoML tool applied in a recently submitted publication.  We have rebranded and expanded this prototype implementation now found at the following repository: https://github.com/UrbsLab/STREAMLINE
+
+As this repository will no longer be developed or improved upon, we strongly recommend interested users use the 'STREAMLINE' tool rather than 'AutoMLPIPE-BC'.
+
 # AutoMLPipe-BC Summary
 AutoMLPipe-BC is an automated, rigorous, and largely scikit-learn based machine learning (ML) analysis pipeline for binary classification. Adopts current best practices to avoid bias, optimize performance, ensure replicatability, capture complex associations (e.g. interactions and heterogeneity), and enhance interpretability. Includes (1) exploratory analysis, (2) data cleaning, (3) partitioning, (4) scaling, (5) imputation, (6) filter-based feature selection, (7) collective feature selection, (8) modeling with 'Optuna' hyperparameter optimization across 15 implemented ML algorithms (including three rule-based machine learning algorithms: ExSTraCS, XCS, and eLCS), (9) testing evaluations with 16 classification metrics, model feature importance estimation, (10) automatically saves all results, models, and publication-ready plots (including proposed composite feature importance plots), (11) non-parametric statistical comparisons across ML algorithms and analyzed datasets, and (12) automatically generated PDF summary reports.
 
@@ -10,7 +15,7 @@ The following 15 ML modeling algorithms are currently included as options: 1. Na
 
 This pipeline does NOT: (1) conduct feature engineering, or feature construction, (2) conduct feature encoding (e.g. apply one-hot-encoding to categorical features, or numerically encode text-based feature values), (3) account for bias in data collection, or (4) conduct anything beyond simple data cleaning (i.e. it only removes instances with no class label, or where all features are missing). These elements should be conducted externally at the discretion of the user.
 
-We do not claim that this is the best or only viable way to assemble an ML analysis pipeline for a given classification problem, nor that the included ML modeling algorithms are necessarily the best options for inclusion. Certainly, this pipeline could be expanded much further and adapted to different problems or goals. We welcome feedback and suggestions for improvement.
+We do not claim that this is the best or only viable way to assemble an ML analysis pipeline for a given classification problem, nor that the included ML modeling algorithms are necessarily the best options for inclusion.
 
 ***
 ## Schematic of AutoMLPipe-BC
@@ -568,20 +573,3 @@ One known issue is that the Optuna hyperparameter optimization does not have a w
 First, try to kill the given job(s) and use the -r command for ModelMain.py.  When using this command, a different random seed will automatically which can resolve the run completion, but will impact perfect reproducibility of the results.
 
 Second, go into the code in ModelJob.py and limit the hyperparameter ranges specified (or do this directly in the jupyter notebook if running from there).  Specifically eliminate possible hyperparameter combinations that might lead the hyperparameter sweep to run for a very long time (i.e. way beyond the 'timeout' parameter).
-
-# Development Notes
-Have ideas on how to improve this pipeline? We welcome suggestions, contributions, and collaborations.
-
-## Planned Extensions
-* Support multiclass and quantitative endpoints
-* Shapley value calculation and visualizations
-* Improved modularization of code for adding new ML modeling algorithms
-* Create ensemble model from all trained models which can then be evaluated on hold out replication data
-
-## Solicited Feedback  
-In particular we welcome suggestions on improving this pipeline with respect to:
-* Other key ML modeling algorithms (for classification) that should be included
-* The range of hyperparmeters and associated values used for each ML modeling algorithms
-* Other key data/results visualizations
-* Support to easily run this pipeline on cloud computing platforms such as AWS, Azure, or Google Cloud.
-* Support to utilize this pipeline within Docker
